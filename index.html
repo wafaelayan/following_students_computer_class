@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <title>سجل المتابعة التفاعلي - ثانوية موضي سلطان العيسى</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Aref+Ruqaa:wght@700&family=Reem+Kufi:wght@700&family=Tajawal:wght@400;500;700;800&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Aref+Ruqaa:wght@700&family=Reem+Kufi:wght@700;800&family=Tajawal:wght@400;500;700;800&display=swap" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.min.js"></script>
 <script>
@@ -22,6 +22,7 @@
     --cream:#FAF3F0; 
     --ink:#2C2C2C; 
     --line:#E5C7D0;
+    --navy:#0D2C54;
     --present:#E2F3E4; --present-ink:#1E5631;
     --absent:#FADBD8; --absent-ink:#7A1F2B;
     --late:#FCF3CF; --late-ink:#8A5A00;
@@ -45,15 +46,15 @@
   .pass-table td, .pass-table th { padding: 8px; border-bottom: 1px solid var(--line); text-align: center; font-size: 13px; }
   .pass-table th { background: var(--pink-dark); color: #fff; }
 
-  #authScreen{ min-height:100vh; display:flex; align-items:center; justify-content:center; padding:15px; }
-  .auth-card{ background:#fff; border-radius:18px; box-shadow:0 10px 30px rgba(232,90,113,.2); padding:28px 24px; width:100%; max-width:380px; text-align:center; border:2px solid var(--rose); }
-  .auth-card .badge{ width:64px;height:64px;border-radius:50%; background:var(--pink); color:#fff; display:flex;align-items:center;justify-content:center; font-size:28px; margin:0 auto 14px; }
-  .auth-card h2{ margin:0 0 4px; color:var(--pink-dark); font-size:19px; }
-  .auth-card p.sub{ margin:0 0 4px; font-size:12.5px; color:#666; }
-  .auth-card p.designer-tag{ margin:0 0 18px; font-family:'Aref Ruqaa', serif; font-size:16px; color:var(--pink); }
-  .auth-card input{ width:100%; font-family:inherit; font-size:16px; padding:11px 12px; border:1px solid var(--line); border-radius:9px; margin-bottom:12px; -webkit-appearance:none; }
-  .auth-card button{ width:100%; font-family:inherit; font-size:15px; font-weight:800; background:var(--pink); color:#fff; border:none; border-radius:9px; padding:12px; cursor:pointer; }
-  .auth-card button:hover{ background:var(--pink-dark); }
+  #authScreen{ min-height:100vh; display:flex; align-items:center; justify-content:center; padding:15px; background: linear-gradient(135deg, #FAF3F0 0%, #FCE4E8 100%); }
+  .auth-card{ background:#fff; border-radius:22px; box-shadow:0 15px 35px rgba(138, 28, 48, 0.15); padding:32px 26px; width:100%; max-width:420px; text-align:center; border:2px solid var(--rose); }
+  .auth-card .school-logo{ width:120px; height:auto; margin:0 auto 12px; display:block; }
+  .auth-card h2{ margin:0 0 8px; color:var(--pink-dark); font-family:'Reem Kufi', sans-serif; font-size:20px; line-height:1.4; }
+  .auth-card p.sub{ margin:0 0 6px; font-size:13px; color:#555; font-weight:bold; }
+  .auth-card p.designer-tag{ margin:0 0 20px; font-family:'Aref Ruqaa', serif; font-size:17px; color:var(--pink); }
+  .auth-card input, .auth-card select{ width:100%; font-family:inherit; font-size:15px; padding:11px 12px; border:1px solid var(--line); border-radius:10px; margin-bottom:12px; background:#fff; -webkit-appearance:none; }
+  .auth-card button{ width:100%; font-family:inherit; font-size:16px; font-weight:800; background:var(--pink-dark); color:#fff; border:none; border-radius:10px; padding:12px; cursor:pointer; transition:background .2s; }
+  .auth-card button:hover{ background:var(--pink); }
 
   #appScreen{ display:none; width:100%; }
   .app{ display:flex; min-height:100vh; width:100%; }
@@ -75,7 +76,7 @@
   .main{ flex:1; padding:20px 24px 60px; max-width:1450px; width:100%; min-width:0; }
   .page-header{ display:flex; justify-content:space-between; align-items:flex-start; flex-wrap:wrap; gap:12px; border-bottom:3px solid var(--pink); padding-bottom:14px; margin-bottom:16px; }
   .page-header h2{ margin:0 0 4px; font-size:20px; font-weight:800; color:var(--pink-dark); }
-  .controls{ display:flex; flex-wrap:wrap; gap:10px; align-items:end; background:#fff; border:1px solid var(--line); border-radius:14px; padding:14px 16px; margin-bottom:16px; box-shadow:0 4px 12px rgba(232,90,113,.05); }
+  .controls{ display:flex; flex-wrap:wrap; gap:10px; align-items:end; background:#fff; border:1px solid var(--line); border-radius:14px; padding:14px 16px; margin-bottom:12px; box-shadow:0 4px 12px rgba(232,90,113,.05); }
   .field{ display:flex; flex-direction:column; gap:5px; flex:1 1 140px; }
   .field label{ font-size:11.5px; font-weight:700; color:var(--pink-dark); }
   .field select, .field input[type=date], .field input[type=text]{ font-family:inherit; font-size:15px; padding:8px 10px; border-radius:8px; border:1px solid var(--line); background:#fff; color:var(--ink); width:100%; -webkit-appearance:none; }
@@ -83,6 +84,10 @@
   .btn-primary{ background:var(--pink); color:#fff; }
   .btn-outline{ background:#fff; color:var(--pink-dark); border:1px solid var(--pink-dark); }
   .btn-danger{ background:var(--red); color:#fff; }
+
+  .lesson-banner{ display:flex; align-items:center; gap:12px; background:#fff; border:1.5px solid var(--pink); border-radius:14px; padding:10px 16px; margin-bottom:12px; box-shadow:0 4px 10px rgba(232,90,113,.05); }
+  .lesson-banner label{ font-weight:800; color:var(--pink-dark); font-size:14px; white-space:nowrap; }
+  .lesson-banner input{ flex:1; font-family:inherit; font-size:15px; font-weight:700; padding:8px 12px; border-radius:8px; border:1px solid var(--line); background:#FAF3F0; color:var(--ink); }
 
   .star-banner{ display:flex; align-items:center; gap:10px; background:linear-gradient(90deg, #FFF2F4, #FCE4E8); border:1px solid var(--rose); border-radius:14px; padding:12px 16px; margin-bottom:16px; flex-wrap:wrap; }
   .star-banner .star-icon{ font-size:26px; }
@@ -168,13 +173,24 @@
 
 <div id="authScreen">
   <div class="auth-card">
-    <div class="badge">💻</div>
-    <h2 id="authTitle">تسجيل الدخول</h2>
-    <p class="sub">سجل متابعة قسم الحاسوب</p>
-    <p class="sub" style="font-weight: bold; color: var(--pink-dark);">منطقة الأحمدي التعليمية - ثانوية موضي سلطان العيسى</p>
+    <img src="شعار المدرسة.jpg" alt="شعار ثانوية موضي سلطان العيسى" class="school-logo">
+    <h2>تسجيل الدخول إلى دفتر المتابعة الإلكتروني في حصة الحاسوب</h2>
+    <p class="sub">منطقة الأحمدي التعليمية - ثانوية موضي سلطان العيسى بنات</p>
     <p class="designer-tag">تصميم: وفاء عليان</p>
     <div id="loginForm">
-      <input type="text" id="loginUser" placeholder="اسم المستخدم" autocomplete="username">
+      <input type="text" id="loginUser" placeholder="اسم المعلمة (مثال: أ. وفاء عليان)" autocomplete="username">
+      <select id="loginDepartment">
+        <option value="قسم الحاسوب">قسم الحاسوب 💻</option>
+        <option value="قسم الرياضيات">قسم الرياضيات 📐</option>
+        <option value="قسم العلوم">قسم العلوم 🔬</option>
+        <option value="قسم اللغة العربية">قسم اللغة العربية 📚</option>
+        <option value="قسم اللغة الإنجليزية">قسم اللغة الإنجليزية 🇬🇧</option>
+        <option value="قسم التربية الإسلامية">قسم التربية الإسلامية 🕌</option>
+        <option value="قسم الدراسات الاجتماعية">قسم الدراسات الاجتماعية 🗺️</option>
+        <option value="قسم التربية البدنية">قسم التربية البدنية ⚽</option>
+        <option value="قسم التربية الفنية">قسم التربية الفنية 🎨</option>
+        <option value="قسم الاقتصاد المنزلي">قسم الاقتصاد المنزلي 🧺</option>
+      </select>
       <input type="password" id="loginPass" placeholder="كلمة المرور" autocomplete="current-password">
       <button onclick="handleLogin()">دخول</button>
     </div>
@@ -187,7 +203,7 @@
       <div class="brand">
         <div class="badge">💻</div>
         <h1>ثانوية موضي سلطان العيسى</h1>
-        <p>منطقة الأحمدي التعليمية</p>
+        <p id="sidebarDeptName">قسم الحاسوب</p>
         <div class="designer-signature">✨ تصميم: وفاء عليان</div>
       </div>
       <div class="user-chip">
@@ -231,9 +247,13 @@
               <option value="الحصة 7">الحصة السابعة (13:10)</option>
             </select>
           </div>
-          <div class="field" style="flex:2;"><label>عنوان الدرس الحالي (حفظ تلقائي محلي)</label><input type="text" id="lessonTitleInput" placeholder="اكتبي عنوان الدرس هنا..." oninput="saveLessonDataLocally()"></div>
           <button class="btn btn-primary" id="markAllBtn">✔ حضور وتأشير كامل للكل</button>
           <button class="btn btn-outline" id="exportBtn">📊 تصدير درجات الفترة (Excel)</button>
+        </div>
+
+        <div class="lesson-banner">
+          <label>📘 عنوان الدرس الحالي (حفظ تلقائي محلي):</label>
+          <input type="text" id="lessonTitleInput" placeholder="اكتبي عنوان الدرس هنا..." oninput="saveLessonDataLocally()">
         </div>
 
         <div class="star-banner">
@@ -254,12 +274,11 @@
         </div>
       </div>
 
-      <!-- شاشة الخروج والاستئذان -->
       <div id="leaveView" style="display:none;">
         <div class="page-header">
           <div>
             <h2>🚪 تصاريح خروج واستئذان الطالبات</h2>
-            <div class="sub">تسجيل الخروج والعودة وحساب مدة الخروج بالدقيقة تلقائياً</div>
+            <div class="sub">تسجيل الخروج والعودة وحساب مدة الخروج بالدقيقة تلقائياً مع إمكانية تعديل السبب</div>
           </div>
         </div>
 
@@ -269,13 +288,13 @@
           <div class="field"><label>اسم الطالبة</label><select id="leaveStudentSelect"></select></div>
           <div class="field"><label>سبب الخروج</label>
             <select id="leaveReasonSelect">
-              <option>🩺 العيادة الطبية</option>
-              <option>🏢 الإدارة / الأخصائية الاجتماعية</option>
-              <option>🚻 دورة المياه</option>
-              <option>🎒 استدعاء ولي أمر</option>
-              <option>🏫 الخروج للصف</option>
-              <option>📋 مهمة مدرسية / نشاط</option>
-              <option>✏️ أسباب أخرى</option>
+              <option value="🚻 دورة المياه">🚻 دورة المياه</option>
+              <option value="🩺 العيادة الطبية">🩺 العيادة الطبية</option>
+              <option value="🏢 الإدارة / الأخصائية الاجتماعية">🏢 الإدارة / الأخصائية الاجتماعية</option>
+              <option value="🎒 استدعاء ولي أمر">🎒 استدعاء ولي أمر</option>
+              <option value="🏫 الخروج للصف">🏫 الخروج للصف</option>
+              <option value="📋 مهمة مدرسية / نشاط">📋 مهمة مدرسية / نشاط</option>
+              <option value="✏️ أسباب أخرى">✏️ أسباب أخرى</option>
             </select>
           </div>
           <button class="btn btn-primary" onclick="issueLeavePass()">🟢 سماح بالخروج وتسجيل الوقت</button>
@@ -304,7 +323,7 @@
                 <th>ساعة الخروج</th>
                 <th>ساعة العودة</th>
                 <th>مدة الخروج (بالدقائق)</th>
-                <th>الحالة / إجراء</th>
+                <th>الحالة / إجراء وتعديل</th>
               </tr>
             </thead>
             <tbody id="leavePassTableBody"></tbody>
@@ -319,11 +338,11 @@
   <div class="modal">
     <h3>إدارة أسماء طالبات: <span id="modalGradeName"></span></h3>
     <div class="excel-upload-box">
-      <span style="display:block; font-size:12px; margin-bottom:6px; color:#444;">استيراد القائمة من ملف Excel أو CSV أو PDF:</span>
+      <span style="display:block; font-size:12px; margin-bottom:6px; color:#444;">استيراد القائمة من ملف Excel أو CSV أو PDF (يستورد أسماء الطالبات فقط):</span>
       <label for="excelFileInput">📁 اختر ملف إكسيل / CSV</label>
       <input type="file" id="excelFileInput" accept=".xlsx, .xls, .csv" onchange="importNamesFromExcel(event)">
       
-      <label for="pdfFileInput" style="background:var(--pink-dark);">📄 اختر ملف PDF</label>
+      <label for="pdfFileInput" style="background:var(--pink-dark);">📄 اختر ملف PDF (أسماء الطالبات فقط)</label>
       <input type="file" id="pdfFileInput" accept=".pdf" onchange="importNamesFromPDF(event)">
     </div>
     <p>أو الصقي الأسماء (اسم في كل سطر) — خاصة بهذه الشعبة فقط.</p>
@@ -368,7 +387,7 @@
 </div>
 
 <div class="modal-overlay" id="reportsModal">
-  <div class="modal" style="max-width:800px;">
+  <div class="modal" style="max-width:850px;">
     <h3>📊 مركز التقارير المتقدم والتفصيلي</h3>
     <p>استخراج تقارير المتابعة لشعبة: <strong id="reportSectionName"></strong></p>
 
@@ -383,13 +402,24 @@
       </div>
     </div>
 
+    <div style="border-bottom: 1px solid var(--line); padding-bottom: 12px; margin-bottom: 12px; display: flex; gap: 10px; flex-wrap: wrap;">
+      <div style="flex:1; min-width:240px;">
+        <h4 style="margin: 0 0 6px; color: var(--green);">2. تقرير الطالبات الفائقات والمتميزات:</h4>
+        <button class="btn btn-outline" style="color:var(--green); border-color:var(--green);" onclick="generateTopStudentsReport()">🌟 حصر الفائقات والدرجات العالية</button>
+      </div>
+      <div style="flex:1; min-width:240px;">
+        <h4 style="margin: 0 0 6px; color: var(--red);">3. تقرير الطالبات المتعثرات والضعيفات:</h4>
+        <button class="btn btn-outline" style="color:var(--red); border-color:var(--red);" onclick="generateWeakStudentsReport()">⚠️ حصر المتعثرات والغياب المتكرر</button>
+      </div>
+    </div>
+
     <div style="border-bottom: 1px solid var(--line); padding-bottom: 12px; margin-bottom: 12px;">
-      <h4 style="margin: 0 0 6px; color: var(--pink-dark);">2. تقرير المخالفات والملاحظات بالتاريخ واليوم:</h4>
+      <h4 style="margin: 0 0 6px; color: var(--pink-dark);">4. تقرير المخالفات والملاحظات بالتاريخ واليوم:</h4>
       <button class="btn btn-outline" onclick="generateViolationsReport()">🚨 حصر الطالبات المخالفات</button>
     </div>
 
     <div style="border-bottom: 1px solid var(--line); padding-bottom: 12px; margin-bottom: 12px;">
-      <h4 style="margin: 0 0 6px; color: var(--pink-dark);">3. تقرير الطالبات الحاصلات على البونص بالتاريخ واليوم:</h4>
+      <h4 style="margin: 0 0 6px; color: var(--pink-dark);">5. تقرير الطالبات الحاصلات على البونص بالتاريخ واليوم:</h4>
       <button class="btn btn-outline" onclick="generateBonusReport()">⭐ حصر البونص والشارات</button>
     </div>
 
@@ -502,6 +532,7 @@ let currentGradeId = GRADES[0].id;
 let currentSection = SECTIONS[GRADES[0].id][0];
 let currentDate = todayStr();
 let currentUserDisplayName = 'أ. وفاء عليان';
+let currentDepartmentName = 'قسم الحاسوب';
 let store = {};
 let leaveLogs = [];
 
@@ -606,6 +637,18 @@ function updateFilterLeaveOptions(){
   filterSelect.value = currentVal;
 }
 
+function editLeaveReason(id){
+  const item = leaveLogs.find(l=>l.id === id);
+  if(item){
+    const newReason = prompt("تعديل سبب الخروج والاستئذان:", item.reason);
+    if(newReason && newReason.trim() !== ""){
+      item.reason = newReason.trim();
+      setLocalData('global_leave_logs', leaveLogs);
+      renderLeaveTable();
+    }
+  }
+}
+
 function renderLeaveTable(){
   const tbody = document.getElementById('leavePassTableBody');
   if(!tbody) return;
@@ -621,12 +664,12 @@ function renderLeaveTable(){
       <td style="font-weight:bold; text-align:right;">${item.student}</td>
       <td>${item.gradeName} (${item.sec})</td>
       <td><b>${item.teacher || currentUserDisplayName}</b></td>
-      <td>${item.reason}</td>
+      <td>${item.reason} <button class="btn btn-outline" style="font-size:10px; padding:1px 4px; margin-right:4px;" onclick="editLeaveReason(${item.id})">✏️ تعديل</button></td>
       <td>${item.outTime}</td>
       <td>${item.inTime || '—'}</td>
       <td style="font-weight:bold; color:${item.inTime ? 'var(--green)' : 'var(--red)'}">${item.duration}</td>
       <td>
-        ${!item.inTime ? `<button class="btn btn-outline" style="font-size:10px; padding:3px 6px;" onclick="registerReturn(${item.id})">🛑 تسجيل العودة</button>` : '✅ اكتمل'}
+        ${!item.inTime ? `<button class="btn btn-outline" style="font-size:10px; padding:3px 6px;" onclick="registerReturn(${item.id})">🛑 تسجيل العودة</button>` : '✅ مكتمل'}
       </td>
     `;
     tbody.appendChild(tr);
@@ -675,8 +718,9 @@ function boot(){
 
   leaveLogs = getLocalData('global_leave_logs') || [];
   const savedToken = localStorage.getItem('session_token');
+  const savedDept = localStorage.getItem('session_dept');
   if(savedToken){
-    showApp(savedToken);
+    showApp(savedToken, savedDept);
     return;
   }
   showAuth();
@@ -689,26 +733,32 @@ function showAuth(){
 
 function handleLogin(){
   const u = document.getElementById('loginUser').value.trim();
+  const dept = document.getElementById('loginDepartment').value;
   const p = document.getElementById('loginPass').value.trim();
   
   if(u && p){
     localStorage.setItem('session_token', u);
-    showApp(u);
+    localStorage.setItem('session_dept', dept);
+    showApp(u, dept);
   } else {
-    alert("يرجى كتابة اسم المستخدم وكلمة المرور.");
+    alert("يرجى كتابة اسم المعلمة وكلمة المرور.");
   }
 }
 
 function handleLogout(){
   localStorage.removeItem('session_token');
+  localStorage.removeItem('session_dept');
   location.reload();
 }
 
-function showApp(displayName){
+function showApp(displayName, deptName){
   currentUserDisplayName = displayName || 'أ. وفاء عليان';
+  currentDepartmentName = deptName || 'قسم الحاسوب';
+  
   document.getElementById('authScreen').style.display = 'none';
   document.getElementById('appScreen').style.display = 'block';
   document.getElementById('userDisplayName').textContent = currentUserDisplayName;
+  document.getElementById('sidebarDeptName').textContent = currentDepartmentName;
   
   GRADES.forEach(g=>{
     store[g.id] = { sections: {} };
@@ -814,8 +864,7 @@ function renderTable(){
   thead.innerHTML = `
     <tr>
       <th style="width:36px;">م</th>
-      <th style="min-width:210px; width:210px;">اسم الطالبة</th>
-      <th style="width:110px;">الصورة والرفع</th>
+      <th style="min-width:220px; width:220px;">اسم الطالبة</th>
       <th style="width:105px;">الحضور والتأخير<small>(5)</small></th>
       <th>الملاحظات والمخالفات التراكمية</th>
       <th>الإجراء المتبع</th>
@@ -862,34 +911,6 @@ function renderTable(){
     tdName.appendChild(deleteSingleBtn);
     tr.appendChild(tdName);
 
-    // عمود رفع وصورة الطالبة مجاور لعمود الاسم مباشرةً
-    const tdPhoto = document.createElement('td');
-    const photoData = (getSectionData().photos && getSectionData().photos[idx]) ? getSectionData().photos[idx] : '';
-    
-    const photoBtn = document.createElement('button');
-    photoBtn.className = 'photo-cell-btn';
-    photoBtn.innerHTML = photoData ? '🖼️ تمت الصورة' : '📁 رفع صورة';
-    photoBtn.onclick = ()=>{
-      const fileInput = document.createElement('input');
-      fileInput.type = 'file'; fileInput.accept = 'image/*';
-      fileInput.onchange = (e)=>{
-        const file = e.target.files[0];
-        if(!file) return;
-        const reader = new FileReader();
-        reader.onload = function(evt){
-          if(!getSectionData().photos) getSectionData().photos = {};
-          getSectionData().photos[idx] = evt.target.result;
-          scheduleSave();
-          renderTable();
-        };
-        reader.readAsDataURL(file);
-      };
-      fileInput.click();
-    };
-    tdPhoto.appendChild(photoBtn);
-    tr.appendChild(tdPhoto);
-
-    // الحضور والتأخير
     const tdAttend = document.createElement('td');
     const attendWrap = document.createElement('div'); attendWrap.className = 'attend-cell';
     
@@ -934,7 +955,6 @@ function renderTable(){
     tdAttend.appendChild(attendWrap); 
     tr.appendChild(tdAttend);
 
-    // المخالفات والملاحظات التراكمية
     const tdNotes = document.createElement('td');
     const notesBox = document.createElement('div'); notesBox.className = 'notes-box';
     
@@ -1008,7 +1028,6 @@ function renderTable(){
     tdNotes.appendChild(notesBox);
     tr.appendChild(tdNotes);
 
-    // الإجراء المتبع
     const tdAction = document.createElement('td');
     const actionBox = document.createElement('div'); actionBox.className = 'action-box';
     
@@ -1041,12 +1060,10 @@ function renderTable(){
     tdAction.appendChild(actionBox);
     tr.appendChild(tdAction);
 
-    // درجة السلوك
     const tdBehavior = document.createElement('td'); tdBehavior.className = 'total-cell behavior-cell';
     tdBehavior.textContent = isAbsent ? '0 / 15' : (calcBehaviorScore(row) + ' / 15');
     tr.appendChild(tdBehavior);
 
-    // التطبيق والتفاعل
     const tdAppStatus = document.createElement('td');
     const appSelect = document.createElement('select'); appSelect.className = 'app-status';
     appSelect.disabled = isAbsent;
@@ -1144,7 +1161,7 @@ function printPledge(studentName, row){
       <style>
         body { font-family: 'Tajawal', sans-serif; padding: 30px; background: #fff; color: #000; direction: rtl; }
         .pledge-paper { border: 3px double #8A1C30; padding: 25px; line-height: 1.8; border-radius: 12px; }
-        .pledge-header { text-align: center; border-bottom: 2px solid #8A1C30; padding-bottom: 12px; margin-bottom: 20px; }
+        .pledge-header { display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #8A1C30; padding-bottom: 12px; margin-bottom: 20px; }
         .pledge-title { font-size: 20px; font-weight: bold; text-decoration: underline; margin: 15px 0; text-align: center; color: #8A1C30; }
         .pledge-body { font-size: 15px; text-align: justify; margin-bottom: 35px; }
         .pledge-footer { display: flex; justify-content: space-between; margin-top: 40px; font-weight: bold; font-size: 14px; }
@@ -1153,10 +1170,12 @@ function printPledge(studentName, row){
     <body>
       <div class="pledge-paper">
         <div class="pledge-header">
-          <h3 style="margin:0;">دولة الكويت - وزارة التربية</h3>
-          <h3 style="margin:2px 0;">منطقة الأحمدي التعليمية</h3>
-          <h3 style="margin:5px 0;">ثانوية موضي سلطان العيسى بنات</h3>
-          <p style="margin:0;">قسم الحاسوب</p>
+          <div style="text-align:right;">
+            <h3 style="margin:0; color:#0D2C54;">منطقة الأحمدي التعليمية</h3>
+            <h3 style="margin:2px 0;">ثانوية موضي سلطان العيسى بنات</h3>
+            <p style="margin:0; font-weight:bold;">${currentDepartmentName}</p>
+          </div>
+          <img src="شعار المدرسة.jpg" style="width:100px; height:auto;">
         </div>
         <div class="pledge-title">إقرار تعهد خطي على طالبة</div>
         <div class="pledge-body">
@@ -1316,9 +1335,14 @@ function importNamesFromExcel(e){
         }
       });
 
-      if(names.length > 0){
-        document.getElementById('namesTextarea').value = names.slice(0, STUDENT_COUNT).join('\n');
-        alert(`تم جلب ${names.length} اسم بنجاح!`);
+      const filteredNames = names.filter(s => {
+        const notHeader = !s.includes("نظام") && !s.includes("سجل") && !s.includes("العام") && !s.includes("قائمة") && !s.includes("الرقم المدني") && !s.includes("الصف") && !s.includes("ادبي") && !s.includes("علمي");
+        return notHeader;
+      });
+
+      if(filteredNames.length > 0){
+        document.getElementById('namesTextarea').value = filteredNames.slice(0, STUDENT_COUNT).join('\n');
+        alert(`تم جلب ${filteredNames.length} اسم طالبة فقط بنجاح!`);
       }
     } catch(err) { alert("حدث خطأ أثناء قراءة الملف."); }
   };
@@ -1348,13 +1372,40 @@ function importNamesFromPDF(e){
       });
 
       const lines = fullText.split('\n').map(s => s.trim()).filter(Boolean);
-      const arabicNames = lines.filter(s => /[\u0600-\u06FF]/.test(s) && s.length > 3);
+      
+      const extractedStudentNames = lines.filter(s => {
+        const isArabic = /[\u0600-\u06FF]/.test(s);
+        const hasNoNumbers = !/\d/.test(s);
+        const wordsCount = s.split(/\s+/).length;
+        
+        const notHeader = !s.includes("نظام") && 
+                          !s.includes("سجل") && 
+                          !s.includes("الطالب") && 
+                          !s.includes("العام") && 
+                          !s.includes("الدراسي") && 
+                          !s.includes("قائمة") && 
+                          !s.includes("بأسماء") && 
+                          !s.includes("الطلاب") && 
+                          !s.includes("الرقم") && 
+                          !s.includes("المدني") && 
+                          !s.includes("الصف") && 
+                          !s.includes("الحادي") && 
+                          !s.includes("عشر") && 
+                          !s.includes("ادبي") && 
+                          !s.includes("علمي") && 
+                          !s.includes("عاشر") && 
+                          !s.includes("الثاني") && 
+                          !s.includes("وزارة") && 
+                          !s.includes("مدرسة");
 
-      if(arabicNames.length > 0){
-        document.getElementById('namesTextarea').value = arabicNames.slice(0, STUDENT_COUNT).join('\n');
-        alert(`تم جلب ${arabicNames.length} اسم من ملف الـ PDF بنجاح!`);
+        return isArabic && hasNoNumbers && wordsCount >= 2 && wordsCount <= 5 && notHeader;
+      });
+
+      if(extractedStudentNames.length > 0){
+        document.getElementById('namesTextarea').value = extractedStudentNames.slice(0, STUDENT_COUNT).join('\n');
+        alert(`تم استخراج ${extractedStudentNames.length} اسم طالبة فقط بنجاح وتنقيتها من عناوين سجل الطالب والصفوف!`);
       } else {
-        alert("لم يتم العثور على أسماء واضحة داخل ملف الـ PDF.");
+        alert("لم يتم العثور على قائمة أسماء طالبات واضحة داخل ملف الـ PDF.");
       }
     }).catch(err => {
       alert("تعذرت قراءة ملف الـ PDF.");
@@ -1468,32 +1519,59 @@ function printAllCards(){
   const minLogoHTML = minLogoData ? `<img src="${minLogoData}" style="width:14mm; height:14mm; object-fit:contain;">` : '<div style="width:14mm;"></div>';
   const schLogoHTML = schLogoData ? `<img src="${schLogoData}" style="width:14mm; height:14mm; object-fit:contain;">` : '<div style="width:14mm;"></div>';
 
+  const isGrade12 = currentGradeId === 'g12s' || currentGradeId === 'g12l';
+
   let cardsHTML = '';
   secData.students.forEach((name, idx)=>{
     if(secData.hiddenCards && secData.hiddenCards.includes(name)) return;
     const photo = secData.photos[idx];
     const shortName = formatThreePartName(name);
 
-    cardsHTML += `
-      <div style="width:90mm; height:60mm; border:2px solid #8A1C30; border-radius:4mm; padding:3mm; display:flex; flex-direction:column; justify-content:space-between; page-break-inside:avoid; box-sizing:border-box; background:#fff;">
-        <div style="display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid #F6C2C9; padding-bottom:2px;">
-          ${schLogoHTML}
-          <div style="text-align:center;">
-            <h4 style="margin:0; font-family:'Reem Kufi', sans-serif; font-size:14pt; color:#8A1C30; font-weight:700;">بطاقة طالبة</h4>
-            <p style="margin:2px 0 0; font-size:8.5pt; font-weight:800; color:#333;">ثانوية موضي سلطان العيسى - بنات</p>
+    if(isGrade12){
+      // بطاقة خريجة الثاني عشر باللون الوردي البرّاق الكحلي وبشكل ملفت للغاية
+      cardsHTML += `
+        <div style="width:90mm; height:60mm; border:2.5px solid #E85A71; border-radius:4mm; padding:3mm; display:flex; flex-direction:column; justify-content:space-between; page-break-inside:avoid; box-sizing:border-box; background:linear-gradient(135deg, #0A1826 0%, #1E3A52 100%); color:#fff; position:relative; overflow:hidden;">
+          <div style="position:absolute; right:-10mm; bottom:-10mm; font-size:90pt; opacity:0.1; color:#E85A71; pointer-events:none;">🎓</div>
+          <div style="display:flex; justify-content:space-between; align-items:center; border-bottom:1.5px solid #E85A71; padding-bottom:2px; z-index:1;">
+            ${schLogoHTML}
+            <div style="text-align:center;">
+              <h4 style="margin:0; font-family:'Reem Kufi', sans-serif; font-size:15pt; color:#FF8DA1; font-weight:800;">بطاقة طالبة</h4>
+              <p style="margin:2px 0 0; font-size:8.5pt; font-weight:800; color:#E0E0E0;">ثانوية موضي سلطان العيسى - بنات</p>
+            </div>
+            ${minLogoHTML}
           </div>
-          ${minLogoHTML}
-        </div>
-        <div style="display:flex; justify-content:space-between; align-items:center; flex:1;">
-          <div style="text-align:right;">
-            <p style="margin:0; font-size:11pt; font-weight:bold; color:#000;">الاسم: <span>${shortName}</span></p>
-            <p style="margin:4px 0 0; font-size:11pt; font-weight:bold; color:#000;">الصف: <span>${currentSection}</span></p>
+          <div style="display:flex; justify-content:space-between; align-items:center; flex:1; z-index:1;">
+            <div style="text-align:right;">
+              <p style="margin:0; font-size:11.5pt; font-weight:800; color:#FFFFFF;">الاسم: <span style="color:#FF8DA1;">${shortName}</span></p>
+              <p style="margin:4px 0 0; font-size:11pt; font-weight:800; color:#E0E0E0;">الصف: <span style="color:#FF8DA1;">${currentSection}</span></p>
+            </div>
+            ${photo ? `<img src="${photo}" style="width:22.5mm; height:30mm; border-radius:2mm; object-fit:cover; border:1.5px solid #E85A71;">` : '<div style="width:22.5mm; height:30mm; border:1.5px dashed #E85A71; border-radius:2mm; font-size:8pt; text-align:center; display:flex; align-items:center; justify-content:center; color:#FF8DA1; background:rgba(232,90,113,0.05);">صورة<br>الخريجة</div>'}
           </div>
-          ${photo ? `<img src="${photo}" style="width:22.5mm; height:30mm; border-radius:2mm; object-fit:cover;">` : '<div style="width:22.5mm; height:30mm; border:1.5px dashed #8A1C30; border-radius:2mm; font-size:8pt; text-align:center; display:flex; align-items:center; justify-content:center; color:#888;">الصورة<br>الشخصية</div>'}
+          <div style="text-align:center; border-top:1px dashed #E85A71; padding-top:2px; font-size:9.5pt; color:#FF8DA1; font-weight:800; z-index:1;">🌸 🎓 خريجة 2026-2027 🎓 🌸</div>
         </div>
-        <div style="text-align:center; border-top:1px dashed #F6C2C9; padding-top:2px; font-size:9pt; color:#8A1C30; font-weight:800;">العام الدراسي 2026/2027</div>
-      </div>
-    `;
+      `;
+    } else {
+      cardsHTML += `
+        <div style="width:90mm; height:60mm; border:2px solid #0D2C54; border-radius:4mm; padding:3mm; display:flex; flex-direction:column; justify-content:space-between; page-break-inside:avoid; box-sizing:border-box; background:#fff;">
+          <div style="display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid #0D2C54; padding-bottom:2px;">
+            ${schLogoHTML}
+            <div style="text-align:center;">
+              <h4 style="margin:0; font-family:'Reem Kufi', sans-serif; font-size:15pt; color:#0D2C54; font-weight:800;">بطاقة طالبة</h4>
+              <p style="margin:2px 0 0; font-size:8.5pt; font-weight:800; color:#000000;">ثانوية موضي سلطان العيسى - بنات</p>
+            </div>
+            ${minLogoHTML}
+          </div>
+          <div style="display:flex; justify-content:space-between; align-items:center; flex:1;">
+            <div style="text-align:right;">
+              <p style="margin:0; font-size:11pt; font-weight:800; color:#0D2C54;">الاسم: <span style="color:#111111;">${shortName}</span></p>
+              <p style="margin:4px 0 0; font-size:11pt; font-weight:800; color:#0D2C54;">الصف: <span style="color:#111111;">${currentSection}</span></p>
+            </div>
+            ${photo ? `<img src="${photo}" style="width:22.5mm; height:30mm; border-radius:2mm; object-fit:cover;">` : '<div style="width:22.5mm; height:30mm; border:1.5px dashed #0D2C54; border-radius:2mm; font-size:8pt; text-align:center; display:flex; align-items:center; justify-content:center; color:#0D2C54;">الصورة<br>الشخصية</div>'}
+          </div>
+          <div style="text-align:center; border-top:1px dashed #0D2C54; padding-top:2px; font-size:9pt; color:#0D2C54; font-weight:800;">العام الدراسي 2026/2027</div>
+        </div>
+      `;
+    }
   });
 
   const printWindow = window.open('', '_blank');
@@ -1503,7 +1581,7 @@ function printAllCards(){
     <head>
       <meta charset="UTF-8">
       <title>طباعة البطاقات</title>
-      <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800&family=Reem+Kufi:wght@700&display=swap" rel="stylesheet">
+      <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800&family=Reem+Kufi:wght@700;800&display=swap" rel="stylesheet">
       <style>@page{size:A4 portrait; margin:5mm;} body{font-family:'Tajawal', sans-serif;} .cards-grid{display:grid; grid-template-columns:90mm 90mm; gap:6mm; justify-content:center;}</style>
     </head>
     <body dir="rtl">
@@ -1534,15 +1612,94 @@ function getReportHeaderHTML(titleText){
   
   return `
     <div style="display:flex; justify-content:space-between; align-items:center; border-bottom:2px solid #8A1C30; padding-bottom:6px; margin-bottom:10px;">
-      <div>${minLogoHTML}</div>
-      <div style="text-align:center;">
-        <h2 style="margin:0; color:#8A1C30; font-size:15pt;">دولة الكويت — وزارة التربية</h2>
-        <h3 style="margin:2px 0; color:#333; font-size:12pt;">منطقة الأحمدي التعليمية — ثانوية موضي سلطان العيسى بنات</h3>
-        <h4 style="margin:4px 0 0; color:#8A1C30; font-size:13pt; text-decoration:underline;">${titleText}</h4>
+      <div style="text-align:right;">
+        <h3 style="margin:0; color:#0D2C54; font-size:12pt;">منطقة الأحمدي التعليمية</h3>
+        <h3 style="margin:2px 0; color:#000; font-size:11pt;">ثانوية موضي سلطان العيسى بنات</h3>
+        <p style="margin:0; font-weight:bold; font-size:10pt;">${currentDepartmentName}</p>
+        <h4 style="margin:4px 0 0; color:#0D2C54; font-size:12pt; text-decoration:underline;">${titleText}</h4>
       </div>
-      <div>${schLogoHTML}</div>
+      <div>${schLogoHTML || minLogoHTML}</div>
     </div>
   `;
+}
+
+function generateTopStudentsReport(){
+  const grade = GRADES.find(g=>g.id===currentGradeId);
+  const secData = getSectionData();
+  const records = secData.records;
+
+  let tableRows = '';
+  let count = 1;
+
+  secData.students.forEach((studentName, idx)=>{
+    let totalScore = 0, weeksCount = 0;
+    Object.keys(records).forEach(k=>{
+      const r = records[k].rows[idx];
+      if(r){
+        totalScore += calcFinal100Total(r);
+        weeksCount++;
+      }
+    });
+
+    const avg = weeksCount > 0 ? (totalScore / weeksCount) : 100;
+    if(avg >= 90){
+      tableRows += `<tr><td>${count++}</td><td style="text-align:right; font-weight:bold;">${studentName}</td><td style="color:var(--green); font-weight:bold;">${Math.round(avg)} / 100</td><td>ممتازة - فائقة 🌟</td></tr>`;
+    }
+  });
+
+  const printWindow = window.open('', '_blank');
+  printWindow.document.write(`
+    <!DOCTYPE html>
+    <html lang="ar" dir="rtl">
+    <head><meta charset="UTF-8"><title>تقرير الفائقات</title><style>body{font-family:sans-serif; direction:rtl; padding:15px;} table{width:100%; border-collapse:collapse;} th,td{border:1px solid #0D2C54; padding:6px; text-align:center;} th{background:#FDF2F4; color:#0D2C54;}</style></head>
+    <body>
+      ${getReportHeaderHTML(`كشف الطالبات الفائقات والمتميزات - ${grade.name} (${currentSection})`)}
+      <table><thead><tr><th>م</th><th>اسم الطالبة</th><th>المعدل التقديري</th><th>ملاحظة التفوق</th></tr></thead><tbody>${tableRows || '<tr><td colspan="4">لا توجد سجلات مكتملة.</td></tr>'}</tbody></table>
+      <script>window.onload=function(){window.print();}<\/script>
+    </body>
+    </html>
+  `);
+  printWindow.document.close();
+  closeReportsModal();
+}
+
+function generateWeakStudentsReport(){
+  const grade = GRADES.find(g=>g.id===currentGradeId);
+  const secData = getSectionData();
+  const records = secData.records;
+
+  let tableRows = '';
+  let count = 1;
+
+  secData.students.forEach((studentName, idx)=>{
+    let totalAbsences = 0, totalViolations = 0;
+    Object.keys(records).forEach(k=>{
+      const r = records[k].rows[idx];
+      if(r){
+        if(r.attend === 'absent') totalAbsences++;
+        if(r.violations && r.violations.length > 0) totalViolations += r.violations.length;
+      }
+    });
+
+    if(totalAbsences >= 2 || totalViolations >= 2){
+      tableRows += `<tr><td>${count++}</td><td style="text-align:right; font-weight:bold;">${studentName}</td><td style="color:var(--red); font-weight:bold;">${totalAbsences} أيام غياب</td><td>${totalViolations} مخالفات مسجلة</td><td>تحتاج متابعة واحتضان أكاديمي ⚠️</td></tr>`;
+    }
+  });
+
+  const printWindow = window.open('', '_blank');
+  printWindow.document.write(`
+    <!DOCTYPE html>
+    <html lang="ar" dir="rtl">
+    <head><meta charset="UTF-8"><title>تقرير المتعثرات</title><style>body{font-family:sans-serif; direction:rtl; padding:15px;} table{width:100%; border-collapse:collapse;} th,td{border:1px solid #0D2C54; padding:6px; text-align:center;} th{background:#FDF2F4; color:#0D2C54;}</style></head>
+    <body>
+      ${getReportHeaderHTML(`كشف الطالبات المتعثرات والضعيفات - ${grade.name} (${currentSection})`)}
+      <table><thead><tr><th>م</th><th>اسم الطالبة</th><th>مرات الغياب</th><th>عدد المخالفات</th><th>التوصية والوضع الأكاديمي</th></tr></thead><tbody>${tableRows || '<tr><td colspan="5">لا توجد حالات تعثر مسجلة.</td></tr>'}</tbody></table>
+      <script>window.onload=function(){window.print();}<\/script>
+    </body>
+    </html>
+  `);
+  printWindow.document.close();
+  closeReportsModal();
 }
 
 function generateTwoPagesWeekRangeReport(){
@@ -1564,12 +1721,12 @@ function generateTwoPagesWeekRangeReport(){
     let headerSub = `<tr>`;
 
     weeksChunk.forEach(w=>{
-      headerTop += `<th colspan="3" style="border-left:2px solid #8A1C30;">${w}</th>`;
-      headerSub += `<th>حضور (5)</th><th>سلوك (15)</th><th style="border-left:2px solid #8A1C30;">تطبيق وتفاعل (20)</th>`;
+      headerTop += `<th colspan="3" style="border-left:2px solid #0D2C54;">${w}</th>`;
+      headerSub += `<th>حضور (5)</th><th>سلوك (15)</th><th style="border-left:2px solid #0D2C54;">تطبيق وتفاعل (20)</th>`;
     });
 
     if(isFinalPage && selectedWeeks.includes("الأسبوع 13")){
-      headerTop += `<th rowspan="2" style="background:#8A1C30; color:#fff; width:65px;">المجموع الكلي (100)</th>`;
+      headerTop += `<th rowspan="2" style="background:#0D2C54; color:#fff; width:65px;">المجموع الكلي (100)</th>`;
     }
 
     headerTop += `</tr>`; headerSub += `</tr>`;
@@ -1587,16 +1744,16 @@ function generateTwoPagesWeekRangeReport(){
           const beh = calcBehaviorScore(r);
           const appObj = APP_STATUS_OPTIONS.find(a=>a.value === r.appStatus);
 
-          tableRows += `<td>${att}</td><td>${beh}</td><td style="border-left:2px solid #8A1C30;">${appObj ? appObj.label : 'تم'}</td>`;
+          tableRows += `<td>${att}</td><td>${beh}</td><td style="border-left:2px solid #0D2C54;">${appObj ? appObj.label : 'تم'}</td>`;
         } else {
-          tableRows += `<td>—</td><td>—</td><td style="border-left:2px solid #8A1C30;">—</td>`;
+          tableRows += `<td>—</td><td>—</td><td style="border-left:2px solid #0D2C54;">—</td>`;
         }
       });
 
       if(isFinalPage && selectedWeeks.includes("الأسبوع 13")){
         let foundRecKey = Object.keys(records).find(k=> records[k]?.week === "الأسبوع 13");
         const finalRow = (foundRecKey && records[foundRecKey].rows[studentIdx]) ? records[foundRecKey].rows[studentIdx] : null;
-        tableRows += `<td style="font-weight:bold; background:#FDF2F4; color:#8A1C30; font-size:9.5pt;">${finalRow ? calcFinal100Total(finalRow) : 100} / 100</td>`;
+        tableRows += `<td style="font-weight:bold; background:#FDF2F4; color:#0D2C54; font-size:9.5pt;">${finalRow ? calcFinal100Total(finalRow) : 100} / 100</td>`;
       }
 
       tableRows += `</tr>`;
@@ -1625,8 +1782,8 @@ function generateTwoPagesWeekRangeReport(){
         .page-container { padding: 5px; }
         .page-break { page-break-before: always; margin-top: 15px; }
         table { width: 100%; border-collapse: collapse; margin-top: 5px; }
-        th, td { border: 1px solid #8A1C30; padding: 4px 2px; text-align: center; font-size: 8.5pt; }
-        th { background: #FDF2F4; color: #8A1C30; font-weight: bold; }
+        th, td { border: 1px solid #0D2C54; padding: 4px 2px; text-align: center; font-size: 8.5pt; }
+        th { background: #FDF2F4; color: #0D2C54; font-weight: bold; }
       </style>
     </head>
     <body>
@@ -1674,7 +1831,7 @@ function generateViolationsReport(){
   printWindow.document.write(`
     <!DOCTYPE html>
     <html lang="ar" dir="rtl">
-    <head><meta charset="UTF-8"><title>تقرير المخالفات</title><style>body{font-family:sans-serif; direction:rtl; padding:15px;} table{width:100%; border-collapse:collapse;} th,td{border:1px solid #8A1C30; padding:6px; text-align:center;} th{background:#FDF2F4; color:#8A1C30;}</style></head>
+    <head><meta charset="UTF-8"><title>تقرير المخالفات</title><style>body{font-family:sans-serif; direction:rtl; padding:15px;} table{width:100%; border-collapse:collapse;} th,td{border:1px solid #0D2C54; padding:6px; text-align:center;} th{background:#FDF2F4; color:#0D2C54;}</style></head>
     <body>
       ${getReportHeaderHTML(`تقرير المخالفات والملاحظات المسجلة - ${grade.name} (${currentSection})`)}
       <table><thead><tr><th>م</th><th>اسم الطالبة</th><th>الأسبوع</th><th>التاريخ</th><th>المخالفات التراكمية</th><th>الإجراء</th></tr></thead><tbody>${tableRows || '<tr><td colspan="6">لا توجد مخالفات مسجلة.</td></tr>'}</tbody></table>
@@ -1710,7 +1867,7 @@ function generateBonusReport(){
   printWindow.document.write(`
     <!DOCTYPE html>
     <html lang="ar" dir="rtl">
-    <head><meta charset="UTF-8"><title>تقرير البونص</title><style>body{font-family:sans-serif; direction:rtl; padding:15px;} table{width:100%; border-collapse:collapse;} th,td{border:1px solid #8A1C30; padding:6px; text-align:center;} th{background:#FDF2F4; color:#8A1C30;}</style></head>
+    <head><meta charset="UTF-8"><title>تقرير البونص</title><style>body{font-family:sans-serif; direction:rtl; padding:15px;} table{width:100%; border-collapse:collapse;} th,td{border:1px solid #0D2C54; padding:6px; text-align:center;} th{background:#FDF2F4; color:#0D2C54;}</style></head>
     <body>
       ${getReportHeaderHTML(`سجل الطالبات الحاصلات على البونص - ${grade.name} (${currentSection})`)}
       <table><thead><tr><th>م</th><th>اسم الطالبة</th><th>الأسبوع</th><th>التاريخ</th><th>الشارات</th></tr></thead><tbody>${tableRows || '<tr><td colspan="5">لا توجد شارات بونص.</td></tr>'}</tbody></table>
