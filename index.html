@@ -8,6 +8,11 @@
 <link href="https://fonts.googleapis.com/css2?family=Aref+Ruqaa:wght@700&family=Reem+Kufi:wght@700;800&family=Tajawal:wght@400;500;700;800&display=swap" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.min.js"></script>
+
+<!-- مكتبات Firebase للربط السحابي المباشر -->
+<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
+
 <script>
   pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.worker.min.js';
 </script>
@@ -95,7 +100,7 @@
   .star-banner select{ font-family:inherit; font-size:15px; font-weight:700; color:var(--red); padding:8px 12px; border-radius:8px; border:1px solid var(--pink); background:#fff; flex:1; min-width:180px; -webkit-appearance:none; }
 
   .table-wrap{ background:#fff; border:1px solid var(--line); border-radius:14px; overflow-x:auto; width:100%; -webkit-overflow-scrolling:touch; margin-bottom:15px; }
-  table{ width:100%; border-collapse:collapse; min-width:1050px; }
+  table{ width:100%; border-collapse:collapse; min-width:980px; }
   thead th{ background:var(--pink-dark); color:#fff; font-size:12px; font-weight:700; padding:10px 6px; text-align:center; white-space:nowrap; }
   tbody td{ padding:8px 6px; border-bottom:1px solid var(--line); font-size:13px; text-align:center; vertical-align:middle; }
   tbody tr:nth-child(even){ background:#FDF8F9; }
@@ -106,18 +111,12 @@
   .btn-del-single{ border:none; background:transparent; color:var(--red); cursor:pointer; font-size:14px; padding:2px 4px; opacity:0.6; }
   .btn-del-single:hover{ opacity:1; }
 
-  .photo-cell-btn { font-size: 10px; font-weight: bold; padding: 4px 6px; border-radius: 6px; background: #fff; color: var(--pink-dark); border: 1px solid var(--pink-dark); cursor: pointer; display: flex; align-items: center; gap: 3px; }
-  .photo-cell-btn:hover { background: #FDF2F4; }
-
   .attend-cell { display:flex; flex-direction:column; align-items:center; gap:2px; width: 105px; margin: 0 auto; }
   select.attend, select.app-status { font-family:inherit; font-size:11px; font-weight:700; padding:4px 2px; border-radius:6px; border:1px solid var(--line); cursor:pointer; width:100%; -webkit-appearance:none; text-align: center; }
   select.attend.present{ background:var(--present); color:var(--present-ink); }
   select.attend.absent{ background:var(--absent); color:var(--absent-ink); }
   select.attend.late{ background:var(--late); color:var(--late-ink); }
   .late-time-input { width: 100%; font-family: inherit; font-size: 10px; font-weight:bold; padding: 2px 4px; border-radius: 4px; border: 1px solid var(--gold); background: #fff; text-align: center; color:var(--late-ink); margin-top:2px; }
-
-  .num-input{ width:54px; font-family:inherit; font-size:15px; padding:6px 4px; border:1px solid var(--line); border-radius:7px; text-align:center; -webkit-appearance:none; }
-  .total-cell{ font-weight:800; color:var(--pink-dark); font-size:13.5px; }
 
   .notes-box { display:flex; flex-direction:column; gap:4px; min-width:160px; }
   .notes-box select { font-family:inherit; font-size:12.5px; padding:5px; border-radius:6px; border:1px solid var(--line); background:#fff; width:100%; }
@@ -223,7 +222,7 @@
         <div class="page-header">
           <div>
             <h2 id="gradeTitle">—</h2>
-            <div class="sub">سجل حضور ومتابعة وتقييم يومي — 30 طالبة</div>
+            <div class="sub" id="studentCountHeaderSub">سجل حضور ومتابعة وتقييم يومي</div>
           </div>
           <div style="display:flex; gap:8px; flex-wrap:wrap; width:100%;">
             <button class="btn btn-outline" id="manageNamesBtn">✎ إدارة أسماء الطالبات</button>
@@ -252,7 +251,7 @@
         </div>
 
         <div class="lesson-banner">
-          <label>📘 عنوان الدرس الحالي (حفظ تلقائي محلي):</label>
+          <label>📘 عنوان الدرس الحالي (حفظ تلقائي سحابي):</label>
           <input type="text" id="lessonTitleInput" placeholder="اكتبي عنوان الدرس هنا..." oninput="saveLessonDataLocally()">
         </div>
 
@@ -346,8 +345,8 @@
       <input type="file" id="pdfFileInput" accept=".pdf" onchange="importNamesFromPDF(event)">
     </div>
     <p>أو الصقي الأسماء (اسم في كل سطر) — خاصة بهذه الشعبة فقط.</p>
-    <textarea id="namesTextarea"></textarea>
-    <div class="modal-actions" style="justify-content:space-between;">
+    <textarea id="namesTextarea" style="width:100%; min-height:180px; font-family:inherit; font-size:14px; padding:10px; border-radius:8px; border:1px solid var(--line);"></textarea>
+    <div class="modal-actions" style="justify-content:space-between; margin-top:10px;">
       <button class="btn btn-danger" onclick="clearEntireSection()">🚨 مسح وإعادة ضبط أسماء الشعبة بالكامل</button>
       <div>
         <button class="btn btn-outline" onclick="closeNamesModal()">إلغاء</button>
@@ -392,34 +391,39 @@
     <p>استخراج تقارير المتابعة لشعبة: <strong id="reportSectionName"></strong></p>
 
     <div style="border-bottom: 1px solid var(--line); padding-bottom: 12px; margin-bottom: 12px;">
-      <h4 style="margin: 0 0 6px; color: var(--pink-dark);">1. تقرير الأعمال الأسبوعي (مقسم لصفحتين A4 - 6 أسابيع في الصفحة):</h4>
+      <h4 style="margin: 0 0 6px; color: var(--pink-dark);">1. تقرير المتابعة اليومي والشهري الرسمي (نموذج دفتر المتابعة الورقي):</h4>
+      <button class="btn btn-primary" onclick="generatePaperRegisterReport()">📄 استخراج كشف المتابعة بالنموذج الورقي الرسمي</button>
+    </div>
+
+    <div style="border-bottom: 1px solid var(--line); padding-bottom: 12px; margin-bottom: 12px;">
+      <h4 style="margin: 0 0 6px; color: var(--pink-dark);">2. تقرير الأعمال الأسبوعي (مقسم لصفحتين A4 - 6 أسابيع في الصفحة):</h4>
       <div style="display: flex; gap: 8px; align-items: center; flex-wrap: wrap;">
         <label style="font-size: 11.5px;">من أسبوع:</label>
         <select id="reportStartWeek" style="padding: 6px; border-radius: 6px; border:1px solid var(--line);"></select>
         <label style="font-size: 11.5px;">إلى أسبوع:</label>
         <select id="reportEndWeek" style="padding: 6px; border-radius: 6px; border:1px solid var(--line);"></select>
-        <button class="btn btn-primary" onclick="generateTwoPagesWeekRangeReport()">📋 استخراج التقرير الأسبوعي المقسم</button>
+        <button class="btn btn-outline" onclick="generateTwoPagesWeekRangeReport()">📋 استخراج التقرير الأسبوعي المقسم</button>
       </div>
     </div>
 
     <div style="border-bottom: 1px solid var(--line); padding-bottom: 12px; margin-bottom: 12px; display: flex; gap: 10px; flex-wrap: wrap;">
       <div style="flex:1; min-width:240px;">
-        <h4 style="margin: 0 0 6px; color: var(--green);">2. تقرير الطالبات الفائقات والمتميزات:</h4>
+        <h4 style="margin: 0 0 6px; color: var(--green);">3. تقرير الطالبات الفائقات والمتميزات:</h4>
         <button class="btn btn-outline" style="color:var(--green); border-color:var(--green);" onclick="generateTopStudentsReport()">🌟 حصر الفائقات والدرجات العالية</button>
       </div>
       <div style="flex:1; min-width:240px;">
-        <h4 style="margin: 0 0 6px; color: var(--red);">3. تقرير الطالبات المتعثرات والضعيفات:</h4>
-        <button class="btn btn-outline" style="color:var(--red); border-color:var(--red);" onclick="generateWeakStudentsReport()">⚠️ حصر المتعثرات والغياب المتكرر</button>
+        <h4 style="margin: 0 0 6px; color: var(--red);">4. تقرير الطالبات المتعثرات والضعيفات مع تواريخ الغياب:</h4>
+        <button class="btn btn-outline" style="color:var(--red); border-color:var(--red);" onclick="generateWeakStudentsReport()">⚠️ حصر المتعثرات وتواريخ الغياب</button>
       </div>
     </div>
 
     <div style="border-bottom: 1px solid var(--line); padding-bottom: 12px; margin-bottom: 12px;">
-      <h4 style="margin: 0 0 6px; color: var(--pink-dark);">4. تقرير المخالفات والملاحظات بالتاريخ واليوم:</h4>
+      <h4 style="margin: 0 0 6px; color: var(--pink-dark);">5. تقرير المخالفات والملاحظات بالتاريخ واليوم:</h4>
       <button class="btn btn-outline" onclick="generateViolationsReport()">🚨 حصر الطالبات المخالفات</button>
     </div>
 
     <div style="border-bottom: 1px solid var(--line); padding-bottom: 12px; margin-bottom: 12px;">
-      <h4 style="margin: 0 0 6px; color: var(--pink-dark);">5. تقرير الطالبات الحاصلات على البونص بالتاريخ واليوم:</h4>
+      <h4 style="margin: 0 0 6px; color: var(--pink-dark);">6. تقرير الطالبات الحاصلات على البونص بالتاريخ واليوم:</h4>
       <button class="btn btn-outline" onclick="generateBonusReport()">⭐ حصر البونص والشارات</button>
     </div>
 
@@ -430,8 +434,20 @@
 </div>
 
 <script>
-const DB_PREFIX = "moudi_local_db_";
+// إعدادات المزامنة السحابية المباشرة (Firebase Realtime Database)
+const firebaseConfig = {
+  databaseURL: "https://moudi-school-default-rtdb.firebaseio.com"
+};
 
+// تهيئة الخدمة السحابية تلقائياً
+if (!firebase.apps.length) {
+  firebase.initializeApp(firebaseConfig);
+}
+const db = firebase.database();
+
+const DB_PREFIX = "moudi_cloud_db_";
+
+// الربط والتخزين السحابي والمحلي المزدوج للأمان المباشر
 function getLocalData(key){
   try {
     const raw = localStorage.getItem(DB_PREFIX + key);
@@ -442,8 +458,20 @@ function getLocalData(key){
 function setLocalData(key, value){
   try {
     localStorage.setItem(DB_PREFIX + key, JSON.stringify(value));
+    // حفظ سحابي لحظي ومباشر بـ Firebase
+    db.ref(DB_PREFIX + key).set(value);
     return true;
   } catch(e) { return false; }
+}
+
+function syncCloudData(key, callback){
+  db.ref(DB_PREFIX + key).on('value', (snapshot) => {
+    const data = snapshot.val();
+    if(data){
+      localStorage.setItem(DB_PREFIX + key, JSON.stringify(data));
+      if(callback) callback(data);
+    }
+  });
 }
 
 function formatThreePartName(fullName){
@@ -495,6 +523,7 @@ const SECTIONS = {
 
 const NOTE_OPTIONS = [
   "— إضافة مخالفة جديدة —",
+  "عدم الالتزام أثناء الطابور",
   "التحدث في الحصة",
   "الأكل أثناء الحصة",
   "إحداث الشغب",
@@ -516,7 +545,6 @@ const APP_STATUS_OPTIONS = [
   { value: "not_done", label: "لم تطبق ❌", score: 0 }
 ];
 
-const STUDENT_COUNT = 30;
 const WEEKS = Array.from({length:15}, (_,i)=>`الأسبوع ${i+1}`);
 const TERMS = ["الفترة الأولى", "الفترة الثانية"];
 const ATTEND_OPTIONS = [
@@ -541,7 +569,7 @@ function todayStr(){
   return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
 }
 
-function defaultStudents(){ return Array.from({length:STUDENT_COUNT}, (_,i)=>`طالبة رقم ${String(i+1).padStart(2,'0')}`); }
+function defaultStudents(){ return Array.from({length:30}, (_,i)=>`طالبة رقم ${String(i+1).padStart(2,'0')}`); }
 
 function checkPublicPassQuery(){
   const urlParams = new URLSearchParams(window.location.search);
@@ -707,9 +735,10 @@ function getRecord(){
 }
 
 function defaultRecord(selectedWeek){
+  const studentsCount = getSectionData() ? getSectionData().students.length : 30;
   return {
     term: TERMS[0], week: selectedWeek || WEEKS[0], period: "الحصة 1", lesson: "", star: "",
-    rows: Array.from({length:STUDENT_COUNT}, ()=>({ attend:"present", lateMinutes:"", violations: [], appStatus: "done", participationSymbols:"", project:"", exam:"", actionTaken:"بدون إجراء" }))
+    rows: Array.from({length: studentsCount}, ()=>({ attend:"present", lateMinutes:"", violations: [], appStatus: "done", participationSymbols:"", actionTaken:"بدون إجراء" }))
   };
 }
 
@@ -763,8 +792,19 @@ function showApp(displayName, deptName){
   GRADES.forEach(g=>{
     store[g.id] = { sections: {} };
     SECTIONS[g.id].forEach(sec => {
-      const savedSec = getLocalData(`section_${g.id}_${sec}`);
+      const secKey = `section_${g.id}_${sec}`;
+      const savedSec = getLocalData(secKey);
       store[g.id].sections[sec] = savedSec || { students: defaultStudents(), records: {}, photos: {}, hiddenCards: [] };
+      
+      // مزامنة لحظية مستمرة لكل الشعب سحابياً
+      syncCloudData(secKey, (cloudData)=>{
+        if(cloudData){
+          store[g.id].sections[sec] = cloudData;
+          if(g.id === currentGradeId && sec === currentSection){
+            renderPage();
+          }
+        }
+      });
     });
   });
 
@@ -774,9 +814,9 @@ function showApp(displayName, deptName){
 }
 
 function scheduleSave(){
-  document.getElementById('saveIndicator').textContent = 'جارٍ الحفظ محلياً...';
+  document.getElementById('saveIndicator').textContent = 'جارٍ الحفظ السحابي... ☁️';
   setLocalData(`section_${currentGradeId}_${currentSection}`, store[currentGradeId].sections[currentSection]);
-  document.getElementById('saveIndicator').textContent = 'تم الحفظ المحلّي الآمن ✓';
+  document.getElementById('saveIndicator').textContent = 'تم الحفظ السحابي اللحظي ✓ ☁️';
 }
 
 function renderSidebar(){
@@ -830,7 +870,9 @@ function updateLeaveStudentOptions(){
 
 function renderPage(){
   const grade = GRADES.find(g=>g.id===currentGradeId);
+  const studentCount = getSectionData().students.length;
   document.getElementById('gradeTitle').textContent = grade.name + ' — شعبة ' + currentSection;
+  document.getElementById('studentCountHeaderSub').textContent = `سجل حضور ومتابعة وتقييم يومي — ${studentCount} طالبة`;
   document.getElementById('dateInput').value = currentDate;
   
   fillSelect(document.getElementById('sectionSelect'), SECTIONS[currentGradeId], currentSection);
@@ -859,7 +901,6 @@ function renderTable(){
   
   const students = getSectionData().students;
   const record = getRecord();
-  const isWeek13 = (record.week === "الأسبوع 13");
 
   thead.innerHTML = `
     <tr>
@@ -870,17 +911,13 @@ function renderTable(){
       <th>الإجراء المتبع</th>
       <th>السلوك والأدوات<small>(15)</small></th>
       <th>تطبيق ورقة العمل والتفاعل<small>(20)</small></th>
-      ${isWeek13 ? `
-        <th>المشروع<small>(20)</small></th>
-        <th>الاختبار النهائي<small>(40)</small></th>
-        <th>المجموع الكلي<small>(100)</small></th>
-      ` : ''}
+      <th>مجموع الأعمال<small>(40)</small></th>
       <th>البونص</th>
     </tr>
   `;
 
   students.forEach((name, idx)=>{
-    if(!record.rows[idx]) record.rows[idx] = { attend:"present", lateMinutes:"", violations: [], appStatus: "done", participationSymbols:"", project:"", exam:"", actionTaken:"بدون إجراء" };
+    if(!record.rows[idx]) record.rows[idx] = { attend:"present", lateMinutes:"", violations: [], appStatus: "done", participationSymbols:"", actionTaken:"بدون إجراء" };
     const row = record.rows[idx];
     if(!row.violations) row.violations = [];
 
@@ -901,7 +938,8 @@ function renderTable(){
     deleteSingleBtn.title = 'مسح اسم الطالبة من هذه الشعبة';
     deleteSingleBtn.onclick = ()=>{
       if(confirm(`مسح الطالبة (${name}) من القائمة؟`)){
-        students[idx] = `طالبة رقم ${String(idx+1).padStart(2,'0')}`;
+        students.splice(idx, 1);
+        record.rows.splice(idx, 1);
         scheduleSave();
         renderPage();
       }
@@ -986,7 +1024,7 @@ function renderTable(){
           delBtn.onclick = ()=>{
             row.violations.splice(vIdx, 1);
             renderViolationsChips();
-            updateRowCalculations(tr, row, isWeek13);
+            updateRowCalculations(tr, row);
             scheduleSave();
           };
           chip.appendChild(delBtn);
@@ -1005,7 +1043,7 @@ function renderTable(){
         noteSelect.value = "— إضافة مخالفة جديدة —";
         customInput.style.display = 'none';
         renderViolationsChips();
-        updateRowCalculations(tr, row, isWeek13);
+        updateRowCalculations(tr, row);
         scheduleSave();
       }
     });
@@ -1017,7 +1055,7 @@ function renderTable(){
         customInput.style.display = 'none';
         noteSelect.value = "— إضافة مخالفة جديدة —";
         renderViolationsChips();
-        updateRowCalculations(tr, row, isWeek13);
+        updateRowCalculations(tr, row);
         scheduleSave();
       }
     });
@@ -1051,7 +1089,7 @@ function renderTable(){
     actionSelect.addEventListener('change', ()=>{
       row.actionTaken = actionSelect.value;
       pledgeBtn.style.display = (row.actionTaken === 'تعهد خطي') ? 'block' : 'none';
-      updateRowCalculations(tr, row, isWeek13);
+      updateRowCalculations(tr, row);
       scheduleSave();
     });
 
@@ -1061,7 +1099,7 @@ function renderTable(){
     tr.appendChild(tdAction);
 
     const tdBehavior = document.createElement('td'); tdBehavior.className = 'total-cell behavior-cell';
-    tdBehavior.textContent = isAbsent ? '0 / 15' : (calcBehaviorScore(row) + ' / 15');
+    tdBehavior.textContent = isAbsent ? 'غائب' : getBehaviorText(row);
     tr.appendChild(tdBehavior);
 
     const tdAppStatus = document.createElement('td');
@@ -1074,44 +1112,16 @@ function renderTable(){
     appSelect.value = isAbsent ? 'not_done' : (row.appStatus || 'done');
     appSelect.addEventListener('change', ()=>{
       row.appStatus = appSelect.value;
-      updateRowCalculations(tr, row, isWeek13);
+      updateRowCalculations(tr, row);
       scheduleSave();
     });
     tdAppStatus.appendChild(appSelect); tr.appendChild(tdAppStatus);
 
-    if(isWeek13){
-      const tdProject = document.createElement('td');
-      const projectInput = document.createElement('input');
-      projectInput.type = 'number'; projectInput.className = 'num-input wide'; projectInput.min = 0; projectInput.max = 20; projectInput.step = 0.5;
-      projectInput.disabled = isAbsent;
-      projectInput.value = isAbsent ? 0 : row.project; projectInput.placeholder = '-';
-      projectInput.addEventListener('change', ()=>{
-        let v = projectInput.value === '' ? '' : parseFloat(projectInput.value);
-        if(v !== '' && !isNaN(v)) v = Math.max(0, Math.min(20, v));
-        row.project = v; projectInput.value = v;
-        updateRowCalculations(tr, row, isWeek13); scheduleSave();
-      });
-      tdProject.appendChild(projectInput); tr.appendChild(tdProject);
-
-      const tdExam = document.createElement('td');
-      const examInput = document.createElement('input');
-      examInput.type = 'number'; examInput.className = 'num-input wide'; examInput.min = 0; examInput.max = 40; examInput.step = 0.5;
-      examInput.disabled = isAbsent;
-      examInput.value = isAbsent ? 0 : row.exam; examInput.placeholder = '-';
-      examInput.addEventListener('change', ()=>{
-        let v = examInput.value === '' ? '' : parseFloat(examInput.value);
-        if(v !== '' && !isNaN(v)) v = Math.max(0, Math.min(40, v));
-        row.exam = v; examInput.value = v;
-        updateRowCalculations(tr, row, isWeek13); scheduleSave();
-      });
-      tdExam.appendChild(examInput); tr.appendChild(tdExam);
-
-      const tdFinalTotal = document.createElement('td');
-      tdFinalTotal.className = 'total-cell final-cell';
-      tdFinalTotal.style.color = 'var(--red)';
-      tdFinalTotal.textContent = isAbsent ? '0 / 100' : (calcFinal100Total(row) + ' / 100');
-      tr.appendChild(tdFinalTotal);
-    }
+    const tdFinalTotal = document.createElement('td');
+    tdFinalTotal.className = 'total-cell final-cell';
+    tdFinalTotal.style.color = 'var(--pink-dark)';
+    tdFinalTotal.textContent = isAbsent ? '0 / 40' : (calcFinalTotal40(row) + ' / 40');
+    tr.appendChild(tdFinalTotal);
 
     const tdBadges = document.createElement('td');
     const badgeWrap = document.createElement('div'); badgeWrap.className = 'badge-cell';
@@ -1210,27 +1220,29 @@ function calcBehaviorScore(row){
   return Math.max(0, score);
 }
 
-function calcFinal100Total(row){
+function getBehaviorText(row){
+  const score = calcBehaviorScore(row);
+  const diff = 15 - score;
+  if(diff === 0) return 'كاملة';
+  return `ناقص ${diff} درجة`;
+}
+
+function calcFinalTotal40(row){
   if(row.attend === 'absent') return 0;
   const att = attendScore(row.attend);
   const beh = calcBehaviorScore(row);
   const appObj = APP_STATUS_OPTIONS.find(a=>a.value === (row.appStatus || 'done'));
   const app = appObj ? appObj.score : 20;
-  
-  const proj = Number(row.project || 0);
-  const ex = Number(row.exam || 0);
 
-  return att + beh + app + proj + ex;
+  return att + beh + app;
 }
 
-function updateRowCalculations(tr, row, isWeek13){
+function updateRowCalculations(tr, row){
   const behCell = tr.querySelector('.behavior-cell');
-  if(behCell) behCell.textContent = (row.attend === 'absent') ? '0 / 15' : (calcBehaviorScore(row) + ' / 15');
+  if(behCell) behCell.textContent = (row.attend === 'absent') ? 'غائب' : getBehaviorText(row);
 
-  if(isWeek13){
-    const finalCell = tr.querySelector('.final-cell');
-    if(finalCell) finalCell.textContent = (row.attend === 'absent') ? '0 / 100' : (calcFinal100Total(row) + ' / 100');
-  }
+  const finalCell = tr.querySelector('.final-cell');
+  if(finalCell) finalCell.textContent = (row.attend === 'absent') ? '0 / 40' : (calcFinalTotal40(row) + ' / 40');
 }
 
 function updateSummary(){
@@ -1238,8 +1250,9 @@ function updateSummary(){
   const present = record.rows.filter(r=>r.attend==='present').length;
   const absent = record.rows.filter(r=>r.attend==='absent').length;
   const late = record.rows.filter(r=>r.attend==='late').length;
+  const studentCount = getSectionData().students.length;
   document.getElementById('countSummary').textContent =
-    `حضور: ${present}  ·  غياب: ${absent}  ·  تأخير: ${late}  ·  عدد الطالبات: ${record.rows.length}`;
+    `حضور: ${present}  ·  غياب: ${absent}  ·  تأخير: ${late}  ·  عدد طالبات الصف الحالي: ${studentCount}`;
 }
 
 document.getElementById('sectionSelect').addEventListener('change', (e)=> switchSection(e.target.value));
@@ -1268,8 +1281,8 @@ function handleExportGrades(){
   const exportData = secData.students.map((studentName, idx)=>{
     let studentRow = { "اسم الطالبة": studentName };
     WEEKS.forEach(w=>{
-      let foundKey = Object.keys(records).find(k=> records[k]?.week === w);
-      if(foundKey && records[foundKey].rows[idx]){
+      let foundKey = Object.keys(records).find(k=> k.includes(`_${w}`) || records[k]?.week === w);
+      if(foundKey && records[foundKey].rows && records[foundKey].rows[idx]){
         const r = records[foundKey].rows[idx];
         const appObj = APP_STATUS_OPTIONS.find(a=>a.value === r.appStatus);
         studentRow[w] = `حضور: ${attendScore(r.attend)} | سلوك: ${calcBehaviorScore(r)} | تطبيق: ${appObj ? appObj.label : 'تم'}`;
@@ -1298,19 +1311,19 @@ function closeNamesModal(){ namesModal.classList.remove('open'); }
 
 function saveNames(){
   const lines = document.getElementById('namesTextarea').value.split('\n').map(s=>s.trim()).filter(Boolean);
-  const students = getSectionData().students;
-  for(let i=0;i<STUDENT_COUNT;i++){ if(lines[i]) students[i] = lines[i]; }
+  const secData = getSectionData();
+  secData.students = lines;
   closeNamesModal(); renderPage(); scheduleSave();
 }
 
 function clearEntireSection(){
   if(confirm(`⚠️ مسح جميع أسماء ومحتويات شعبة (${currentSection}) بالكامل؟`)){
     const secData = getSectionData();
-    secData.students = defaultStudents();
+    secData.students = [];
     secData.records = {};
     secData.photos = {};
     secData.hiddenCards = [];
-    document.getElementById('namesTextarea').value = secData.students.join('\n');
+    document.getElementById('namesTextarea').value = '';
     scheduleSave();
     renderPage();
     alert("تم مسح أسماء وقوائم الشعبة بالكامل ✓");
@@ -1341,7 +1354,7 @@ function importNamesFromExcel(e){
       });
 
       if(filteredNames.length > 0){
-        document.getElementById('namesTextarea').value = filteredNames.slice(0, STUDENT_COUNT).join('\n');
+        document.getElementById('namesTextarea').value = filteredNames.join('\n');
         alert(`تم جلب ${filteredNames.length} اسم طالبة فقط بنجاح!`);
       }
     } catch(err) { alert("حدث خطأ أثناء قراءة الملف."); }
@@ -1402,7 +1415,7 @@ function importNamesFromPDF(e){
       });
 
       if(extractedStudentNames.length > 0){
-        document.getElementById('namesTextarea').value = extractedStudentNames.slice(0, STUDENT_COUNT).join('\n');
+        document.getElementById('namesTextarea').value = extractedStudentNames.join('\n');
         alert(`تم استخراج ${extractedStudentNames.length} اسم طالبة فقط بنجاح وتنقيتها من عناوين سجل الطالب والصفوف!`);
       } else {
         alert("لم يتم العثور على قائمة أسماء طالبات واضحة داخل ملف الـ PDF.");
@@ -1528,7 +1541,6 @@ function printAllCards(){
     const shortName = formatThreePartName(name);
 
     if(isGrade12){
-      // بطاقة خريجة الثاني عشر باللون الوردي البرّاق الكحلي وبشكل ملفت للغاية
       cardsHTML += `
         <div style="width:90mm; height:60mm; border:2.5px solid #E85A71; border-radius:4mm; padding:3mm; display:flex; flex-direction:column; justify-content:space-between; page-break-inside:avoid; box-sizing:border-box; background:linear-gradient(135deg, #0A1826 0%, #1E3A52 100%); color:#fff; position:relative; overflow:hidden;">
           <div style="position:absolute; right:-10mm; bottom:-10mm; font-size:90pt; opacity:0.1; color:#E85A71; pointer-events:none;">🎓</div>
@@ -1623,6 +1635,121 @@ function getReportHeaderHTML(titleText){
   `;
 }
 
+function generatePaperRegisterReport(){
+  const grade = GRADES.find(g=>g.id===currentGradeId);
+  const secData = getSectionData();
+  const records = secData ? secData.records : {};
+
+  let weeksHeaderTop = '';
+  for(let w=1; w<=10; w++){
+    weeksHeaderTop += `<th colspan="3" style="border-left:1.5px solid #000;">${w}</th>`;
+  }
+
+  let datesHeaderSub = '';
+  for(let w=1; w<=10; w++){
+    const weekTitle = `الأسبوع ${w}`;
+    let foundKey = Object.keys(records).find(k=> k.includes(`_${weekTitle}`) || records[k]?.week === weekTitle);
+    let dateVal = foundKey ? foundKey.split('_')[0] : '—';
+    datesHeaderSub += `<th colspan="3" style="font-size:6.5pt; font-weight:bold; border-left:1.5px solid #000; background:#FAF3F0 !important;">${dateVal}</th>`;
+  }
+
+  let weeksHeaderSub = '';
+  for(let w=1; w<=10; w++){
+    weeksHeaderSub += `
+      <th style="writing-mode: vertical-rl; font-size:7.5pt; padding:2px; background:#EBF1F5 !important;">حضور</th>
+      <th style="writing-mode: vertical-rl; font-size:7.5pt; padding:2px; background:#F2EBF5 !important;">سلوك وأدوات</th>
+      <th style="writing-mode: vertical-rl; font-size:7.5pt; padding:2px; background:#EBF5EC !important; border-left:1.5px solid #000;">مشاركة وتفاعل</th>
+    `;
+  }
+
+  let studentRowsHTML = '';
+  secData.students.forEach((studentName, idx)=>{
+    const shortName = formatThreePartName(studentName);
+    studentRowsHTML += `<tr><td>${idx+1}</td><td style="text-align:right; font-weight:bold; padding-right:4px;">${shortName}</td>`;
+    
+    for(let w=1; w<=10; w++){
+      const weekTitle = `الأسبوع ${w}`;
+      let foundKey = Object.keys(records).find(k=> k.includes(`_${weekTitle}`) || records[k]?.week === weekTitle);
+      
+      if(foundKey && records[foundKey].rows && records[foundKey].rows[idx]){
+        const r = records[foundKey].rows[idx];
+        
+        let attTxt = '✓';
+        if(r.attend === 'absent') attTxt = '❌ غائب';
+        else if(r.attend === 'late') attTxt = '<span style="color:#8A5A00; font-weight:bold;">ت</span>';
+
+        let behVal = r.violations ? r.violations.length : 0;
+        let behTxt = behVal > 0 ? `${behVal} <a href="#" onclick="window.opener.openReportsModal(); return false;" title="عرض تفاصيل المخالفات" style="color:#B8001F; text-decoration:underline;">🔗</a>` : '0';
+
+        let appTxt = '✓';
+        if(r.appStatus === 'not_done') appTxt = '✕';
+        else if(r.appStatus === 'partial') appTxt = '⚠️ غير كامل';
+
+        studentRowsHTML += `<td>${attTxt}</td><td>${behTxt}</td><td style="border-left:1.5px solid #000;">${appTxt}</td>`;
+      } else {
+        studentRowsHTML += `<td>—</td><td>—</td><td style="border-left:1.5px solid #000;">—</td>`;
+      }
+    }
+
+    studentRowsHTML += `<td style="background:#EBF3FB !important;"></td></tr>`;
+  });
+
+  const printWindow = window.open('', '_blank');
+  printWindow.document.write(`
+    <!DOCTYPE html>
+    <html lang="ar" dir="rtl">
+    <head>
+      <meta charset="UTF-8">
+      <title>دفتر المتابعة الورقي - ${currentSection}</title>
+      <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;700&display=swap" rel="stylesheet">
+      <style>
+        @page { size: A4 landscape; margin: 4mm; }
+        * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
+        body { font-family: 'Tajawal', sans-serif; padding: 0; margin: 0; direction: rtl; }
+        .section-header-banner { background: #C5D9F1 !important; border: 1.5px solid #000; text-align: center; font-weight: bold; font-size: 13pt; padding: 3px; margin-bottom: 4px; }
+        table { width: 100%; border-collapse: collapse; border: 1.5px solid #000; }
+        th, td { border: 1px solid #000; text-align: center; font-size: 7.5pt; padding: 2px 1px; }
+        th { background: #DCE6F1 !important; color: #000; font-weight: bold; }
+        .pink-header { background: #F2DCDB !important; color: #900000; font-weight: bold; }
+        .footer-signatures { display: flex; justify-content: space-between; align-items: center; margin-top: 12px; font-weight: bold; font-size: 10.5pt; padding: 0 10px; }
+      </style>
+    </head>
+    <body>
+      <div class="section-header-banner">الصف : ${grade.name} - ${currentSection}</div>
+      <table>
+        <thead>
+          <tr>
+            <th rowspan="4" style="width:20px;">م</th>
+            <th rowspan="4" style="min-width:140px;">الاسم</th>
+            <th colspan="30">الاسبوع</th>
+            <th rowspan="4" class="pink-header" style="writing-mode: vertical-rl; font-size:9pt; width:45px;">مجموع الأعمال (40)</th>
+          </tr>
+          <tr>
+            ${weeksHeaderTop}
+          </tr>
+          <tr>
+            ${datesHeaderSub}
+          </tr>
+          <tr>
+            ${weeksHeaderSub}
+          </tr>
+        </thead>
+        <tbody>
+          ${studentRowsHTML}
+        </tbody>
+      </table>
+      <div class="footer-signatures">
+        <div>إعداد المعلمة : <strong>${currentUserDisplayName}</strong></div>
+        <div>الموجّهة الفنية : <strong>أ.ريم الرشيدي</strong></div>
+      </div>
+      <script>window.onload = function() { setTimeout(function(){ window.print(); }, 300); }<\/script>
+    </body>
+    </html>
+  `);
+  printWindow.document.close();
+  closeReportsModal();
+}
+
 function generateTopStudentsReport(){
   const grade = GRADES.find(g=>g.id===currentGradeId);
   const secData = getSectionData();
@@ -1634,16 +1761,16 @@ function generateTopStudentsReport(){
   secData.students.forEach((studentName, idx)=>{
     let totalScore = 0, weeksCount = 0;
     Object.keys(records).forEach(k=>{
-      const r = records[k].rows[idx];
+      const r = records[k].rows && records[k].rows[idx];
       if(r){
-        totalScore += calcFinal100Total(r);
+        totalScore += calcFinalTotal40(r);
         weeksCount++;
       }
     });
 
-    const avg = weeksCount > 0 ? (totalScore / weeksCount) : 100;
-    if(avg >= 90){
-      tableRows += `<tr><td>${count++}</td><td style="text-align:right; font-weight:bold;">${studentName}</td><td style="color:var(--green); font-weight:bold;">${Math.round(avg)} / 100</td><td>ممتازة - فائقة 🌟</td></tr>`;
+    const avg = weeksCount > 0 ? (totalScore / weeksCount) : 40;
+    if(avg >= 36){
+      tableRows += `<tr><td>${count++}</td><td style="text-align:right; font-weight:bold;">${studentName}</td><td style="color:var(--green); font-weight:bold;">${Math.round(avg)} / 40</td><td>ممتازة - فائقة 🌟</td></tr>`;
     }
   });
 
@@ -1673,16 +1800,23 @@ function generateWeakStudentsReport(){
 
   secData.students.forEach((studentName, idx)=>{
     let totalAbsences = 0, totalViolations = 0;
+    let absentDates = [];
+
     Object.keys(records).forEach(k=>{
-      const r = records[k].rows[idx];
+      const r = records[k].rows && records[k].rows[idx];
       if(r){
-        if(r.attend === 'absent') totalAbsences++;
+        if(r.attend === 'absent'){
+          totalAbsences++;
+          const dateStr = k.split('_')[0];
+          if(dateStr) absentDates.push(dateStr);
+        }
         if(r.violations && r.violations.length > 0) totalViolations += r.violations.length;
       }
     });
 
-    if(totalAbsences >= 2 || totalViolations >= 2){
-      tableRows += `<tr><td>${count++}</td><td style="text-align:right; font-weight:bold;">${studentName}</td><td style="color:var(--red); font-weight:bold;">${totalAbsences} أيام غياب</td><td>${totalViolations} مخالفات مسجلة</td><td>تحتاج متابعة واحتضان أكاديمي ⚠️</td></tr>`;
+    if(totalAbsences >= 1 || totalViolations >= 2){
+      const formattedAbsentDates = absentDates.length > 0 ? absentDates.join(' ، ') : 'لا توجد تواريخ غياب مسجلة';
+      tableRows += `<tr><td>${count++}</td><td style="text-align:right; font-weight:bold;">${studentName}</td><td style="color:var(--red); font-weight:bold;">${totalAbsences} أيام غياب</td><td style="font-size:9pt; font-weight:bold; color:#8A1C30;">${formattedAbsentDates}</td><td>${totalViolations} مخالفات مسجلة</td><td>تحتاج متابعة واحتضان أكاديمي ⚠️</td></tr>`;
     }
   });
 
@@ -1692,8 +1826,8 @@ function generateWeakStudentsReport(){
     <html lang="ar" dir="rtl">
     <head><meta charset="UTF-8"><title>تقرير المتعثرات</title><style>body{font-family:sans-serif; direction:rtl; padding:15px;} table{width:100%; border-collapse:collapse;} th,td{border:1px solid #0D2C54; padding:6px; text-align:center;} th{background:#FDF2F4; color:#0D2C54;}</style></head>
     <body>
-      ${getReportHeaderHTML(`كشف الطالبات المتعثرات والضعيفات - ${grade.name} (${currentSection})`)}
-      <table><thead><tr><th>م</th><th>اسم الطالبة</th><th>مرات الغياب</th><th>عدد المخالفات</th><th>التوصية والوضع الأكاديمي</th></tr></thead><tbody>${tableRows || '<tr><td colspan="5">لا توجد حالات تعثر مسجلة.</td></tr>'}</tbody></table>
+      ${getReportHeaderHTML(`كشف الطالبات المتعثرات والضعيفات وتواريخ الغياب - ${grade.name} (${currentSection})`)}
+      <table><thead><tr><th>م</th><th>اسم الطالبة</th><th>عدد الغيابات</th><th>تواريخ الغياب المسجلة</th><th>عدد المخالفات</th><th>التوصية والوضع الأكاديمي</th></tr></thead><tbody>${tableRows || '<tr><td colspan="6">لا توجد حالات تعثر أو غياب مسجلة.</td></tr>'}</tbody></table>
       <script>window.onload=function(){window.print();}<\/script>
     </body>
     </html>
@@ -1725,8 +1859,8 @@ function generateTwoPagesWeekRangeReport(){
       headerSub += `<th>حضور (5)</th><th>سلوك (15)</th><th style="border-left:2px solid #0D2C54;">تطبيق وتفاعل (20)</th>`;
     });
 
-    if(isFinalPage && selectedWeeks.includes("الأسبوع 13")){
-      headerTop += `<th rowspan="2" style="background:#0D2C54; color:#fff; width:65px;">المجموع الكلي (100)</th>`;
+    if(isFinalPage){
+      headerTop += `<th rowspan="2" style="background:#0D2C54; color:#fff; width:65px;">مجموع الأعمال (40)</th>`;
     }
 
     headerTop += `</tr>`; headerSub += `</tr>`;
@@ -1737,9 +1871,9 @@ function generateTwoPagesWeekRangeReport(){
       tableRows += `<tr><td>${studentIdx+1}</td><td style="text-align:right; font-weight:bold; padding-right:6px;">${shortName}</td>`;
       
       weeksChunk.forEach(w=>{
-        let foundRecKey = Object.keys(records).find(k=> records[k]?.week === w);
-        if(foundRecKey && records[foundRecKey].rows[studentIdx]){
-          const r = records[foundRecKey].rows[studentIdx];
+        let foundKey = Object.keys(records).find(k=> k.includes(`_${w}`) || records[k]?.week === w);
+        if(foundKey && records[foundKey].rows && records[foundKey].rows[studentIdx]){
+          const r = records[foundKey].rows[studentIdx];
           const att = attendScore(r.attend);
           const beh = calcBehaviorScore(r);
           const appObj = APP_STATUS_OPTIONS.find(a=>a.value === r.appStatus);
@@ -1750,10 +1884,10 @@ function generateTwoPagesWeekRangeReport(){
         }
       });
 
-      if(isFinalPage && selectedWeeks.includes("الأسبوع 13")){
-        let foundRecKey = Object.keys(records).find(k=> records[k]?.week === "الأسبوع 13");
-        const finalRow = (foundRecKey && records[foundRecKey].rows[studentIdx]) ? records[foundRecKey].rows[studentIdx] : null;
-        tableRows += `<td style="font-weight:bold; background:#FDF2F4; color:#0D2C54; font-size:9.5pt;">${finalRow ? calcFinal100Total(finalRow) : 100} / 100</td>`;
+      if(isFinalPage){
+        let foundKey = Object.keys(records).find(k=> k.includes(`_${WEEKS[0]}`) || records[k]?.week === WEEKS[0]);
+        const finalRow = (foundKey && records[foundKey].rows && records[foundKey].rows[studentIdx]) ? records[foundKey].rows[studentIdx] : null;
+        tableRows += `<td style="font-weight:bold; background:#FDF2F4; color:#0D2C54; font-size:9.5pt;">${finalRow ? calcFinalTotal40(finalRow) : 40} / 40</td>`;
       }
 
       tableRows += `</tr>`;
