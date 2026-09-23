@@ -53,7 +53,7 @@
 
   #authScreen{ min-height:100vh; display:flex; align-items:center; justify-content:center; padding:15px; background: linear-gradient(135deg, #FAF3F0 0%, #FCE4E8 100%); }
   .auth-card{ background:#fff; border-radius:22px; box-shadow:0 15px 35px rgba(138, 28, 48, 0.15); padding:32px 26px; width:100%; max-width:420px; text-align:center; border:2px solid var(--rose); }
-  .auth-card .school-logo{ width:120px; height:auto; margin:0 auto 12px; display:block; }
+  .auth-card .school-logo{ width:140px; height:auto; margin:0 auto 14px; display:block; border-radius:10px; }
   .auth-card h2{ margin:0 0 8px; color:var(--pink-dark); font-family:'Reem Kufi', sans-serif; font-size:20px; line-height:1.4; }
   .auth-card p.sub{ margin:0 0 6px; font-size:13px; color:#555; font-weight:bold; }
   .auth-card p.designer-tag{ margin:0 0 20px; font-family:'Aref Ruqaa', serif; font-size:17px; color:var(--pink); }
@@ -100,7 +100,7 @@
   .star-banner select{ font-family:inherit; font-size:15px; font-weight:700; color:var(--red); padding:8px 12px; border-radius:8px; border:1px solid var(--pink); background:#fff; flex:1; min-width:180px; -webkit-appearance:none; }
 
   .table-wrap{ background:#fff; border:1px solid var(--line); border-radius:14px; overflow-x:auto; width:100%; -webkit-overflow-scrolling:touch; margin-bottom:15px; }
-  table{ width:100%; border-collapse:collapse; min-width:980px; }
+  table{ width:100%; border-collapse:collapse; min-width:1050px; }
   thead th{ background:var(--pink-dark); color:#fff; font-size:12px; font-weight:700; padding:10px 6px; text-align:center; white-space:nowrap; }
   tbody td{ padding:8px 6px; border-bottom:1px solid var(--line); font-size:13px; text-align:center; vertical-align:middle; }
   tbody tr:nth-child(even){ background:#FDF8F9; }
@@ -434,12 +434,11 @@
 </div>
 
 <script>
-// إعدادات المزامنة السحابية المباشرة (Firebase Realtime Database)
+// إعدادات المزامنة السحابية المباشرة بـ Firebase
 const firebaseConfig = {
-  databaseURL: "https://following-students-default-rtdb.firebaseio.com"
+  databaseURL: "https://following-students-default-rtdb.firebaseio.com/"
 };
 
-// تهيئة الخدمة السحابية تلقائياً
 if (!firebase.apps.length) {
   firebase.initializeApp(firebaseConfig);
 }
@@ -447,7 +446,6 @@ const db = firebase.database();
 
 const DB_PREFIX = "moudi_cloud_db_";
 
-// الربط والتخزين السحابي والمحلي المزدوج للأمان المباشر
 function getLocalData(key){
   try {
     const raw = localStorage.getItem(DB_PREFIX + key);
@@ -458,7 +456,6 @@ function getLocalData(key){
 function setLocalData(key, value){
   try {
     localStorage.setItem(DB_PREFIX + key, JSON.stringify(value));
-    // حفظ سحابي لحظي ومباشر بـ Firebase
     db.ref(DB_PREFIX + key).set(value);
     return true;
   } catch(e) { return false; }
@@ -524,6 +521,8 @@ const SECTIONS = {
 const NOTE_OPTIONS = [
   "— إضافة مخالفة جديدة —",
   "عدم الالتزام أثناء الطابور",
+  "مضغ العلك",
+  "عدم إحضار الكتاب",
   "التحدث في الحصة",
   "الأكل أثناء الحصة",
   "إحداث الشغب",
@@ -796,7 +795,6 @@ function showApp(displayName, deptName){
       const savedSec = getLocalData(secKey);
       store[g.id].sections[sec] = savedSec || { students: defaultStudents(), records: {}, photos: {}, hiddenCards: [] };
       
-      // مزامنة لحظية مستمرة لكل الشعب سحابياً
       syncCloudData(secKey, (cloudData)=>{
         if(cloudData){
           store[g.id].sections[sec] = cloudData;
@@ -868,6 +866,36 @@ function updateLeaveStudentOptions(){
   fillSelect(document.getElementById('leaveStudentSelect'), students);
 }
 
+// دالة مخصصة لحساب كم مرة ارتكبت الطالبة نوع المخالفة المحددة حالياً في الأسابيع السابقة
+function countSpecificViolationInPast(studentIdx, currentViolations){
+  if(!currentViolations || currentViolations.length === 0) return { count: 0, label: '-' };
+
+  const secData = getSectionData();
+  const records = secData ? secData.records : {};
+  const currentWeek = document.getElementById('weekSelect') ? document.getElementById('weekSelect').value : WEEKS[0];
+  const currentWeekNum = parseInt(currentWeek.replace('الأسبوع ', '')) || 1;
+
+  const targetViolationType = currentViolations[currentViolations.length - 1]; // المخالفة المحددة حالياً
+
+  let sameViolationCount = 0;
+  Object.keys(records).forEach(k=>{
+    const recWeek = records[k].week;
+    const recWeekNum = parseInt((recWeek || '').replace('الأسبوع ', '')) || 0;
+    if(recWeekNum < currentWeekNum){
+      const row = records[k].rows && records[k].rows[studentIdx];
+      if(row && row.violations && row.violations.includes(targetViolationType)){
+        sameViolationCount++;
+      }
+    }
+  });
+
+  if(sameViolationCount === 0){
+    return { count: 0, label: '0 (أول مرة)' };
+  } else {
+    return { count: sameViolationCount, label: `تكررت ${sameViolationCount} مرة سابقاً ⚠️` };
+  }
+}
+
 function renderPage(){
   const grade = GRADES.find(g=>g.id===currentGradeId);
   const studentCount = getSectionData().students.length;
@@ -905,9 +933,10 @@ function renderTable(){
   thead.innerHTML = `
     <tr>
       <th style="width:36px;">م</th>
-      <th style="min-width:220px; width:220px;">اسم الطالبة</th>
-      <th style="width:105px;">الحضور والتأخير<small>(5)</small></th>
-      <th>الملاحظات والمخالفات التراكمية</th>
+      <th style="min-width:210px; width:210px;">اسم الطالبة</th>
+      <th style="width:100px;">الحضور والتأخير<small>(5)</small></th>
+      <th style="width:130px; background:#8A1C30;">تكرار نفس المخالفة سابقاً</th>
+      <th>الملاحظات والمخالفات اليومية</th>
       <th>الإجراء المتبع</th>
       <th>السلوك والأدوات<small>(15)</small></th>
       <th>تطبيق ورقة العمل والتفاعل<small>(20)</small></th>
@@ -993,6 +1022,15 @@ function renderTable(){
     tdAttend.appendChild(attendWrap); 
     tr.appendChild(tdAttend);
 
+    // عمود يحسب تكرار نوع المخالفة المسجلة حالياً
+    const tdPastViolations = document.createElement('td');
+    const pastInfo = countSpecificViolationInPast(idx, row.violations);
+    tdPastViolations.style.fontWeight = 'bold';
+    tdPastViolations.style.fontSize = '11px';
+    tdPastViolations.style.color = pastInfo.count > 0 ? 'var(--red)' : '#666';
+    tdPastViolations.textContent = pastInfo.label;
+    tr.appendChild(tdPastViolations);
+
     const tdNotes = document.createElement('td');
     const notesBox = document.createElement('div'); notesBox.className = 'notes-box';
     
@@ -1024,7 +1062,7 @@ function renderTable(){
           delBtn.onclick = ()=>{
             row.violations.splice(vIdx, 1);
             renderViolationsChips();
-            updateRowCalculations(tr, row);
+            updateRowCalculations(tr, row, idx);
             scheduleSave();
           };
           chip.appendChild(delBtn);
@@ -1043,7 +1081,7 @@ function renderTable(){
         noteSelect.value = "— إضافة مخالفة جديدة —";
         customInput.style.display = 'none';
         renderViolationsChips();
-        updateRowCalculations(tr, row);
+        updateRowCalculations(tr, row, idx);
         scheduleSave();
       }
     });
@@ -1055,7 +1093,7 @@ function renderTable(){
         customInput.style.display = 'none';
         noteSelect.value = "— إضافة مخالفة جديدة —";
         renderViolationsChips();
-        updateRowCalculations(tr, row);
+        updateRowCalculations(tr, row, idx);
         scheduleSave();
       }
     });
@@ -1089,7 +1127,7 @@ function renderTable(){
     actionSelect.addEventListener('change', ()=>{
       row.actionTaken = actionSelect.value;
       pledgeBtn.style.display = (row.actionTaken === 'تعهد خطي') ? 'block' : 'none';
-      updateRowCalculations(tr, row);
+      updateRowCalculations(tr, row, idx);
       scheduleSave();
     });
 
@@ -1112,7 +1150,7 @@ function renderTable(){
     appSelect.value = isAbsent ? 'not_done' : (row.appStatus || 'done');
     appSelect.addEventListener('change', ()=>{
       row.appStatus = appSelect.value;
-      updateRowCalculations(tr, row);
+      updateRowCalculations(tr, row, idx);
       scheduleSave();
     });
     tdAppStatus.appendChild(appSelect); tr.appendChild(tdAppStatus);
@@ -1237,12 +1275,20 @@ function calcFinalTotal40(row){
   return att + beh + app;
 }
 
-function updateRowCalculations(tr, row){
+function updateRowCalculations(tr, row, studentIdx){
   const behCell = tr.querySelector('.behavior-cell');
   if(behCell) behCell.textContent = (row.attend === 'absent') ? 'غائب' : getBehaviorText(row);
 
   const finalCell = tr.querySelector('.final-cell');
   if(finalCell) finalCell.textContent = (row.attend === 'absent') ? '0 / 40' : (calcFinalTotal40(row) + ' / 40');
+
+  // تحديث خانة تكرار المخالفة المحددة حالياً تلقائياً
+  const pastViolationsTd = tr.querySelectorAll('td')[3];
+  if(pastViolationsTd){
+    const pastInfo = countSpecificViolationInPast(studentIdx, row.violations);
+    pastViolationsTd.style.color = pastInfo.count > 0 ? 'var(--red)' : '#666';
+    pastViolationsTd.textContent = pastInfo.label;
+  }
 }
 
 function updateSummary(){
@@ -1635,6 +1681,22 @@ function getReportHeaderHTML(titleText){
   `;
 }
 
+function showViolationDetailModal(studentName, weekStr){
+  const secData = getSectionData();
+  const records = secData ? secData.records : {};
+  let foundKey = Object.keys(records).find(k=> k.includes(`_${weekStr}`) || records[k]?.week === weekStr);
+  
+  let detailsText = "لا توجد تفاصيل إضافية مسجلة.";
+  if(foundKey && records[foundKey].rows){
+    const studentIdx = secData.students.indexOf(studentName);
+    const r = records[foundKey].rows[studentIdx];
+    if(r && r.violations && r.violations.length > 0){
+      detailsText = `التاريخ: ${foundKey.split('_')[0]}\nالمخالفات: ${r.violations.join(' ، ')}\nالإجراء المتخذ: ${r.actionTaken || 'بدون إجراء'}`;
+    }
+  }
+  alert(`📋 سجل مخالفات الطالبة (${studentName}) - ${weekStr}:\n\n${detailsText}`);
+}
+
 function generatePaperRegisterReport(){
   const grade = GRADES.find(g=>g.id===currentGradeId);
   const secData = getSectionData();
@@ -1679,11 +1741,11 @@ function generatePaperRegisterReport(){
         else if(r.attend === 'late') attTxt = '<span style="color:#8A5A00; font-weight:bold;">ت</span>';
 
         let behVal = r.violations ? r.violations.length : 0;
-        let behTxt = behVal > 0 ? `${behVal} <a href="#" onclick="window.opener.openReportsModal(); return false;" title="عرض تفاصيل المخالفات" style="color:#B8001F; text-decoration:underline;">🔗</a>` : '0';
+        let behTxt = behVal > 0 ? `${behVal} <a href="#" onclick="window.opener.showViolationDetailModal('${studentName}', '${weekTitle}'); return false;" title="اضغط لفتح تفاصيل المخالفات" style="color:#B8001F; text-decoration:underline;">🔗</a>` : '0';
 
         let appTxt = '✓';
         if(r.appStatus === 'not_done') appTxt = '✕';
-        else if(r.appStatus === 'partial') appTxt = '⚠️ غير كامل';
+        else if(r.appStatus === 'partial') appTxt = '<span style="color:#8A5A00; font-weight:bold;">⚠️ غ</span>';
 
         studentRowsHTML += `<td>${attTxt}</td><td>${behTxt}</td><td style="border-left:1.5px solid #000;">${appTxt}</td>`;
       } else {
