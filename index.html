@@ -117,7 +117,7 @@
   select.attend.present{ background:var(--present); color:var(--present-ink); }
   select.attend.absent{ background:var(--absent); color:var(--absent-ink); }
   select.attend.late{ background:var(--late); color:var(--late-ink); }
-  .late-time-input { width: 100%; font-family: inherit; font-size: 10px; font-weight:bold; padding: 2px 4px; border-radius: 4px; border: 1px solid var(--gold); background: #fff; text-align: center; color:var(--late-ink); margin-top:2px; }
+  .late-time-input { width: 100%; font-family: inherit; font-size: 11px; font-weight:bold; padding: 4px 6px; border-radius: 6px; border: 1.5px solid var(--gold); background: #fff; text-align: center; color:var(--late-ink); margin-top:2px; }
 
   .notes-box { display:flex; flex-direction:column; gap:4px; min-width:160px; }
   .notes-box select { font-family:inherit; font-size:12.5px; padding:5px; border-radius:6px; border:1px solid var(--line); background:#fff; width:100%; }
@@ -250,7 +250,7 @@
           <div class="field"><label>تاريخ اليوم</label><input type="date" id="dateInput"></div>
           <div class="field"><label>الأسبوع</label><select id="weekSelect"></select></div>
           <div class="field"><label>الحصة الدراسية</label>
-            <select id="lessonPeriodSelect" onchange="saveLessonDataLocally()">
+            <select id="lessonPeriodSelect" onchange="onPeriodChange()">
               <option value="الحصة 1">الحصة الأولى (07:55)</option>
               <option value="الحصة 2">الحصة الثانية (08:45)</option>
               <option value="الحصة 3">الحصة الثالثة (09:35)</option>
@@ -516,6 +516,11 @@ function calculateLateMinutes(){
   return late > 0 ? late : 0;
 }
 
+function onPeriodChange(){
+  saveLessonDataLocally();
+  renderTable(); // إعادة تحسين الجدول عند تغيير الحصة لتحديث دقائق التأخير إذا أردتِ
+}
+
 const GRADES = [
   { id: "g10",  name: "الصف العاشر" },
   { id: "g11s", name: "الحادي عشر علمي" },
@@ -532,7 +537,6 @@ const SECTIONS = {
   g12l: ["12 أدبي 1","12 أدبي 2","12 أدبي 3"],
 };
 
-// إضافة "مخالفة الحجاب" إلى القائمة
 const NOTE_OPTIONS = [
   "— إضافة مخالفة جديدة —",
   "عدم الالتزام أثناء الطابور",
@@ -729,13 +733,6 @@ function registerReturn(id){
     setLocalData('global_leave_logs', leaveLogs);
     renderLeaveTable();
   }
-}
-
-function saveLessonDataLocally(){
-  const record = getRecord();
-  record.period = document.getElementById('lessonPeriodSelect').value;
-  record.lesson = document.getElementById('lessonTitleInput').value.trim();
-  scheduleSave();
 }
 
 function getSectionData(){ 
@@ -1047,6 +1044,7 @@ function renderTable(){
     tdName.appendChild(deleteSingleBtn);
     tr.appendChild(tdName);
 
+    // قسم الحضور وإتاحة تعديل الدقائق بحرية
     const tdAttend = document.createElement('td');
     const attendWrap = document.createElement('div'); attendWrap.className = 'attend-cell';
     
@@ -1060,9 +1058,15 @@ function renderTable(){
 
     const lateInput = document.createElement('input');
     lateInput.type = 'text'; lateInput.className = 'late-time-input';
-    lateInput.placeholder = 'التأخير (دقيقة)';
-    lateInput.value = row.lateMinutes ? `${row.lateMinutes} دقيقة` : '';
+    lateInput.placeholder = 'الدقائق';
+    lateInput.value = row.lateMinutes !== undefined ? row.lateMinutes : calculateLateMinutes();
     lateInput.style.display = (row.attend === 'late') ? 'block' : 'none';
+
+    // إتاحة كتابة وتعديل الدقائق يدوياً في أي وقت
+    lateInput.addEventListener('input', ()=>{
+      row.lateMinutes = lateInput.value;
+      scheduleSave();
+    });
 
     attendSelect.addEventListener('change', ()=>{
       row.attend = attendSelect.value;
@@ -1073,7 +1077,7 @@ function renderTable(){
         lateInput.style.display = 'none';
       } else if(row.attend === 'late') {
         row.lateMinutes = calculateLateMinutes();
-        lateInput.value = `${row.lateMinutes} دقيقة`;
+        lateInput.value = row.lateMinutes;
         lateInput.style.display = 'block';
       } else if(row.attend === 'absent') {
         row.lateMinutes = "";
@@ -1172,6 +1176,7 @@ function renderTable(){
     tdNotes.appendChild(notesBox);
     tr.appendChild(tdNotes);
 
+    // تفعيل الإجراء المتبع لجميع أنواع المخالفات
     const tdAction = document.createElement('td');
     const actionBox = document.createElement('div'); actionBox.className = 'action-box';
     
@@ -1181,7 +1186,7 @@ function renderTable(){
       const o = document.createElement('option'); o.value = opt; o.textContent = opt;
       actionSelect.appendChild(o);
     });
-    actionSelect.value = isAbsent ? 'بدون إجراء' : row.actionTaken;
+    actionSelect.value = isAbsent ? 'بدون إجراء' : (row.actionTaken || 'بدون إجراء');
 
     const pledgeBtn = document.createElement('button');
     pledgeBtn.className = 'btn-print-pledge';
