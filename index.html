@@ -54,10 +54,10 @@
   #authScreen{ min-height:100vh; display:flex; align-items:center; justify-content:center; padding:15px; background: linear-gradient(135deg, #FAF3F0 0%, #FCE4E8 100%); }
   .auth-card{ background:#fff; border-radius:22px; box-shadow:0 15px 35px rgba(138, 28, 48, 0.15); padding:28px 24px; width:100%; max-width:480px; text-align:center; border:2px solid var(--rose); }
   .auth-header-grid { display:flex; justify-content:space-between; align-items:center; margin-bottom:12px; border-bottom:1.5px solid var(--line); padding-bottom:8px; }
-  .auth-header-grid img { width:65px; height:auto; border-radius:6px; }
+  .auth-header-grid img { width:70px; height:auto; border-radius:6px; }
   .auth-card h2{ margin:0 0 4px; color:var(--pink-dark); font-family:'Reem Kufi', sans-serif; font-size:18px; line-height:1.3; }
   .auth-card p.sub{ margin:0 0 4px; font-size:12px; color:#555; font-weight:bold; }
-  .auth-card p.designer-tag{ margin:0 0 16px; font-family:'Aref Ruqaa', serif; font-size:17px; color:var(--pink); }
+  .auth-card p.designer-tag{ margin:0 0 16px; font-family:'Aref Ruqaa', serif; font-size:16px; color:var(--pink); }
   .auth-card input, .auth-card select{ width:100%; font-family:inherit; font-size:14.5px; padding:10px 12px; border:1px solid var(--line); border-radius:10px; margin-bottom:10px; background:#fff; -webkit-appearance:none; }
   .auth-card button{ width:100%; font-family:inherit; font-size:15.5px; font-weight:800; background:var(--pink-dark); color:#fff; border:none; border-radius:10px; padding:11px; cursor:pointer; transition:background .2s; }
   .auth-card button:hover{ background:var(--pink); }
@@ -178,15 +178,15 @@
         <h3 style="margin:0; color:#0D2C54; font-size:11pt;">منطقة الأحمدي التعليمية</h3>
         <h3 style="margin:2px 0; color:#000; font-size:10pt;">ثانوية موضي سلطان العيسى بنات</h3>
       </div>
-      <img src="شعار المدرسة.jpg" alt="شعار ثانوية موضي سلطان العيسى">
+      <img id="loginLogoImg" alt="شعار ثانوية موضي سلطان العيسى">
     </div>
     <h2>تسجيل الدخول إلى دفتر المتابعة الإلكتروني</h2>
-    <p class="sub" id="authScreenSubText">تسجيل حساب معلمة جديد أو تسجيل الدخول</p>
+    <p class="sub" id="authScreenSubText">تسجيل حساب معلمة جديد أول مرة</p>
     <p class="designer-tag">تصميم: وفاء عليان</p>
 
     <div id="loginForm">
       <div id="firstTimeFields">
-        <input type="text" id="loginUser" placeholder="الاسم الكامل للمعلمة (مثال: أ. وفاء عليان)" autocomplete="username">
+        <input type="text" id="loginUser" placeholder="الاسم الكامل للمعلمة (مثال: أ. وفاء عليان)" autocomplete="name">
         <select id="loginDepartment">
           <option value="قسم الحاسوب">قسم الحاسوب 💻</option>
           <option value="قسم الرياضيات">قسم الرياضيات 📐</option>
@@ -200,9 +200,10 @@
           <option value="قسم الاقتصاد المنزلي">قسم الاقتصاد المنزلي 🧺</option>
         </select>
       </div>
+      <input type="text" id="loginUsername" placeholder="اسم المستخدم" autocomplete="username">
       <input type="password" id="loginPass" placeholder="كلمة المرور" autocomplete="current-password">
-      <button onclick="handleLogin()" id="loginSubmitBtn">دخول وحفظ الحساب</button>
-      <div style="margin-top:10px;" id="resetAccountOption">
+      <button onclick="handleLogin()" id="loginSubmitBtn">حفظ الحساب والدخول</button>
+      <div style="margin-top:12px;" id="resetAccountOption">
         <a onclick="resetTeacherAccount()" style="font-size:11px; color:var(--pink); cursor:pointer; text-decoration:underline;">إعادة ضبط اسم المعلمة أو إنشاء حساب جديد</a>
       </div>
     </div>
@@ -447,6 +448,9 @@
 </div>
 
 <script>
+// صورة شعار المدرسة مدمجة كـ Data URL لضمان الظهور الفوري في كل الأجهزة
+const SCHOOL_LOGO_BASE64 = "شعار المدرسة.jpg";
+
 // إعدادات المزامنة السحابية المباشرة بـ Firebase
 const firebaseConfig = {
   databaseURL: "https://following-students-default-rtdb.firebaseio.com/"
@@ -757,19 +761,23 @@ function defaultRecord(selectedWeek){
 function boot(){
   if(checkPublicPassQuery()) return;
 
+  // إسناد الشعار لشاشة الدخول تلقائياً
+  document.getElementById('loginLogoImg').src = SCHOOL_LOGO_BASE64;
+
   leaveLogs = getLocalData('global_leave_logs') || [];
   const savedTeacherName = localStorage.getItem('global_teacher_name');
   const savedTeacherDept = localStorage.getItem('global_teacher_dept');
+  const savedTeacherUsername = localStorage.getItem('global_teacher_username');
   const savedTeacherPass = localStorage.getItem('global_teacher_pass');
 
   const firstTimeFields = document.getElementById('firstTimeFields');
   const authSubText = document.getElementById('authScreenSubText');
   const submitBtn = document.getElementById('loginSubmitBtn');
 
-  if(savedTeacherName && savedTeacherPass){
+  if(savedTeacherName && savedTeacherUsername && savedTeacherPass){
     firstTimeFields.style.display = 'none';
-    authSubText.textContent = `أهلاً بكِ أ. ${savedTeacherName} — أدخلي كلمة المرور للدخول:`;
-    submitBtn.textContent = 'دخول';
+    authSubText.textContent = `أهلاً بكِ أ. ${savedTeacherName} — أدخلي اسم المستخدم وكلمة المرور للدخول:`;
+    submitBtn.textContent = 'تسجيل الدخول';
   } else {
     firstTimeFields.style.display = 'block';
     authSubText.textContent = 'تسجيل حساب معلمة جديد أول مرة:';
@@ -787,34 +795,38 @@ function showAuth(){
 function handleLogin(){
   const savedTeacherName = localStorage.getItem('global_teacher_name');
   const savedTeacherDept = localStorage.getItem('global_teacher_dept');
+  const savedTeacherUsername = localStorage.getItem('global_teacher_username');
   const savedTeacherPass = localStorage.getItem('global_teacher_pass');
 
+  const usernameInput = document.getElementById('loginUsername').value.trim();
   const passInput = document.getElementById('loginPass').value.trim();
 
-  if(savedTeacherName && savedTeacherPass){
-    if(passInput === savedTeacherPass){
+  if(savedTeacherName && savedTeacherUsername && savedTeacherPass){
+    if(usernameInput === savedTeacherUsername && passInput === savedTeacherPass){
       showApp(savedTeacherName, savedTeacherDept);
     } else {
-      alert("كلمة المرور غير صحيحة، يرجى المحاولة مجدداً.");
+      alert("اسم المستخدم أو كلمة المرور غير صحيحة، يرجى التأكد وإعادة المحاولة.");
     }
   } else {
     const nameInput = document.getElementById('loginUser').value.trim();
     const deptInput = document.getElementById('loginDepartment').value;
 
-    if(nameInput && passInput){
+    if(nameInput && usernameInput && passInput){
       localStorage.setItem('global_teacher_name', nameInput);
       localStorage.setItem('global_teacher_dept', deptInput);
+      localStorage.setItem('global_teacher_username', usernameInput);
       localStorage.setItem('global_teacher_pass', passInput);
 
       db.ref("global_teacher_info").set({
         name: nameInput,
         dept: deptInput,
+        username: usernameInput,
         pass: passInput
       });
 
       showApp(nameInput, deptInput);
     } else {
-      alert("يرجى كتابة الاسم الكامل للمعلمة وتحديد كلمة المرور للبدء.");
+      alert("يرجى إكمال كتابة اسم المعلمة الكامل، اسم المستخدم، وكلمة المرور.");
     }
   }
 }
@@ -823,6 +835,7 @@ function resetTeacherAccount(){
   if(confirm("هل ترغبين في إعادة ضبط حساب المعلمة وإنشاء حساب جديد؟")){
     localStorage.removeItem('global_teacher_name');
     localStorage.removeItem('global_teacher_dept');
+    localStorage.removeItem('global_teacher_username');
     localStorage.removeItem('global_teacher_pass');
     location.reload();
   }
@@ -982,7 +995,6 @@ function renderTable(){
   const students = getSectionData().students;
   const record = getRecord();
 
-  // حذف عمود مجموع الأعمال من شاشة الإدخال حسب الطلب
   thead.innerHTML = `
     <tr>
       <th style="width:36px;">م</th>
@@ -1603,7 +1615,7 @@ function printAllCards(){
   const schLogoData = localStorage.getItem('custom_school_logo');
 
   const minLogoHTML = minLogoData ? `<img src="${minLogoData}" style="width:14mm; height:14mm; object-fit:contain;">` : '<div style="width:14mm;"></div>';
-  const schLogoHTML = schLogoData ? `<img src="${schLogoData}" style="width:14mm; height:14mm; object-fit:contain;">` : '<div style="width:14mm;"></div>';
+  const schLogoHTML = schLogoData ? `<img src="${schLogoData}" style="width:14mm; height:14mm; object-fit:contain;">` : `<img src="${SCHOOL_LOGO_BASE64}" style="width:14mm; height:14mm; object-fit:contain;">`;
 
   const isGrade12 = currentGradeId === 'g12s' || currentGradeId === 'g12l';
 
@@ -1693,7 +1705,7 @@ function getReportHeaderHTML(titleText){
   const minLogoData = localStorage.getItem('custom_ministry_logo');
   const schLogoData = localStorage.getItem('custom_school_logo');
   const minLogoHTML = minLogoData ? `<img src="${minLogoData}" style="width:20mm; height:20mm; object-fit:contain;">` : '<div style="width:20mm;"></div>';
-  const schLogoHTML = schLogoData ? `<img src="${schLogoData}" style="width:20mm; height:20mm; object-fit:contain;">` : '<img src="شعار المدرسة.jpg" style="width:20mm; height:20mm; object-fit:contain;">';
+  const schLogoHTML = schLogoData ? `<img src="${schLogoData}" style="width:20mm; height:20mm; object-fit:contain;">` : `<img src="${SCHOOL_LOGO_BASE64}" style="width:20mm; height:20mm; object-fit:contain;">`;
   
   return `
     <div style="display:flex; justify-content:space-between; align-items:center; border-bottom:2.5px solid #8A1C30; padding-bottom:8px; margin-bottom:12px;">
