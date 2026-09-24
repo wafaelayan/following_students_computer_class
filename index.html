@@ -178,7 +178,7 @@
         <h3 style="margin:0; color:#0D2C54; font-size:11pt;">منطقة الأحمدي التعليمية</h3>
         <h3 style="margin:2px 0; color:#000; font-size:10pt;">ثانوية موضي سلطان العيسى بنات</h3>
       </div>
-      <img id="loginLogoImg" alt="شعار ثانوية موضي سلطان العيسى">
+      <img id="loginLogoImg" src="شعار المدرسة.jpg" alt="شعار ثانوية موضي سلطان العيسى">
     </div>
     <h2>تسجيل الدخول إلى دفتر المتابعة الإلكتروني</h2>
     <p class="sub" id="authScreenSubText">تسجيل حساب معلمة جديد أول مرة</p>
@@ -405,8 +405,8 @@
     <p>استخراج تقارير المتابعة لشعبة: <strong id="reportSectionName"></strong></p>
 
     <div style="border-bottom: 1px solid var(--line); padding-bottom: 12px; margin-bottom: 12px;">
-      <h4 style="margin: 0 0 6px; color: var(--pink-dark);">1. تقرير المتابعة اليومي والشهري الرسمي (نموذج دفتر المتابعة الورقي):</h4>
-      <button class="btn btn-primary" onclick="generatePaperRegisterReport()">📄 استخراج كشف المتابعة بالنموذج الورقي الرسمي</button>
+      <h4 style="margin: 0 0 6px; color: var(--pink-dark);">1. تقرير المتابعة اليومي والشهري الرسمي (نموذج دفتر المتابعة الرسمي):</h4>
+      <button class="btn btn-primary" onclick="generatePaperRegisterReport()">📄 استخراج كشف المتابعة بالنموذج الرسمي</button>
     </div>
 
     <div style="border-bottom: 1px solid var(--line); padding-bottom: 12px; margin-bottom: 12px;">
@@ -448,9 +448,6 @@
 </div>
 
 <script>
-// صورة شعار المدرسة مدمجة كـ Data URL لضمان الظهور الفوري في كل الأجهزة
-const SCHOOL_LOGO_BASE64 = "شعار المدرسة.jpg";
-
 // إعدادات المزامنة السحابية المباشرة بـ Firebase
 const firebaseConfig = {
   databaseURL: "https://following-students-default-rtdb.firebaseio.com/"
@@ -461,7 +458,7 @@ if (!firebase.apps.length) {
 }
 const db = firebase.database();
 
-const DB_PREFIX = "moudi_cloud_db_";
+const DB_PREFIX = "moudi_cloud_v3_";
 
 function getLocalData(key){
   try {
@@ -529,15 +526,17 @@ const GRADES = [
 
 const SECTIONS = {
   g10:  ["عاشر 1","عاشر 2","عاشر 3","عاشر 4","عاشر 5","عاشر 6"],
-  g11s: ["11 علمي - 1","11 علمي - 2","11 علمي - 3"],
-  g11l: ["11 أدبي - 1","11 أدبي - 2","11 أدبي - 3"],
-  g12s: ["12 علمي - 1","12 علمي - 2","12 علمي - 3"],
-  g12l: ["12 أدبي - 1","12 أدبي - 2","12 أدبي - 3"],
+  g11s: ["11 علمي 1","11 علمي 2","11 علمي 3"],
+  g11l: ["11 أدبي 1","11 أدبي 2","11 أدبي 3"],
+  g12s: ["12 علمي 1","12 علمي 2","12 علمي 3"],
+  g12l: ["12 أدبي 1","12 أدبي 2","12 أدبي 3"],
 };
 
+// إضافة "مخالفة الحجاب" إلى القائمة
 const NOTE_OPTIONS = [
   "— إضافة مخالفة جديدة —",
   "عدم الالتزام أثناء الطابور",
+  "مخالفة الحجاب",
   "مضغ العلك",
   "عدم إحضار الكتاب",
   "التحدث في الحصة",
@@ -572,8 +571,8 @@ const ATTEND_OPTIONS = [
 function attendScore(v){ const o = ATTEND_OPTIONS.find(a=>a.value===v); return o ? o.score : 0; }
 
 let currentView = 'attendance';
-let currentGradeId = GRADES[0].id;
-let currentSection = SECTIONS[GRADES[0].id][0];
+let currentGradeId = "g10";
+let currentSection = "عاشر 1";
 let currentDate = todayStr();
 let currentUserDisplayName = 'أ. وفاء عليان';
 let currentDepartmentName = 'قسم الحاسوب';
@@ -739,7 +738,13 @@ function saveLessonDataLocally(){
   scheduleSave();
 }
 
-function getSectionData(){ return store[currentGradeId].sections[currentSection]; }
+function getSectionData(){ 
+  if(!store[currentGradeId]) store[currentGradeId] = { sections: {} };
+  if(!store[currentGradeId].sections[currentSection]) {
+    store[currentGradeId].sections[currentSection] = { students: defaultStudents(), records: {}, photos: {}, hiddenCards: [] };
+  }
+  return store[currentGradeId].sections[currentSection]; 
+}
 
 function getRecord(){
   const sd = getSectionData();
@@ -760,9 +765,6 @@ function defaultRecord(selectedWeek){
 
 function boot(){
   if(checkPublicPassQuery()) return;
-
-  // إسناد الشعار لشاشة الدخول تلقائياً
-  document.getElementById('loginLogoImg').src = SCHOOL_LOGO_BASE64;
 
   leaveLogs = getLocalData('global_leave_logs') || [];
   const savedTeacherName = localStorage.getItem('global_teacher_name');
@@ -872,6 +874,9 @@ function showApp(displayName, deptName){
     });
   });
 
+  currentGradeId = GRADES[0].id;
+  currentSection = SECTIONS[GRADES[0].id][0];
+
   renderSidebar();
   renderPage();
   updateFilterLeaveOptions();
@@ -962,7 +967,7 @@ function countSpecificViolationInPast(studentIdx, currentViolations){
 }
 
 function renderPage(){
-  const grade = GRADES.find(g=>g.id===currentGradeId);
+  const grade = GRADES.find(g=>g.id===currentGradeId) || GRADES[0];
   const studentCount = getSectionData().students.length;
   document.getElementById('gradeTitle').textContent = grade.name + ' — شعبة ' + currentSection;
   document.getElementById('studentCountHeaderSub').textContent = `سجل حضور ومتابعة وتقييم يومي — ${studentCount} طالبة`;
@@ -1615,7 +1620,7 @@ function printAllCards(){
   const schLogoData = localStorage.getItem('custom_school_logo');
 
   const minLogoHTML = minLogoData ? `<img src="${minLogoData}" style="width:14mm; height:14mm; object-fit:contain;">` : '<div style="width:14mm;"></div>';
-  const schLogoHTML = schLogoData ? `<img src="${schLogoData}" style="width:14mm; height:14mm; object-fit:contain;">` : `<img src="${SCHOOL_LOGO_BASE64}" style="width:14mm; height:14mm; object-fit:contain;">`;
+  const schLogoHTML = schLogoData ? `<img src="${schLogoData}" style="width:14mm; height:14mm; object-fit:contain;">` : `<img src="شعار المدرسة.jpg" style="width:14mm; height:14mm; object-fit:contain;">`;
 
   const isGrade12 = currentGradeId === 'g12s' || currentGradeId === 'g12l';
 
@@ -1705,7 +1710,7 @@ function getReportHeaderHTML(titleText){
   const minLogoData = localStorage.getItem('custom_ministry_logo');
   const schLogoData = localStorage.getItem('custom_school_logo');
   const minLogoHTML = minLogoData ? `<img src="${minLogoData}" style="width:20mm; height:20mm; object-fit:contain;">` : '<div style="width:20mm;"></div>';
-  const schLogoHTML = schLogoData ? `<img src="${schLogoData}" style="width:20mm; height:20mm; object-fit:contain;">` : `<img src="${SCHOOL_LOGO_BASE64}" style="width:20mm; height:20mm; object-fit:contain;">`;
+  const schLogoHTML = schLogoData ? `<img src="${schLogoData}" style="width:20mm; height:20mm; object-fit:contain;">` : `<img src="شعار المدرسة.jpg" style="width:20mm; height:20mm; object-fit:contain;">`;
   
   return `
     <div style="display:flex; justify-content:space-between; align-items:center; border-bottom:2.5px solid #8A1C30; padding-bottom:8px; margin-bottom:12px;">
@@ -1798,7 +1803,7 @@ function generatePaperRegisterReport(){
         else if(r.attend === 'late') attTxt = '<span style="color:#8A5A00; font-weight:bold;">ت</span>';
 
         let behVal = r.violations ? r.violations.length : 0;
-        let behTxt = behVal > 0 ? `${behVal} <a href="#" onclick="window.opener.showViolationDetailModal('${studentName}', '${weekTitle}'); return false;" title="اضغط لفتح تفاصيل المخالفات" style="color:#B8001F; text-decoration:underline;">🔗</a>` : '0';
+        let behTxt = behVal > 0 ? `${behVal} <a href="#" onclick="window.opener.showViolationDetailModal('${studentName}', '${weekTitle}'); return false;" title="اضغط لفتح تفاصيل المخالفات" style="color:#B8001F; text-decoration:underline;">🔗</a>` : '✓';
 
         let appTxt = '✓';
         if(r.appStatus === 'not_done') appTxt = '✕';
@@ -1819,7 +1824,7 @@ function generatePaperRegisterReport(){
     <html lang="ar" dir="rtl">
     <head>
       <meta charset="UTF-8">
-      <title>دفتر المتابعة الورقي - ${currentSection}</title>
+      <title>دفتر المتابعة - ${currentSection}</title>
       <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;700&display=swap" rel="stylesheet">
       <style>
         @page { size: A4 landscape; margin: 4mm; }
@@ -1832,7 +1837,7 @@ function generatePaperRegisterReport(){
       </style>
     </head>
     <body>
-      ${getReportHeaderHTML(`كشف دفتر المتابعة الورقي — ${grade.name} (${currentSection})`)}
+      ${getReportHeaderHTML(`كشف المتابعة للصف : ${grade.name} (${currentSection})`)}
       <table>
         <thead>
           <tr>
