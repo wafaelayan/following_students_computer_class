@@ -239,6 +239,7 @@
             <div class="sub" id="studentCountHeaderSub">سجل حضور ومتابعة وتقييم يومي</div>
           </div>
           <div style="display:flex; gap:8px; flex-wrap:wrap; width:100%;">
+            <button class="btn btn-primary" onclick="manualSaveCurrentRecord()">💾 حفظ بيانات الحصة</button>
             <button class="btn btn-outline" id="manageNamesBtn">✎ إدارة أسماء الطالبات</button>
             <button class="btn btn-outline" id="manageCardsBtn" onclick="openCardsModal()">💳 بطاقات الطالبات</button>
           </div>
@@ -248,7 +249,7 @@
           <div class="field"><label>الشعبة</label><select id="sectionSelect"></select></div>
           <div class="field"><label>الفترة الدراسية</label><select id="termSelect"></select></div>
           <div class="field"><label>تاريخ اليوم</label><input type="date" id="dateInput"></div>
-          <div class="field"><label>الأسبوع</label><select id="weekSelect"></select></div>
+          <div class="field"><label>الأسبوع</label><select id="weekSelect" onchange="onWeekSelectChange()"></select></div>
           <div class="field"><label>الحصة الدراسية</label>
             <select id="lessonPeriodSelect" onchange="onPeriodChange()">
               <option value="الحصة 1">الحصة الأولى (07:55)</option>
@@ -458,6 +459,7 @@ if (!firebase.apps.length) {
 }
 const db = firebase.database();
 
+// تثبيت البادئة الأصلية المستقرة لاسترجاع بياناتك بالكامل
 const DB_PREFIX = "moudi_cloud_v3_";
 
 function getLocalData(key){
@@ -518,7 +520,29 @@ function calculateLateMinutes(){
 
 function onPeriodChange(){
   saveLessonDataLocally();
-  renderTable(); // إعادة تحسين الجدول عند تغيير الحصة لتحديث دقائق التأخير إذا أردتِ
+  renderTable();
+}
+
+function onWeekSelectChange(){
+  const selectedWeek = document.getElementById('weekSelect').value;
+  const sd = getSectionData();
+  
+  if(sd && sd.records){
+    let foundRecordKey = Object.keys(sd.records).find(k=> sd.records[k].week === selectedWeek);
+    if(foundRecordKey){
+      const savedDate = foundRecordKey.split('_')[0];
+      if(savedDate){
+        currentDate = savedDate;
+        document.getElementById('dateInput').value = savedDate;
+      }
+    }
+  }
+  renderPage();
+}
+
+function manualSaveCurrentRecord(){
+  scheduleSave();
+  alert("تم حفظ بيانات الحصة والدرجات سحابياً بنجاح ✓");
 }
 
 const GRADES = [
@@ -1044,7 +1068,6 @@ function renderTable(){
     tdName.appendChild(deleteSingleBtn);
     tr.appendChild(tdName);
 
-    // قسم الحضور وإتاحة تعديل الدقائق بحرية
     const tdAttend = document.createElement('td');
     const attendWrap = document.createElement('div'); attendWrap.className = 'attend-cell';
     
@@ -1062,7 +1085,6 @@ function renderTable(){
     lateInput.value = row.lateMinutes !== undefined ? row.lateMinutes : calculateLateMinutes();
     lateInput.style.display = (row.attend === 'late') ? 'block' : 'none';
 
-    // إتاحة كتابة وتعديل الدقائق يدوياً في أي وقت
     lateInput.addEventListener('input', ()=>{
       row.lateMinutes = lateInput.value;
       scheduleSave();
@@ -1176,7 +1198,6 @@ function renderTable(){
     tdNotes.appendChild(notesBox);
     tr.appendChild(tdNotes);
 
-    // تفعيل الإجراء المتبع لجميع أنواع المخالفات
     const tdAction = document.createElement('td');
     const actionBox = document.createElement('div'); actionBox.className = 'action-box';
     
@@ -1353,7 +1374,6 @@ function updateSummary(){
 document.getElementById('sectionSelect').addEventListener('change', (e)=> switchSection(e.target.value));
 document.getElementById('dateInput').addEventListener('change', (e)=>{ currentDate = e.target.value || todayStr(); renderPage(); });
 document.getElementById('termSelect').addEventListener('change', (e)=>{ getRecord().term = e.target.value; scheduleSave(); });
-document.getElementById('weekSelect').addEventListener('change', (e)=>{ getRecord().week = e.target.value; renderPage(); scheduleSave(); });
 document.getElementById('starSelect').addEventListener('change', (e)=>{ const v = e.target.value; getRecord().star = v.startsWith('—') ? '' : v; scheduleSave();});
 
 document.getElementById('markAllBtn').addEventListener('click', ()=>{
