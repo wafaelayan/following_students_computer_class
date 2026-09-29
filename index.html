@@ -54,10 +54,29 @@
   .pass-filters { display:flex; gap:14px; flex-wrap:wrap; justify-content:center; align-items:center; margin:4px 0 8px; font-size:13px; font-weight:700; color:#444; }
   .pass-filters input[type=date]{ font-family:inherit; padding:5px 8px; border:1px solid var(--line); border-radius:8px; }
   .pass-credit { margin-top:14px; padding-top:10px; border-top:2px double var(--rose); font-family:'Aref Ruqaa','Reem Kufi',serif; font-size:19px; font-weight:700; color:var(--pink-dark); }
+  /* على الهاتف: كل تصريح يظهر كبطاقة صغيرة بدل الجدول */
+  @media (max-width: 720px){
+    .pass-card{ padding:16px 12px; }
+    .pass-table{ min-width:0 !important; }
+    .pass-table, .pass-table tbody, .pass-table tr, .pass-table td{ display:block; width:100%; }
+    .pass-table thead{ display:none; }
+    .pass-table tr{ margin:10px 0; border:1.5px solid var(--line); border-right:6px solid #2A7B4C; border-radius:14px; padding:8px 12px; background:#fff; text-align:right; box-shadow:0 2px 8px rgba(0,0,0,.07); }
+    .pass-table tr.is-out{ border-right-color:#B8001F; background:#FFF8F8; }
+    .pass-table tr.is-ended{ border-right-color:#999; background:#F6F6F6; opacity:.8; }
+    .pass-table td{ display:flex; justify-content:space-between; align-items:center; gap:10px; text-align:left; border-bottom:1px dashed #eee; padding:6px 0; font-size:13px; }
+    .pass-table td:last-child{ border-bottom:none; }
+    .pass-table td::before{ content:attr(data-label); font-weight:800; color:var(--pink-dark); font-size:12px; white-space:nowrap; }
+    .pass-table td[data-label="م"]{ display:none; }
+    .pass-table td.c-name{ font-size:16px; }
+    .pass-table td.c-status{ justify-content:center; font-size:14px; font-weight:800; padding-top:8px; }
+    .pass-table td.c-status::before{ display:none; }
+  }
   .pass-live { color:#2A7B4C; font-size:12px; animation: livePulse 1.6s infinite; }
   .pass-live.off { color:#B8001F; animation:none; }
   @keyframes livePulse { 50% { opacity:.35; } }
   .pass-table td.out-now { color:#B8001F; font-weight:800; }
+  .pass-table td.ended-now { color:#777; font-weight:800; }
+  .pass-filters select{ font-family:inherit; padding:5px 8px; border:1px solid var(--line); border-radius:8px; }
   .pass-table { width: 100%; border-collapse: collapse; margin-top: 10px; }
   .pass-table td, .pass-table th { padding: 8px; border-bottom: 1px solid var(--line); text-align: center; font-size: 13px; }
   .pass-table th { background: var(--pink-dark); color: #fff; }
@@ -198,6 +217,7 @@
 
     <div class="pass-filters">
       <label>التاريخ: <input type="date" id="publicDateInput"></label>
+      <label>الصف: <select id="publicClassFilter"><option value="">كل الصفوف</option></select></label>
       <label><input type="checkbox" id="publicActiveOnly"> الخارجات حالياً فقط</label>
       <span class="pass-live" id="publicLiveDot">● مباشر</span>
     </div>
@@ -721,6 +741,11 @@ function openLeavePassTab(){
         <button class="btn btn-outline" onclick="window.opener.copyPublicLink(document)">🔗 نسخ رابط المرافقات (للاطلاع فقط)</button>
         <button class="btn btn-outline" onclick="window.opener.openLeaveReportWindow()">📊 تقرير الاستئذانات</button>
       </div>
+      <div class="controls" style="align-items:center;">
+        <label style="font-size:13px; font-weight:bold; color:#8A1C30;"><input type="checkbox" id="winAllClasses" onchange="window.opener.renderWinLeaveTable(document)"> عرض كل الصفوف (الافتراضي: الصف المختار فقط)</label>
+        <label style="font-size:13px; font-weight:bold; color:#8A1C30;"><input type="checkbox" id="winShowEnded" onchange="window.opener.renderWinLeaveTable(document)"> إظهار الاستئذانات المنتهية</label>
+        <button class="btn btn-outline" style="border-color:#B8001F; color:#B8001F;" onclick="window.opener.endClassLeaves(document)">🙈 إنهاء استئذانات هذا الصف (انتهت الحصة)</button>
+      </div>
 
       <p id="winLeaveCount" style="font-size:13px; font-weight:bold; color:#8A1C30; margin:0 0 8px;"></p>
       <table>
@@ -779,6 +804,7 @@ function updateWinStudents(winDoc){
   const stuSel = winDoc.getElementById('winStudentSelect');
   const students = (store[gId] && store[gId].sections[sec]) ? store[gId].sections[sec].students : defaultStudents();
   stuSel.innerHTML = students.map(s=> `<option value="${s}">${s}</option>`).join('');
+  renderWinLeaveTable(winDoc);
 }
 
 function showLeaveToast(winDoc, kind, student, extra){
@@ -812,6 +838,8 @@ function issueWinLeavePass(winDoc){
     teacher: currentUserDisplayName, reason, outTime: timeStr, outTimestamp: now.getTime(),
     inTime: null, duration: 'جاري الخروج...'
   };
+  const per = currentPeriodInfo(now);
+  logItem.periodEnd = per.end; logItem.periodLabel = per.label;   // ينتهي التصريح بنهاية الحصة
   try{
     db.ref(LEAVE_ROOT + '/' + logItem.dateStr + '/' + logItem.id).set(logItem);
     if(!leaveLogs.some(l => l.id === logItem.id)) leaveLogs.unshift(logItem);
@@ -825,10 +853,29 @@ function renderWinLeaveTable(winDoc){
   const tbody = winDoc.getElementById('winLeaveTableBody');
   if(!tbody) return;
   tbody.innerHTML = '';
+  const gSel = winDoc.getElementById('winGradeSelect'), sSel = winDoc.getElementById('winSectionSelect');
+  const allBox = winDoc.getElementById('winAllClasses'), endedBox = winDoc.getElementById('winShowEnded');
+  const all = allBox && allBox.checked, showEnded = endedBox && endedBox.checked;
+  const myKey = (gSel && sSel) ? `${gSel.value}_${sSel.value}` : '';
+  const mine = all ? leaveLogs : leaveLogs.filter(l => leaveClassKeyOf(l) === myKey);
+  const hiddenEnded = mine.filter(leaveIsEnded).length;
+  const list = showEnded ? mine : mine.filter(l => !leaveIsEnded(l));
   const cnt = winDoc.getElementById('winLeaveCount');
-  if(cnt) cnt.textContent = `${leaveLogs.length} تصريح اليوم — ${leaveLogs.filter(l=>!l.inTime).length} خارج الفصل الآن`;
-  leaveLogs.forEach((item, idx)=>{
+  if(cnt){
+    const outNow = mine.filter(l => leaveStatus(l) === 'out').length;
+    cnt.textContent = `${all ? 'كل الصفوف' : 'الصف المختار'}: ${mine.length} تصريح اليوم — ${outNow} خارج الفصل الآن` + (!showEnded && hiddenEnded ? ` — ${hiddenEnded} منتهية مخفية` : '');
+  }
+  if(list.length === 0){
+    tbody.innerHTML = '<tr><td colspan="9" style="color:#777; padding:16px;">لا توجد استئذانات نشطة لهذا الصف حالياً.</td></tr>';
+    return;
+  }
+  list.forEach((item, idx)=>{
+    const st = leaveStatus(item);
     const tr = winDoc.createElement('tr');
+    if(st === 'expired' || st === 'closed') tr.style.opacity = '0.6';
+    const action = st === 'out'
+      ? `<button class="btn btn-outline" style="font-size:10px; padding:2px 5px;" onclick="window.opener.registerWinReturn(${item.id}, document)">🛑 تسجيل العودة</button>`
+      : (st === 'back' ? '✅ مكتمل' : (st === 'closed' ? '⏹️ أُنهي يدوياً' : '⏹️ انتهت الحصة'));
     tr.innerHTML = `
       <td>${idx+1}</td>
       <td style="font-weight:bold;">${escHtml(item.student)}</td>
@@ -838,10 +885,21 @@ function renderWinLeaveTable(winDoc){
       <td>${escHtml(item.outTime)}</td>
       <td>${escHtml(item.inTime || '—')}</td>
       <td style="font-weight:bold; color:${item.inTime ? '#2A7B4C' : '#B8001F'}">${escHtml(item.duration)}</td>
-      <td>${!item.inTime ? `<button class="btn btn-outline" style="font-size:10px; padding:2px 5px;" onclick="window.opener.registerWinReturn(${item.id}, document)">🛑 تسجيل العودة</button>` : '✅ مكتمل'}</td>
-    `;
+      <td>${action}</td>`;
     tbody.appendChild(tr);
   });
+}
+// إنهاء استئذانات الصف المختار يدوياً (تنتهي بانتهاء الحصة) فتختفي من القائمة النشطة ومن صفحة المرافقات
+function endClassLeaves(winDoc){
+  const gSel = winDoc.getElementById('winGradeSelect'), sSel = winDoc.getElementById('winSectionSelect');
+  const key = `${gSel.value}_${sSel.value}`;
+  const active = leaveLogs.filter(l => leaveClassKeyOf(l) === key && leaveStatus(l) === 'out');
+  if(active.length === 0){ alert('لا توجد استئذانات نشطة لهذا الصف.'); return; }
+  if(!confirm(`سيتم إنهاء ${active.length} استئذان نشط لهذا الصف (انتهت الحصة). هل تريدين المتابعة؟`)) return;
+  const updates = {}, ts = Date.now();
+  active.forEach(l => { updates[`${l.dateStr}/${l.id}/closed`] = true; updates[`${l.dateStr}/${l.id}/closedAt`] = ts; l.closed = true; });
+  try{ db.ref(LEAVE_ROOT).update(updates); }catch(e){ alert('تعذّر الحفظ، تأكدي من الاتصال.'); }
+  renderWinLeaveTable(winDoc);
 }
 function registerWinReturn(id, winDoc){
   const item = leaveLogs.find(l=>l.id === id);
@@ -940,9 +998,9 @@ async function runLeaveReport(doc){
     <div class="card"><b>${avg}</b><span>متوسط المدة (دقيقة)</span></div>
     <div class="card"><b>${notBack}</b><span>لم تُسجَّل عودتها</span></div></div>
     <div class="two">${box('أكثر الأسباب', byReason)}${box('الأكثر خروجاً', byStudent)}</div>
-    <table><thead><tr><th>م</th><th>التاريخ</th><th>الطالبة</th><th>الصف والشعبة</th><th>المعلمة</th><th>السبب</th><th>الخروج</th><th>العودة</th><th>المدة</th></tr></thead><tbody>`;
+    <table><thead><tr><th>م</th><th>التاريخ</th><th>الطالبة</th><th>الصف والشعبة</th><th>المعلمة</th><th>السبب</th><th>الخروج</th><th>العودة</th><th>المدة</th><th>الحالة</th></tr></thead><tbody>`;
   rows.forEach((l, i) => {
-    html += `<tr><td>${i+1}</td><td>${escHtml(l.dateStr)}</td><td><b>${escHtml(l.student)}</b></td><td>${escHtml(l.gradeName)} (${escHtml(l.sec)})</td><td>${escHtml(l.teacher)}</td><td>${escHtml(l.reason)}</td><td>${escHtml(l.outTime)}</td><td>${escHtml(l.inTime || '—')}</td><td>${l.inTime ? escHtml(l.duration) : '—'}</td></tr>`;
+    html += `<tr><td>${i+1}</td><td>${escHtml(l.dateStr)}</td><td><b>${escHtml(l.student)}</b></td><td>${escHtml(l.gradeName)} (${escHtml(l.sec)})</td><td>${escHtml(l.teacher)}</td><td>${escHtml(l.reason)}</td><td>${escHtml(l.outTime)}</td><td>${escHtml(l.inTime || '—')}</td><td>${l.inTime ? escHtml(l.duration) : '—'}</td><td>${({back:'✅ عادت', out:'🔴 خارج الفصل', closed:'⏹️ أُنهي يدوياً', expired:'⏹️ انتهت الحصة دون تسجيل عودة'})[leaveStatus(l)]}</td></tr>`;
   });
   out.innerHTML = html + '</tbody></table>';
 }
@@ -1139,6 +1197,25 @@ const LEAVE_ROOT = DB_PREFIX + 'leave_days';
 const LEAVE_REASONS = ["🚻 دورة المياه","🩺 العيادة الطبية","🏢 الإدارة / الأخصائية الاجتماعية","🎒 استدعاء ولي أمر","🏫 الخروج للصف","📋 مهمة مدرسية / نشاط","✏️ أسباب أخرى"];
 let leaveLogs = [];            // استئذانات اليوم الحالي فقط
 let leaveBoundDate = null, leaveRef = null, leaveWinRef = null;
+// حالة التصريح: عادت / خارج الفصل / انتهى بانتهاء الحصة / أُنهي يدوياً
+function leaveStatus(l, nowMs){
+  if(l.inTime) return 'back';
+  if(l.closed) return 'closed';
+  if(l.periodEnd && (nowMs || Date.now()) > l.periodEnd) return 'expired';
+  return 'out';
+}
+function leaveIsEnded(l){ const st = leaveStatus(l); return st === 'closed' || st === 'expired'; }
+function leaveClassKeyOf(l){ return l.classKey || ''; }
+// نهاية الحصة الحالية (حسب أوقات الحصص ومدتها)، ويُخزَّن مع كل تصريح
+function currentPeriodInfo(now){
+  const nowMin = now.getHours()*60 + now.getMinutes() + now.getSeconds()/60;
+  const dayStart = new Date(now).setHours(0,0,0,0);
+  for(let i = 0; i < LESSON_TIMINGS.length; i++){
+    const st = LESSON_TIMINGS[i].startMinutes, en = st + LESSON_DURATION_MIN;
+    if(nowMin < en) return { end: dayStart + en*60000, label: `الحصة ${i+1}` };
+  }
+  return { end: now.getTime() + LESSON_DURATION_MIN*60000, label: '' };
+}
 function leaveItemsFromSnap(v){ return Object.values(v || {}).filter(x => x && x.id).sort((a,b)=> (b.id||0) - (a.id||0)); }
 function refreshLeaveWin(){ try{ if(leaveWinRef && !leaveWinRef.closed) renderWinLeaveTable(leaveWinRef.document); }catch(e){} }
 function bindTodayLeaves(){
@@ -1189,11 +1266,20 @@ function checkPublicPassQuery(){
   dateInput.value = todayStr();
   let logs = [];
 
+  const classFilter = document.getElementById('publicClassFilter');
+  function refreshClassOptions(){
+    const cur = classFilter.value;
+    const names = [...new Set(logs.map(l => `${l.gradeName} (${l.sec})`))].sort();
+    classFilter.innerHTML = '<option value="">كل الصفوف</option>' + names.map(n => `<option value="${escHtml(n)}">${escHtml(n)}</option>`).join('');
+    if(names.includes(cur)) classFilter.value = cur;
+  }
   function draw(){
     const day = dateInput.value || todayStr();
-    let list = logs.filter(l => l && l.dateStr === day);
-    const outNow = list.filter(l => !l.inTime).length;
-    if(activeOnly.checked) list = list.filter(l => !l.inTime);
+    refreshClassOptions();
+    const cf = classFilter.value;
+    let list = logs.filter(l => l && l.dateStr === day && (!cf || `${l.gradeName} (${l.sec})` === cf));
+    const outNow = list.filter(l => leaveStatus(l) === 'out').length;
+    if(activeOnly.checked) list = list.filter(l => leaveStatus(l) === 'out');
 
     if(outNow > 0){
       badge.className = 'pass-status status-active';
@@ -1208,25 +1294,29 @@ function checkPublicPassQuery(){
     }
     let html = `<table class="pass-table"><thead><tr><th>م</th><th>اسم الطالبة</th><th>الصف والشعبة</th><th>اسم المعلمة</th><th>سبب الخروج</th><th>ساعة الخروج</th><th>ساعة العودة</th><th>المدة</th><th>الحالة</th></tr></thead><tbody>`;
     list.forEach((l, i)=>{
-      const back = !!l.inTime;
+      const st = leaveStatus(l);
+      const back = st === 'back', out = st === 'out';
       let duration = l.duration;
-      if(!back && l.outTimestamp){ duration = Math.max(0, Math.floor((Date.now() - l.outTimestamp)/60000)) + ' دقيقة (حتى الآن)'; }
-      html += `<tr>
-        <td>${i+1}</td>
-        <td><b>${escHtml(l.student)}</b></td>
-        <td>${escHtml(l.gradeName)} (${escHtml(l.sec)})</td>
-        <td>${escHtml(l.teacher)}</td>
-        <td>${escHtml(l.reason)}</td>
-        <td>${escHtml(l.outTime)}</td>
-        <td>${back ? escHtml(l.inTime) : '—'}</td>
-        <td style="font-weight:bold; color:${back ? '#2A7B4C' : '#B8001F'}">${escHtml(duration)}</td>
-        <td class="${back ? '' : 'out-now'}">${back ? '✅ عادت' : '🔴 خارج الفصل'}</td>
+      if(out && l.outTimestamp){ duration = Math.max(0, Math.floor((Date.now() - l.outTimestamp)/60000)) + ' دقيقة (حتى الآن)'; }
+      if(!back && !out){ duration = '—'; }
+      const label = back ? '✅ عادت' : (out ? '🔴 خارج الفصل' : '⏹️ انتهى بانتهاء الحصة');
+      html += `<tr class="${back ? 'is-back' : (out ? 'is-out' : 'is-ended')}">
+        <td data-label="م">${i+1}</td>
+        <td data-label="الطالبة" class="c-name"><b>${escHtml(l.student)}</b></td>
+        <td data-label="الصف والشعبة">${escHtml(l.gradeName)} (${escHtml(l.sec)})</td>
+        <td data-label="المعلمة">${escHtml(l.teacher)}</td>
+        <td data-label="السبب">${escHtml(l.reason)}</td>
+        <td data-label="ساعة الخروج">${escHtml(l.outTime)}</td>
+        <td data-label="ساعة العودة">${back ? escHtml(l.inTime) : '—'}</td>
+        <td data-label="المدة" style="font-weight:bold; color:${back ? '#2A7B4C' : (out ? '#B8001F' : '#777')}">${escHtml(duration)}</td>
+        <td data-label="الحالة" class="c-status ${out ? 'out-now' : (back ? '' : 'ended-now')}">${label}</td>
       </tr>`;
     });
     contentArea.innerHTML = html + '</tbody></table>';
   }
 
   dateInput.addEventListener('change', draw);
+  classFilter.addEventListener('change', draw);
   activeOnly.addEventListener('change', draw);
   draw();
 
@@ -1417,7 +1507,7 @@ function showApp(displayName, deptName){
   startLessonTimer();
 
   // سجل الاستئذانات: يتزامن لحظياً بين كل الأجهزة ويتجدد تلقائياً مع بداية كل يوم
-  bindTodayLeaves(); migrateOldLeaveLogs(); setInterval(bindTodayLeaves, 60000);
+  bindTodayLeaves(); migrateOldLeaveLogs(); setInterval(bindTodayLeaves, 60000); setInterval(refreshLeaveWin, 30000);
 
   currentGradeId = GRADES[0].id;
   currentSection = SECTIONS[GRADES[0].id][0];
