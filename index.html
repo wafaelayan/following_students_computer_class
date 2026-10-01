@@ -154,7 +154,8 @@
   td.name-cell{ text-align:right; font-weight:600; min-width:190px; width:190px; }
   td.name-cell input{ width:100%; border:1px solid transparent; background:transparent; font-family:inherit; font-size:14px; font-weight:600; padding:4px 5px; border-radius:5px; -webkit-appearance:none; }
 
-  .attend-cell { display:flex; flex-direction:column; align-items:center; gap:2px; width: 95px; margin: 0 auto; }
+  .attend-cell { display:flex; flex-direction:column; align-items:center; gap:2px; width: 62px; margin: 0 auto; }
+  select.attend{ font-size:15px !important; text-align:center; text-align-last:center; }
   select.attend, select.app-status { font-family:inherit; font-size:10.5px; font-weight:700; padding:3px 2px; border-radius:5px; border:1px solid var(--line); cursor:pointer; width:100%; -webkit-appearance:none; text-align: center; }
   select.attend.present{ background:var(--present); color:var(--present-ink); }
   select.attend.absent{ background:var(--absent); color:var(--absent-ink); }
@@ -177,7 +178,8 @@
   .p-symbols{ min-height:16px; font-size:13px; letter-spacing:1px; }
   .p-buttons{ display:flex; gap:2px; }
   .p-buttons button{ border:1px solid var(--line); background:#fff; border-radius:5px; font-size:11.5px; padding:2px 5px; cursor:pointer; }
-  .p-buttons .clear-btn{ color:var(--red); font-size:10px; font-weight:700; }
+  .p-buttons button{ font-size:15px; padding:3px 7px; }
+  .p-buttons button.active{ background:#FFE9A8; border-color:#E0A800; box-shadow:0 0 0 2px #FFD25E inset; }
 
   .modal-overlay{ position:fixed; inset:0; background:rgba(138,28,48,.55); display:none; align-items:center; justify-content:center; z-index:100; padding:15px; }
   .modal-overlay.open{ display:flex; }
@@ -203,24 +205,6 @@
     .nav-item{ display:inline-block; width:auto; margin-left:4px; margin-bottom:4px; padding:6px 9px; font-size:12px; }
     .main{ padding:10px; }
   }
-
-body{font-size:16px;}
-table{min-width:1050px !important;}
-thead th{font-size:14px !important;padding:10px 4px !important;}
-tbody td{font-size:15px !important;}
-td.name-cell input{font-size:16px !important;}
-select.attend, select.app-status{font-size:15px !important;padding:6px 2px !important;}
-.attend-cell{width:110px !important;} .late-time-input{font-size:14px !important;}
-.notes-box select{font-size:14px !important;} .notes-box input{font-size:13px !important;}
-.violation-chip{font-size:13px !important;}
-.btn{font-size:14.5px !important;}
-.field label{font-size:13px !important;}
-.field select,.field input[type=date],.field input[type=text]{font-size:16px !important;}
-.p-buttons button{font-size:15px !important;} .p-symbols{font-size:16px !important;}
-.past-cell,.behavior-cell{font-size:16px !important;font-weight:800;}
-.behavior-cell{color:#B8001F;}
-#saveRecordBtn{font-size:16px !important;padding:11px 22px !important;}
-#saveRecordBtn.dirty{background:var(--red) !important;animation:livePulse 1.2s infinite;}
 </style>
 </head>
 <body>
@@ -321,6 +305,8 @@ select.attend, select.app-status{font-size:15px !important;padding:6px 2px !impo
             
             <button class="btn btn-primary" id="saveRecordBtn" onclick="manualSaveCurrentRecord()">💾 حفظ بيانات الحصة</button>
             <button class="btn btn-outline" id="manageNamesBtn">✎ إدارة أسماء الطالبات</button>
+            <button class="btn btn-outline" onclick="addStudentQuick()">➕ إضافة طالبة</button>
+            <button class="btn btn-outline" style="color:var(--red); border-color:var(--red);" onclick="openDeleteStudentModal()">🗑️ حذف طالبة</button>
             <button class="btn btn-outline" id="manageCardsBtn" onclick="openCardsModal()">💳 بطاقات الطالبات</button>
           </div>
         </div>
@@ -388,6 +374,18 @@ select.attend, select.app-status{font-size:15px !important;padding:6px 2px !impo
 
     <div style="margin-top:25px;">
       <button class="btn btn-primary" onclick="closeCelebrationModal()" style="padding:10px 25px; font-size:14px;">👏 إغلاق والعودة للسجل</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal-overlay" id="deleteStudentModal">
+  <div class="modal" style="max-width:440px;">
+    <h3>🗑️ حذف طالبة من الشعبة</h3>
+    <p style="font-size:13px; color:#666; margin:0 0 10px;">اختاري الطالبة. سيُحذف اسمها وكل سجلاتها (الحضور والمخالفات والمشاركة والدرجات) من هذه الشعبة، وتبقى بيانات باقي الطالبات كما هي.</p>
+    <select id="deleteStudentSelect" style="width:100%; padding:10px; font-family:inherit; font-size:15px; border:1px solid var(--line); border-radius:8px;"></select>
+    <div class="modal-actions" style="margin-top:12px;">
+      <button class="btn btn-outline" onclick="document.getElementById('deleteStudentModal').classList.remove('open')">إلغاء</button>
+      <button class="btn btn-danger" onclick="confirmDeleteStudent()">حذف الطالبة</button>
     </div>
   </div>
 </div>
@@ -482,8 +480,8 @@ select.attend, select.app-status{font-size:15px !important;padding:6px 2px !impo
     </div>
 
     <div style="border-bottom: 1px solid var(--line); padding-bottom: 12px; margin-bottom: 12px;">
-      <h4 style="margin: 0 0 6px; color: var(--pink-dark);">6. تقرير المشاركة التفاعلية بالتاريخ واليوم:</h4>
-      <button class="btn btn-outline" onclick="generateBonusReport()">⭐ حصر المشاركة التفاعلية</button>
+      <h4 style="margin: 0 0 6px; color: var(--pink-dark);">6. تقرير الطالبات الحاصلات على البونص بالتاريخ واليوم:</h4>
+      <button class="btn btn-outline" onclick="generateBonusReport()">⭐ حصر البونص والشارات</button>
     </div>
 
     <div style="border-bottom: 1px solid var(--line); padding-bottom: 12px; margin-bottom: 12px;">
@@ -498,9 +496,16 @@ select.attend, select.app-status{font-size:15px !important;padding:6px 2px !impo
       <div style="display:flex; gap:8px; flex-wrap:wrap; align-items:center; margin-top:8px;">
         <button class="btn btn-primary" onclick="generateLeaveReport()">🚪 عرض وطباعة تقرير الاستئذانات</button>
         <button class="btn btn-outline" onclick="exportLeaveReportExcel()">📥 تصدير Excel</button>
+        <button class="btn btn-outline" style="border-color:#2A7B4C; color:#2A7B4C;" onclick="recoverLeaveLogs()">🔄 استرجاع الاستئذانات المفقودة</button>
         <span style="margin-inline-start:auto; font-size:11.5px; color:#666;">🧹 حذف الأقدم من <input type="number" id="lrPurgeDays" value="180" min="30" style="width:62px; padding:4px; border:1px solid var(--line); border-radius:6px;"> يوماً</span>
         <button class="btn btn-outline" style="color:var(--red); border-color:var(--red);" onclick="purgeOldLeaves()">حذف القديم</button>
       </div>
+    </div>
+
+    <div style="border-bottom: 1px solid var(--line); padding-bottom: 12px; margin-bottom: 12px;">
+      <h4 style="margin: 0 0 6px; color: var(--pink-dark);">8. أدوات الحماية والاسترجاع:</h4>
+      <p style="margin:0 0 8px; font-size:12px; color:#666;">تبحث عن مخالفات سُجّلت على هذا الجهاز ولم تصل للسحابة أو مُحيت منها، وتعيدها بعد موافقتك.</p>
+      <button class="btn btn-outline" style="border-color:#2A7B4C; color:#2A7B4C;" onclick="recoverViolationsFromDevice()">🛟 استرجاع المخالفات المفقودة من هذا الجهاز</button>
     </div>
 
     <div class="modal-actions">
@@ -538,6 +543,16 @@ function toArr(v){
   if(v && typeof v === 'object') return Object.keys(v).sort((a,b)=>a-b).map(k=>v[k]);
   return [];
 }
+function toArrIdx(v){
+  if(Array.isArray(v)) return v;
+  if(v && typeof v === 'object'){
+    const keys = Object.keys(v).map(Number).filter(n => !isNaN(n));
+    const out = new Array(keys.length ? Math.max(...keys) + 1 : 0).fill(null);
+    keys.forEach(k => { out[k] = v[k]; });
+    return out;
+  }
+  return [];
+}
 function normalizeRow(r){
   r = r || {};
   return {
@@ -557,19 +572,160 @@ function normalizeSection(sec){
     ...sec,
     students: students.length ? students : defaultStudents(),
     records: {},
-    photos: (sec.photos && typeof sec.photos === 'object') ? sec.photos : {},
+    photos: Object.fromEntries(Object.entries((sec.photos && typeof sec.photos === 'object') ? sec.photos : {}).filter(([, v]) => v)),
     hiddenCards: toArr(sec.hiddenCards)
   };
   Object.keys(sec.records || {}).forEach(k=>{
     const rec = sec.records[k];
     if(!rec || typeof rec !== 'object') return;
     const wk = rec.week || (k.split('_')[1] || WEEKS[0]);
-    const rows = toArr(rec.rows).map(normalizeRow);
+    const rows = toArrIdx(rec.rows).map(normalizeRow);
     while(rows.length < out.students.length) rows.push(normalizeRow({}));
+    if(rows.length > out.students.length) rows.length = out.students.length;
     out.records[k] = { ...rec, _auto: rec._auto === true ? true : (rec._auto === false ? false : undefined), week: wk, term: rec.term || TERMS[0], period: rec.period || 'الحصة 1', lesson: rec.lesson || '', star: rec.star || '', rows };
   });
   return out;
 }
+// ===================== نظام الحفظ الآمن =====================
+// 1) لا نكتب الشعبة كاملة أبداً: نرسل فقط الحقول التي تغيّرت (مسارات محددة) فلا يمحو جهاز قديم عمل جهاز آخر.
+// 2) كل تعديل يُخزَّن في طابور محلي دائم حتى تؤكد السحابة وصوله، ويُعاد إرساله تلقائياً بعد انقطاع الإنترنت.
+// 3) مؤشر الحفظ لا يقول «محفوظ» إلا بعد تأكيد السحابة فعلاً.
+const lastSent = {};            // secKey -> نسخة نعتقد أنها موجودة في السحابة (أساس المقارنة)
+const saveTimers = {};
+let saveInflight = 0, lastAckAt = null;
+const cloneJSON = o => JSON.parse(JSON.stringify(o === undefined ? null : o));
+const emptyBase = () => ({ students: [], records: {}, photos: {}, hiddenCards: [] });
+
+function setPathVal(obj, path, val){
+  const seg = path.split('/'); let n = obj;
+  for(let i = 0; i < seg.length - 1; i++){
+    const k = seg[i], nxt = seg[i+1];
+    if(n[k] === undefined || n[k] === null || typeof n[k] !== 'object') n[k] = /^\d+$/.test(nxt) ? [] : {};
+    n = n[k];
+  }
+  n[seg[seg.length - 1]] = val;
+  return obj;
+}
+function applyUpdates(sec, updates){ Object.keys(updates).forEach(p => setPathVal(sec, p, cloneJSON(updates[p]))); return sec; }
+const sameJSON = (a, b) => JSON.stringify(a === undefined ? null : a) === JSON.stringify(b === undefined ? null : b);
+
+function diffSection(local, base){
+  const up = {};
+  base = base || emptyBase();
+  if(!sameJSON(local.students, base.students)) up['students'] = cloneJSON(local.students);
+  if(!sameJSON(local.hiddenCards, base.hiddenCards)) up['hiddenCards'] = cloneJSON(local.hiddenCards);
+  const lp = local.photos || {}, bp = base.photos || {};
+  Object.keys(lp).forEach(k => { if(!sameJSON(lp[k], bp[k])) up['photos/' + k] = lp[k]; });
+  Object.keys(bp).forEach(k => { if(!(k in lp)) up['photos/' + k] = null; });
+  const defRow = normalizeRow({});
+  Object.keys(local.records || {}).forEach(k => {
+    const rec = local.records[k];
+    if(!rec || rec._auto === true) return;                      // سجل فارغ أُنشئ للعرض فقط: لا يُرسل
+    const b = base.records && base.records[k];
+    ['term','week','period','lesson','star'].forEach(f => {
+      const cur = rec[f] === undefined ? '' : rec[f];
+      if(!b || !sameJSON(cur, b[f] === undefined ? '' : b[f])) up[`records/${k}/${f}`] = cur;
+    });
+    (rec.rows || []).forEach((r, i) => {
+      if(!r) return;
+      const br = b && b.rows && b.rows[i] ? b.rows[i] : defRow;   // سجل جديد: نقارن بالصف الافتراضي فنرسل ما تغيّر فقط
+      Object.keys(r).forEach(f => { if(!sameJSON(r[f], br[f])) up[`records/${k}/rows/${i}/${f}`] = cloneJSON(r[f]); });
+    });
+    if(b && b.rows && b.rows.length > (rec.rows || []).length){ for(let i = (rec.rows || []).length; i < b.rows.length; i++) up[`records/${k}/rows/${i}`] = null; }   // صفوف طالبات محذوفات
+  });
+  return up;
+}
+
+const pendingKey = secKey => DB_PREFIX + 'pending_' + secKey;
+function loadPending(secKey){ try{ return JSON.parse(localStorage.getItem(pendingKey(secKey)) || '{}'); }catch(e){ return {}; } }
+function savePending(secKey, p){ try{ if(Object.keys(p).length) localStorage.setItem(pendingKey(secKey), JSON.stringify(p)); else localStorage.removeItem(pendingKey(secKey)); }catch(e){} }
+function totalPending(){
+  let n = 0;
+  try{ for(let i = 0; i < localStorage.length; i++){ const k = localStorage.key(i); if(k && k.startsWith(DB_PREFIX + 'pending_')){ try{ n += Object.keys(JSON.parse(localStorage.getItem(k))).length; }catch(e){} } } }catch(e){}
+  return n;
+}
+function setSaveStatus(kind){
+  const el = document.getElementById('saveIndicator'); if(!el) return;
+  const t = () => (lastAckAt || new Date()).toLocaleTimeString('ar-KW', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+  const map = {
+    saving:  ['⏳ جارٍ الحفظ في السحابة...', '#8A4B00'],
+    saved:   [`✅ محفوظ في السحابة — ${t()}`, '#1E7A46'],
+    pending: [`⚠️ ${totalPending() || 'بعض'} تعديل لم يصل للسحابة بعد — تأكدي من الإنترنت (محفوظ على جهازك وسيُرسل تلقائياً)`, '#B8001F'],
+    offline: ['🔴 لا يوجد اتصال بالإنترنت — تعديلاتك محفوظة على الجهاز وسترسل تلقائياً عند عودة الاتصال', '#B8001F'],
+    typing:  ['✏️ تعديل غير محفوظ بعد...', '#8A4B00']
+  };
+  const [txt, col] = map[kind] || map.saved;
+  el.textContent = txt; el.style.color = col;
+}
+
+function flushSection(gId, sec){
+  const secKey = `section_${gId}_${sec}`;
+  const local = store[gId] && store[gId].sections[sec];
+  if(!local) return Promise.resolve(true);
+  if(!lastSent[secKey]) lastSent[secKey] = emptyBase();
+  try{ localStorage.setItem(DB_PREFIX + secKey, JSON.stringify(local)); }catch(e){}
+  const updates = diffSection(local, lastSent[secKey]);
+  const pend = Object.assign(loadPending(secKey), updates);
+  savePending(secKey, pend);
+  applyUpdates(lastSent[secKey], updates);
+  if(Object.keys(pend).length === 0){ setSaveStatus('saved'); return Promise.resolve(true); }
+  const toSend = Object.assign({}, pend);
+  saveInflight++; setSaveStatus('saving');
+  setTimeout(() => { if(saveInflight > 0) setSaveStatus('pending'); }, 8000);
+  return db.ref(DB_PREFIX + secKey).update(toSend).then(() => {
+    const cur = loadPending(secKey);
+    Object.keys(toSend).forEach(k => { if(sameJSON(cur[k], toSend[k])) delete cur[k]; });
+    savePending(secKey, cur); lastAckAt = new Date();
+    return true;
+  }).catch(() => false).then(ok => { saveInflight = Math.max(0, saveInflight - 1); setSaveStatus(ok ? (totalPending() ? 'pending' : 'saved') : 'pending'); return ok; });
+}
+
+// دمج نسخة السحابة الواردة مع تعديلاتنا غير المؤكدة (لا نفقد شيئاً)
+function mergeCloudSection(gId, sec, cloudRaw){
+  const secKey = `section_${gId}_${sec}`;
+  const local = store[gId].sections[sec];
+  const base = lastSent[secKey] || emptyBase();
+  const dirty = diffSection(local, base);
+  const pend = loadPending(secKey);
+  const cloud = normalizeSection(cloudRaw);
+  let merged = cloneJSON(cloud);
+  applyUpdates(merged, pend);
+  applyUpdates(merged, dirty);
+  merged = normalizeSection(merged);
+  Object.keys(local.records || {}).forEach(k => { if(local.records[k] && local.records[k]._auto === true && !merged.records[k]) merged.records[k] = local.records[k]; });
+  lastSent[secKey] = cloneJSON(cloud);
+  const changed = JSON.stringify(local) !== JSON.stringify(merged);
+  store[gId].sections[sec] = merged;
+  try{ localStorage.setItem(DB_PREFIX + secKey, JSON.stringify(merged)); }catch(e){}
+  if(Object.keys(dirty).length || Object.keys(pend).length) flushSection(gId, sec);
+  return changed;
+}
+
+function backupViolations(gId, sec, recKey){
+  try{
+    const r = store[gId].sections[sec].records[recKey]; if(!r) return;
+    const key = DB_PREFIX + 'vio_backup_v1';
+    const all = JSON.parse(localStorage.getItem(key) || '{}');
+    (r.rows || []).forEach((row, i) => {
+      if(row && row.violations && row.violations.length){
+        const k = `${gId}|${sec}|${recKey}|${i}`;
+        all[k] = [...new Set([...(all[k] || []), ...row.violations])];
+      }
+    });
+    localStorage.setItem(key, JSON.stringify(all));
+  }catch(e){}
+}
+
+function flushAllPending(){
+  GRADES.forEach(g => (SECTIONS[g.id] || []).forEach(sec => {
+    if(Object.keys(loadPending(`section_${g.id}_${sec}`)).length) flushSection(g.id, sec);
+  }));
+}
+window.addEventListener('beforeunload', e => {
+  if(Object.keys(saveTimers).length || totalPending() > 0){ e.preventDefault(); e.returnValue = ''; }
+});
+window.addEventListener('online', () => { try{ flushAllPending(); }catch(e){} });
+
 function isPristineRecord(rec){
   if(!rec) return true;
   if(rec._auto === true) return true;          // أُنشئ تلقائياً عند العرض ولم تُدخل فيه بيانات
@@ -616,7 +772,7 @@ function syncCloudData(key, callback){
   db.ref(DB_PREFIX + key).on('value', (snapshot) => {
     const data = snapshot.val();
     if(data){
-      localStorage.setItem(DB_PREFIX + key, JSON.stringify(data));
+      if(!String(key).startsWith('section_')) localStorage.setItem(DB_PREFIX + key, JSON.stringify(data));
       if(callback) callback(data);
     }
   });
@@ -666,7 +822,7 @@ function calculateLateMinutes(){
   const currentMinutes = now.getHours() * 60 + now.getMinutes();
 
   const timing = LESSON_TIMINGS[selectedIdx] || LESSON_TIMINGS[0];
-  const gracePeriodEnd = timing.startMinutes + 1;
+  const gracePeriodEnd = timing.startMinutes + 5;
   
   const late = currentMinutes - gracePeriodEnd;
   return late > 0 ? late : 0;
@@ -744,9 +900,6 @@ function openLeavePassTab(){
         .btn { font-family: inherit; font-size: 13px; font-weight: bold; padding: 8px 14px; border: none; border-radius: 8px; cursor: pointer; }
         .btn-primary { background: #E85A71; color: #fff; }
         .btn-outline { background: #fff; color: #8A1C30; border: 1px solid #8A1C30; }
-        .btn-big{font-size:22px !important;padding:16px 30px !important;border-radius:12px !important;}
-        .btn-big-sm{font-size:17px !important;padding:10px 16px !important;border-radius:10px !important;font-weight:800 !important;}
-        .field select,.field input{font-size:16px !important;} td,th{font-size:15px !important;}
         table { width: 100%; border-collapse: collapse; background: #fff; border-radius: 10px; overflow: hidden; }
         th { background: #8A1C30; color: #fff; padding: 8px; font-size: 12px; }
         td { padding: 8px; border-bottom: 1px solid #E5C7D0; text-align: center; font-size: 13px; }
@@ -756,7 +909,7 @@ function openLeavePassTab(){
       <div class="header">
         <div>
           <h2>🚪 تصاريح خروج واستئذان الطالبات</h2>
-          <p style="margin:2px 0 0; font-size:12px; color:#666;">منطقة الأحمدي التعليمية — ثانوية موضي سلطان العيسى — المعلمة: ${escHtml(currentUserDisplayName)}</p>
+          <p style="margin:2px 0 0; font-size:12px; color:#666;">منطقة الأحمدي التعليمية — ثانوية موضي سلطان العيسى</p>
         </div>
       </div>
 
@@ -775,12 +928,12 @@ function openLeavePassTab(){
             <option value="✏️ أسباب أخرى">✏️ أسباب أخرى</option>
           </select>
         </div>
-        <button class="btn btn-primary btn-big" onclick="window.opener.issueWinLeavePass(document)">🟢 تسجيل السماح بالخروج</button>
+        <button class="btn btn-primary" onclick="window.opener.issueWinLeavePass(document)">🟢 تسجيل السماح بالخروج</button>
       </div>
       <div class="controls" style="align-items:center;">
         <label style="font-size:13px; font-weight:bold; color:#8A1C30;">📅 التاريخ: <input type="date" id="winLeaveDate" style="font-family:inherit; padding:4px 6px; border:1px solid #E5C7D0; border-radius:6px;" onchange="window.opener.changeWinLeaveDate(document)"></label>
         <label style="font-size:13px; font-weight:bold; color:#8A1C30;"><input type="checkbox" id="winAllClasses" onchange="window.opener.renderWinLeaveTable(document)"> عرض كل الصفوف (الافتراضي: الصف المختار فقط)</label>
-        <label style="font-size:13px; font-weight:bold; color:#8A1C30;"><input type="checkbox" id="winShowEnded" checked onchange="window.opener.renderWinLeaveTable(document)"> إظهار الاستئذانات المنتهية</label>
+        <label style="font-size:13px; font-weight:bold; color:#8A1C30;"><input type="checkbox" id="winShowEnded" onchange="window.opener.renderWinLeaveTable(document)"> إظهار الاستئذانات المنتهية</label>
         <button class="btn btn-outline" style="border-color:#B8001F; color:#B8001F;" onclick="window.opener.endClassLeaves(document)">🙈 إنهاء استئذانات هذا الصف (انتهت الحصة)</button>
       </div>
 
@@ -791,6 +944,7 @@ function openLeavePassTab(){
             <th>م</th>
             <th>اسم الطالبة</th>
             <th>الصف والشعبة</th>
+            <th>اسم المعلمة</th>
             <th>سبب الخروج</th>
             <th>ساعة الخروج</th>
             <th>ساعة العودة</th>
@@ -805,10 +959,8 @@ function openLeavePassTab(){
         window.onload = function(){
           const gSel = document.getElementById('winGradeSelect');
           gSel.innerHTML = '${gradeOptionsHTML}';
-          gSel.value = '${currentGradeId}';
           window.opener.updateWinSections(gSel.value, document);
-          document.getElementById('winSectionSelect').value = '${currentSection}';
-          window.opener.updateWinStudents(document);
+          window.opener.renderWinLeaveTable(document);
         };
       <\/script>
     </body>
@@ -867,6 +1019,7 @@ function issueWinLeavePass(winDoc){
   const per = currentPeriodInfo(now);
   logItem.periodEnd = per.end; logItem.periodLabel = per.label;   // ينتهي التصريح بنهاية الحصة
   try{
+    backupLeaveItem(logItem);
     db.ref(LEAVE_ROOT + '/' + logItem.dateStr + '/' + logItem.id).set(logItem);
     if(!leaveLogs.some(l => l.id === logItem.id)) leaveLogs.unshift(logItem);
     renderWinLeaveTable(winDoc);
@@ -903,21 +1056,21 @@ function renderWinLeaveTable(winDoc){
     let why = 'لا توجد استئذانات نشطة لهذا الصف' + (isToday ? ' حالياً.' : ` بتاريخ ${dateInp.value}.`);
     if(hiddenEnded) why += ` يوجد ${hiddenEnded} منتهية، فعّلي «إظهار الاستئذانات المنتهية».`;
     if(others > 0) why += ` ويوجد ${others} استئذان لصفوف أخرى، فعّلي «عرض كل الصفوف».`;
-    tbody.innerHTML = `<tr><td colspan="8" style="color:#777; padding:16px;">${why}</td></tr>`;
+    tbody.innerHTML = `<tr><td colspan="9" style="color:#777; padding:16px;">${why}</td></tr>`;
     return;
   }
   list.forEach((item, idx)=>{
     const st = leaveStatus(item);
     const tr = winDoc.createElement('tr');
     if(st === 'expired' || st === 'closed') tr.style.opacity = '0.6';
-    const delBtn = `<button class="btn btn-outline btn-big-sm" style="color:#B8001F;border-color:#B8001F;" onclick="window.opener.deleteWinLeave(${item.id}, document)">🗑️ حذف (خطأ)</button>`;
-    const retBtn = `<button class="btn btn-primary btn-big-sm" onclick="window.opener.registerWinReturn(${item.id}, document)">🛑 تسجيل العودة</button>`;
-    const stTxt = st==='back' ? '✅ مكتمل' : (st==='closed' ? '⏹️ أُنهي يدوياً' : (st==='expired' ? '⏹️ انتهت الحصة' : ''));
-    const action = (stTxt ? stTxt + '<br>' : '') + (st==='back' ? '' : retBtn) + ' ' + delBtn;
+    const action = st === 'out'
+      ? `<button class="btn btn-outline" style="font-size:10px; padding:2px 5px;" onclick="window.opener.registerWinReturn(${item.id}, document)">🛑 تسجيل العودة</button>`
+      : (st === 'back' ? '✅ مكتمل' : (st === 'closed' ? '⏹️ أُنهي يدوياً' : '⏹️ انتهت الحصة'));
     tr.innerHTML = `
       <td>${idx+1}</td>
       <td style="font-weight:bold;">${escHtml(item.student)}</td>
       <td>${escHtml(item.gradeName)} (${escHtml(item.sec)})</td>
+      <td><b>${escHtml(item.teacher || currentUserDisplayName)}</b></td>
       <td>${escHtml(item.reason)}</td>
       <td>${escHtml(item.outTime)}</td>
       <td>${escHtml(item.inTime || '—')}</td>
@@ -938,14 +1091,6 @@ function endClassLeaves(winDoc){
   try{ db.ref(LEAVE_ROOT).update(updates); }catch(e){ alert('تعذّر الحفظ، تأكدي من الاتصال.'); }
   renderWinLeaveTable(winDoc);
 }
-function deleteWinLeave(id, winDoc){
-  const item = leaveViewSource(winDoc).find(l=>l.id === id); if(!item) return;
-  if(!confirm(`حذف تصريح الطالبة (${item.student}) نهائياً؟ استخدمي هذا عند خطأ الإدخال ثم أعيدي التسجيل بشكل صحيح.`)) return;
-  db.ref(LEAVE_ROOT + '/' + item.dateStr + '/' + item.id).remove().then(()=>{
-    leaveLogs = leaveLogs.filter(l=>l.id !== id); leavePastLogs = leavePastLogs.filter(l=>l.id !== id);
-    renderWinLeaveTable(winDoc);
-  }).catch(()=>alert('تعذّر الحذف، تأكدي من الاتصال بالإنترنت.'));
-}
 function registerWinReturn(id, winDoc){
   const item = leaveViewSource(winDoc).find(l=>l.id === id) || leaveLogs.find(l=>l.id === id);
   if(!item) return;
@@ -955,7 +1100,7 @@ function registerWinReturn(id, winDoc){
   const upd = { inTime, duration: `${diffMins} دقيقة`, durationMin: diffMins };
   try{
     db.ref(LEAVE_ROOT + '/' + item.dateStr + '/' + item.id).update(upd);
-    Object.assign(item, upd);
+    Object.assign(item, upd); backupLeaveItem(item);
     renderWinLeaveTable(winDoc);
     showLeaveToast(winDoc, 'in', item.student, `مدة الخروج: ${diffMins} دقيقة`);
   }catch(e){ alert('تعذّر تسجيل العودة ⚠️ تأكدي من الاتصال وأعيدي المحاولة.'); }
@@ -1032,6 +1177,74 @@ async function exportLeaveReportExcel(){
   XLSX.utils.book_append_sheet(wb, ws, 'الاستئذانات');
   XLSX.writeFile(wb, `تقرير_الاستئذانات_${todayStr()}.xlsx`);
 }
+async function recoverLeaveLogs(){
+  const found = {};
+  const add = (l, src) => { if(l && l.id && l.dateStr && !found[l.id]) found[l.id] = Object.assign({}, l, { _src: src }); };
+  const sources = { cloudOld: 0, deviceOld: 0, deviceBackup: 0 };
+  try{ const snap = await db.ref(DB_PREFIX + 'global_leave_logs').once('value'); toArr(snap.val()).forEach(l => add(l, 'cloudOld')); }catch(e){}
+  try{ toArr(JSON.parse(localStorage.getItem(DB_PREFIX + 'global_leave_logs') || '[]')).forEach(l => add(l, 'deviceOld')); }catch(e){}
+  try{ toArr(JSON.parse(localStorage.getItem(DB_PREFIX + 'leave_backup_v1') || '[]')).forEach(l => add(l, 'deviceBackup')); }catch(e){}
+  const items = Object.values(found);
+  if(items.length === 0){ alert('لم أجد أي استئذانات قديمة أو نسخ احتياطية في السحابة أو في هذا الجهاز.\n\nجرّبي الضغط على هذا الزر من الجهاز نفسه (والمتصفح نفسه) الذي سجّلتِ منه الاستئذانات.'); return; }
+  const dates = [...new Set(items.map(l => l.dateStr))];
+  const existing = {};
+  try{
+    await Promise.all(dates.map(async d => { const snap = await db.ref(LEAVE_ROOT + '/' + d).once('value'); existing[d] = snap.val() || {}; }));
+  }catch(e){ alert('تعذّر الاتصال بالسحابة، تأكدي من الإنترنت وأعيدي المحاولة.'); return; }
+  const missing = items.filter(l => !existing[l.dateStr][l.id]);
+  if(missing.length === 0){ alert(`فحصتُ ${items.length} استئذاناً محفوظاً احتياطياً، وكلها موجودة أصلاً في السجل الحالي. لا يوجد ما يُسترجع.`); return; }
+  const byGroup = {};
+  missing.forEach(l => { const k = `${l.dateStr} — ${l.gradeName || ''} (${l.sec || ''})`; byGroup[k] = (byGroup[k] || 0) + 1; });
+  const summary = Object.entries(byGroup).sort().map(([k, v]) => `• ${k}: ${v}`).join('\n');
+  if(!confirm(`وجدتُ ${missing.length} استئذاناً مفقوداً يمكن استرجاعه:\n\n${summary}\n\nهل تريدين استرجاعها الآن؟`)) return;
+  const updates = {};
+  missing.forEach(l => { const c = Object.assign({}, l); delete c._src; updates[`${l.dateStr}/${l.id}`] = c; });
+  try{ await db.ref(LEAVE_ROOT).update(updates); }catch(e){ alert('تعذّر الحفظ، أعيدي المحاولة.'); return; }
+  alert(`تم استرجاع ${missing.length} استئذاناً ✓\nافتحي «تقرير الاستئذانات» أو شاشة الاستئذان واختاري التاريخ للتأكد.`);
+}
+async function recoverViolationsFromDevice(){
+  // المصادر: نسخة المخالفات الاحتياطية + آخر نسخ الشعب المخزنة على هذا الجهاز
+  const cand = {};   // "g|sec|recKey|idx" -> [violations]
+  const put = (k, arr) => { if(arr && arr.length) cand[k] = [...new Set([...(cand[k] || []), ...arr])]; };
+  try{ const b = JSON.parse(localStorage.getItem(DB_PREFIX + 'vio_backup_v1') || '{}'); Object.keys(b).forEach(k => put(k, b[k])); }catch(e){}
+  GRADES.forEach(g => (SECTIONS[g.id] || []).forEach(sec => {
+    try{
+      const local = JSON.parse(localStorage.getItem(DB_PREFIX + `section_${g.id}_${sec}`) || 'null'); if(!local) return;
+      Object.keys(local.records || {}).forEach(rk => toArrIdx(local.records[rk].rows).forEach((row, i) => { if(row) put(`${g.id}|${sec}|${rk}|${i}`, toArr(row.violations)); }));
+    }catch(e){}
+  }));
+  const keys = Object.keys(cand);
+  if(keys.length === 0){ alert('لا توجد مخالفات محفوظة على هذا الجهاز لاسترجاعها.\n\nجرّبي من الجهاز الذي سجّلتِ منه المخالفات.'); return; }
+  const bySec = {};
+  keys.forEach(k => { const [g, sec] = k.split('|'); (bySec[`${g}|${sec}`] = bySec[`${g}|${sec}`] || []).push(k); });
+  const updates = {}, summary = {};
+  try{
+    for(const gs of Object.keys(bySec)){
+      const [g, sec] = gs.split('|');
+      const snap = await db.ref(DB_PREFIX + `section_${g}_${sec}`).once('value');
+      const cloud = normalizeSection(snap.val() || {});
+      bySec[gs].forEach(k => {
+        const [, , rk, idxS] = k.split('|'); const idx = parseInt(idxS, 10);
+        const crow = cloud.records[rk] && cloud.records[rk].rows[idx];
+        const have = crow ? crow.violations : [];
+        const missing = cand[k].filter(v => !have.includes(v));
+        if(missing.length === 0) return;
+        const base = `section_${g}_${sec}`;
+        updates[`${base}/records/${rk}/rows/${idx}/violations`] = [...have, ...missing];
+        if(!cloud.records[rk]){ updates[`${base}/records/${rk}/week`] = rk.split('_')[1] || WEEKS[0]; }
+        const label = `${GRADES.find(x => x.id === g)?.name || g} (${sec}) — ${rk.split('_')[0]}`;
+        summary[label] = (summary[label] || 0) + missing.length;
+      });
+    }
+  }catch(e){ alert('تعذّر الاتصال بالسحابة، تأكدي من الإنترنت.'); return; }
+  const n = Object.values(summary).reduce((a, b) => a + b, 0);
+  if(n === 0){ alert('فحصتُ المخالفات المحفوظة على هذا الجهاز، وكلها موجودة أصلاً في السحابة. لا يوجد ما يُسترجع.'); return; }
+  const list = Object.entries(summary).sort().map(([k, v]) => `• ${k}: ${v}`).join('\n');
+  if(!confirm(`وجدتُ ${n} مخالفة على هذا الجهاز غير موجودة في السحابة:\n\n${list}\n\nتنبيه: إن كنتِ حذفتِ إحدى هذه المخالفات عمداً فستعود.\nهل تريدين استرجاعها؟`)) return;
+  const full = {}; Object.keys(updates).forEach(p => { full[DB_PREFIX + p] = updates[p]; });
+  try{ await db.ref().update(full); }catch(e){ alert('تعذّر الحفظ، أعيدي المحاولة.'); return; }
+  alert(`تم استرجاع ${n} مخالفة ✓\nأعيدي فتح الصف والأسبوع للتأكد.`);
+}
 async function purgeOldLeaves(){
   const days = parseInt(document.getElementById('lrPurgeDays').value, 10);
   if(!(days >= 30)){ alert('أدخلي 30 يوماً على الأقل.'); return; }
@@ -1046,79 +1259,45 @@ async function purgeOldLeaves(){
   alert('تم الحذف ✓');
 }
 
-// نقاط التميز: 🔥=3 ، 🏆=2 ، ⭐=1 ، + نقطتان لمن طبّقت التطبيق كاملاً (تُحتسب فقط لمن لها مشاركة مسجلة)
-const CELEBRATION_POINTS = { fire: 3, trophy: 2, star: 0, appDone: 2 };
-
+// المتميزات: من حصلن على 🔥 أو 🏆 بدون أي مخالفة (النجوم لا تُحتسب)
 function openCelebrationModal(){
   const record = getRecord();
   const students = getSectionData().students;
   const grade = GRADES.find(g=>g.id===currentGradeId);
-  const P = CELEBRATION_POINTS;
-
-  const candidates = [];
+  const winners = [];
   let excludedByViolation = 0;
   students.forEach((name, idx)=>{
     const r = record.rows[idx];
-    if(!r || r.attend !== 'present') return;
-    if(toArr(r.violations).length > 0){ if((r.participationSymbols||'').trim()) excludedByViolation++; return; }
+    if(!r || r.attend === 'absent') return;
     const syms = r.participationSymbols || '';
-    const fireCount = (syms.match(/🔥/g) || []).length;
-    const trophyCount = (syms.match(/🏆/g) || []).length;
-    const starCount = (syms.match(/⭐/g) || []).length;
-    const symbolPoints = fireCount*P.fire + trophyCount*P.trophy + starCount*P.star;
-    if(symbolPoints === 0) return;                       // بلا مشاركة مسجلة = لا ترشيح
-    const appBonus = r.appStatus === 'done' ? P.appDone : 0;
-    candidates.push({ name, fireCount, trophyCount, starCount, appBonus, total: symbolPoints + appBonus });
+    const fire = syms.includes('🔥'), trophy = syms.includes('🏆');
+    if(!fire && !trophy) return;
+    if(toArr(r.violations).length > 0){ excludedByViolation++; return; }
+    winners.push({ name, idx, fire, trophy });
   });
+  // من جمعت النار والكأس معاً أولاً، ثم النار، ثم الكأس، ثم ترتيب القائمة
+  const weight = w => (w.fire && w.trophy) ? 3 : (w.fire ? 2 : 1);
+  winners.sort((a, b) => weight(b) - weight(a) || a.idx - b.idx);
 
-  const winnersGrid = document.getElementById('topWinnersGrid');
-  winnersGrid.innerHTML = '';
-
-  if(candidates.length === 0){
-    alert("لم تُسجَّل مشاركات لطالبات ملتزمات في هذه الحصة بعد. أضيفي رموز المشاركة (🔥 🏆) ثم أعيدي المحاولة.");
+  const grid = document.getElementById('topWinnersGrid');
+  grid.innerHTML = '';
+  if(winners.length === 0){
+    alert("لا توجد طالبات حصلن على 🔥 أو 🏆 بدون مخالفات في هذه الحصة بعد." + (excludedByViolation ? `\n(استُبعدت ${excludedByViolation} بسبب المخالفات)` : ''));
     return;
   }
-
-  // ترتيب بالنقاط، والمتعادلات يشتركن في المركز نفسه (نعرض أول ثلاثة مراكز)
-  candidates.sort((a,b)=> b.total - a.total);
-  const scoreLevels = [...new Set(candidates.map(c=>c.total))].slice(0, 3);
-  const ranks = [
-    { badge: "🥇", label: "المركز الأول", cls: "rank-1" },
-    { badge: "🥈", label: "المركز الثاني", cls: "" },
-    { badge: "🥉", label: "المركز الثالث", cls: "" }
-  ];
-  const MAX_CARDS = 9;
-  let shown = 0, hidden = 0;
-
-  scoreLevels.forEach((score, lvl)=>{
-    candidates.filter(c=>c.total === score).forEach(w=>{
-      if(shown >= MAX_CARDS){ hidden++; return; }
-      shown++;
-      const card = document.createElement('div');
-      card.className = `winner-card ${ranks[lvl].cls}`;
-      card.innerHTML = `
-        <div class="winner-badge">${ranks[lvl].badge}</div>
-        <div style="font-size:11px; font-weight:bold; color:var(--pink-dark);">${ranks[lvl].label}</div>
-        <div class="winner-name">${w.name}</div>
-        <div class="winner-stats">
-          🔥 ${w.fireCount} &nbsp;|&nbsp; 🏆 ${w.trophyCount} 
-          ${w.appBonus ? '&nbsp;|&nbsp; ✅ تطبيق كامل' : ''}
-          <div style="margin-top:4px; color:var(--green);">مجموع النقاط: ${w.total}</div>
-        </div>
-      `;
-      winnersGrid.appendChild(card);
-    });
+  winners.forEach((w, i)=>{
+    const card = document.createElement('div');
+    card.className = 'winner-card' + (w.fire && w.trophy ? ' rank-1' : '');
+    card.innerHTML = `
+      <div class="winner-badge">${w.fire ? '🔥' : ''}${w.trophy ? '🏆' : ''}</div>
+      <div class="winner-name">${escHtml(w.name)}</div>`;
+    grid.appendChild(card);
   });
-
-  const note = (hidden > 0 ? ` — و${hidden} أخريات بنفس المراكز` : '') + (excludedByViolation > 0 ? ` — استُبعدت ${excludedByViolation} بسبب المخالفات` : '');
   document.getElementById('celebrationSubTitle').textContent =
-    `لوحة التميز لشعبة: ${grade.name} (${currentSection})${note} · 🔥=3  🏆=2  تطبيق كامل=+2`;
+    `طالبات متميزات في ${grade.name} (${currentSection}): ${winners.length}` + (excludedByViolation ? ` — استُبعدت ${excludedByViolation} بسبب المخالفات` : '') + ' · 🔥 و🏆 فقط';
   document.getElementById('celebrationModal').classList.add('open');
-
   playCelebrationSound();
-  if(window.confetti){
-    confetti({ particleCount: 100, spread: 70, origin: { y: 0.6 } });
-  }
+  if(window.confetti){ confetti({ particleCount: 100, spread: 70, origin: { y: 0.6 } }); }
 }
 
 function closeCelebrationModal(){
@@ -1140,12 +1319,13 @@ function onWeekSelectChange(){
   renderPage();
 }
 
-function manualSaveCurrentRecord(){
-  const rec = getRecord(); rec._auto = false;
-  dirtyMap[`${currentGradeId}|${currentSection}|${currentRecordKey()}`] = true;
-  const ind = document.getElementById('saveIndicator'); ind.textContent = 'جارٍ الحفظ السحابي... ☁️';
-  saveAllDirty().then(()=>{ updateDirtyUI(); ind.textContent = 'تم الحفظ السحابي ✓ ☁️'; alert('تم حفظ بيانات الحصة سحابياً ✓'); })
-    .catch(()=>alert('تعذّر الحفظ ⚠️ تأكدي من الاتصال بالإنترنت ثم اضغطي حفظ مرة أخرى. بياناتك ما زالت محفوظة على جهازك.'));
+async function manualSaveCurrentRecord(){
+  scheduleSave();
+  const secKey = `section_${currentGradeId}_${currentSection}`;
+  clearTimeout(saveTimers[secKey]); delete saveTimers[secKey];
+  const ok = await flushSection(currentGradeId, currentSection);
+  if(ok && totalPending() === 0) alert("تم الحفظ وتأكدت السحابة من وصول كل البيانات ✓");
+  else alert("لم يصل الحفظ للسحابة بعد ⚠️\nتعديلاتك محفوظة على هذا الجهاز وستُرسل تلقائياً عند عودة الإنترنت. لا تغلقي الصفحة قبل ظهور «محفوظ في السحابة».");
 }
 
 function saveLessonDataLocally(){
@@ -1201,9 +1381,9 @@ const APP_STATUS_OPTIONS = [
 const WEEKS = Array.from({length:15}, (_,i)=>`الأسبوع ${i+1}`);
 const TERMS = ["الفترة الأولى", "الفترة الثانية"];
 const ATTEND_OPTIONS = [
-  { value:"present", label:"ح ✅", score:5 },
-  { value:"late",    label:"ت ⏱️", score:4 },
-  { value:"absent",  label:"غ ❌", score:0 },
+  { value:"present", label:"ح", full:"حضور", score:5 },
+  { value:"late",    label:"ت", full:"تأخير", score:4 },
+  { value:"absent",  label:"غ", full:"غياب", score:0 },
 ];
 
 function attendScore(v){ const o = ATTEND_OPTIONS.find(a=>a.value===v); return o ? o.score : 0; }
@@ -1214,7 +1394,7 @@ let currentSection = "عاشر 1";
 let currentDate = todayStr();
 let currentUserDisplayName = 'أ. وفاء عليان';
 let currentDepartmentName = 'قسم الحاسوب';
-let store = {}; const dirtyMap = {};
+let store = {};
 // ===== سجل الاستئذانات: كل يوم في فرع مستقل (خفيف وآمن عند تسجيل أكثر من معلمة) =====
 const LEAVE_ROOT = DB_PREFIX + 'leave_days';
 const LEAVE_REASONS = ["🚻 دورة المياه","🩺 العيادة الطبية","🏢 الإدارة / الأخصائية الاجتماعية","🎒 استدعاء ولي أمر","🏫 الخروج للصف","📋 مهمة مدرسية / نشاط","✏️ أسباب أخرى"];
@@ -1229,7 +1409,7 @@ function leaveStatus(l, nowMs){
   return 'out';
 }
 function leaveIsEnded(l){ const st = leaveStatus(l); return st === 'closed' || st === 'expired'; }
-function leaveClassKeyOf(l){ if(l.classKey) return l.classKey; const g = GRADES.find(x=>x.name===l.gradeName); return g ? `${g.id}_${l.sec}` : ''; }
+function leaveClassKeyOf(l){ return l.classKey || ''; }
 // نهاية الحصة الحالية (حسب أوقات الحصص ومدتها)، ويُخزَّن مع كل تصريح
 function currentPeriodInfo(now){
   const nowMin = now.getHours()*60 + now.getMinutes() + now.getSeconds()/60;
@@ -1242,6 +1422,14 @@ function currentPeriodInfo(now){
 }
 function leaveItemsFromSnap(v){ return Object.values(v || {}).filter(x => x && x.id).sort((a,b)=> (b.id||0) - (a.id||0)); }
 function refreshLeaveWin(){ try{ if(leaveWinRef && !leaveWinRef.closed) renderWinLeaveTable(leaveWinRef.document); }catch(e){} }
+function backupLeaveItem(item){
+  try{
+    const key = DB_PREFIX + 'leave_backup_v1';
+    const arr = JSON.parse(localStorage.getItem(key) || '[]').filter(x => x && x.id !== item.id);
+    arr.push(item);
+    localStorage.setItem(key, JSON.stringify(arr.slice(-1500)));
+  }catch(e){}
+}
 function leaveViewSource(winDoc){
   const di = winDoc.getElementById('winLeaveDate');
   const d = di && di.value ? di.value : todayStr();
@@ -1521,26 +1709,24 @@ function showApp(displayName, deptName){
       const secKey = `section_${g.id}_${sec}`;
       const savedSec = getLocalData(secKey);
       store[g.id].sections[sec] = savedSec ? normalizeSection(savedSec) : { students: defaultStudents(), records: {}, photos: {}, hiddenCards: [] };
+      lastSent[secKey] = cloneJSON(store[g.id].sections[sec]);   // أساس المقارنة قبل وصول السحابة
 
       syncCloudData(secKey, (cloudData)=>{
         if(!cloudData) return;
-        const cloud = normalizeSection(cloudData);
-        const local = store[g.id].sections[sec];
-        // دمج: نحتفظ بأي سجل محلي حقيقي غير موجود في السحابة (حتى لا تضيع بيانات مسجلة دون اتصال)
-        let localOnly = false;
-        Object.keys(local.records || {}).forEach(k=>{
-          if(dirtyMap[`${g.id}|${sec}|${k}`]){ cloud.records[k] = local.records[k]; return; }
-          if(!cloud.records[k] && !isPristineRecord(local.records[k])){ cloud.records[k] = local.records[k]; localOnly = true; }
-        });
-        const same = JSON.stringify(cloud) === JSON.stringify(local);
-        if(!same) store[g.id].sections[sec] = cloud;   // لا نستبدل بيانات الشاشة بنسخة مطابقة (كان يفصل الشاشة عمّا يُحفظ)
-        if(localOnly){ try{ localStorage.setItem(DB_PREFIX + secKey, JSON.stringify(cloud)); db.ref(DB_PREFIX + secKey).set(cloud); }catch(e){} }
-        if(!same && g.id === currentGradeId && sec === currentSection){
-          renderPage();
-        }
+        const changed = mergeCloudSection(g.id, sec, cloudData);
+        if(changed && g.id === currentGradeId && sec === currentSection){ renderPage(); }
       });
     });
   });
+
+  // إعادة إرسال أي تعديلات لم تؤكدها السحابة سابقاً + متابعة حالة الاتصال
+  setTimeout(flushAllPending, 2500);
+  try{
+    db.ref('.info/connected').on('value', snap => {
+      if(snap.val() === false) setSaveStatus('offline');
+      else { flushAllPending(); if(saveInflight === 0) setSaveStatus(totalPending() ? 'pending' : 'saved'); }
+    });
+  }catch(e){}
 
   startLessonTimer();
 
@@ -1555,39 +1741,19 @@ function showApp(displayName, deptName){
 }
 
 // force=true للإجراءات الإدارية (أسماء، صور، بطاقات) التي تُنفَّذ عمداً حتى في وضع الاستعراض
-function secKeyOf(g,s){ return `section_${g}_${s}`; }
-function updateDirtyUI(){
-  const n = Object.keys(dirtyMap).length;
-  const ind = document.getElementById('saveIndicator'), btn = document.getElementById('saveRecordBtn');
-  if(n && ind) ind.textContent = '⚠️ توجد تغييرات غير محفوظة — اضغطي «حفظ بيانات الحصة»';
-  if(btn){ btn.classList.toggle('dirty', n > 0); btn.textContent = n ? '💾 حفظ بيانات الحصة (لم تُحفظ بعد!)' : '💾 حفظ بيانات الحصة'; }
-}
 function scheduleSave(force){
-  const sd = store[currentGradeId].sections[currentSection];
+  const gId = currentGradeId, sec = currentSection;
+  const sd = store[gId].sections[sec];
   const key = currentRecordKey();
-  if(force !== true && sd.records[key]) sd.records[key]._auto = false;
+  if(force !== true && sd.records[key]) sd.records[key]._auto = false;   // إدخال حقيقي
   pruneEmptyRecords(sd, key);
-  try{ localStorage.setItem(DB_PREFIX + secKeyOf(currentGradeId, currentSection), JSON.stringify(sd)); }catch(e){}   // نسخة احتياطية على الجهاز فقط
-  if(force === true){
-    setLocalData(secKeyOf(currentGradeId, currentSection), sd);   // إجراءات إدارية (أسماء/صور/بطاقات)
-    document.getElementById('saveIndicator').textContent = 'تم الحفظ السحابي ✓ ☁️';
-  } else {
-    dirtyMap[`${currentGradeId}|${currentSection}|${key}`] = true; updateDirtyUI();
-  }
+  backupViolations(gId, sec, key);
+  const secKey = `section_${gId}_${sec}`;
+  try{ localStorage.setItem(DB_PREFIX + secKey, JSON.stringify(sd)); }catch(e){}   // نسخة فورية على الجهاز
+  setSaveStatus('typing');
+  clearTimeout(saveTimers[secKey]);
+  saveTimers[secKey] = setTimeout(() => { delete saveTimers[secKey]; flushSection(gId, sec); }, 300);
 }
-function saveAllDirty(){
-  const keys = Object.keys(dirtyMap);
-  if(!keys.length) return Promise.resolve();
-  return Promise.all(keys.map(dk=>{
-    const [g, s, rk] = dk.split('|');
-    const sd = store[g] && store[g].sections[s], rec = sd && sd.records[rk];
-    if(!rec){ delete dirtyMap[dk]; return Promise.resolve(); }
-    rec._auto = false;
-    try{ localStorage.setItem(DB_PREFIX + secKeyOf(g, s), JSON.stringify(sd)); }catch(e){}
-    return db.ref(DB_PREFIX + secKeyOf(g, s)).update({ students: sd.students, ['records/' + rk]: rec }).then(()=>{ delete dirtyMap[dk]; });
-  }));
-}
-window.addEventListener('beforeunload', e=>{ if(Object.keys(dirtyMap).length){ e.preventDefault(); e.returnValue = ''; } });
 
 function renderSidebar(){
   const nav = document.getElementById('navList');
@@ -1616,7 +1782,7 @@ function switchSection(sec){
 }
 
 function countSpecificViolationInPast(studentIdx, currentViolations){
-  if(!currentViolations || currentViolations.length === 0) return { count: 0, label: '0' };
+  if(!currentViolations || currentViolations.length === 0) return { count: 0, label: '—' };
 
   const secData = getSectionData();
   const records = secData ? secData.records : {};
@@ -1630,11 +1796,7 @@ function countSpecificViolationInPast(studentIdx, currentViolations){
     }
   });
 
-  if(sameViolationCount <= 1){
-    return { count: sameViolationCount, label: '1' };
-  } else {
-    return { count: sameViolationCount, label: String(sameViolationCount) };
-  }
+  return { count: sameViolationCount, label: String(sameViolationCount) };
 }
 
 function renderPage(){
@@ -1664,7 +1826,19 @@ function renderTable(){
   const students = getSectionData().students;
   const record = getRecord();
 
-  thead.innerHTML = `<tr><th style="width:30px;">م</th><th style="min-width:190px;width:190px;">اسم الطالبة</th><th style="width:95px;">الحضور (ح/ت/غ)</th><th style="width:120px;">مشاركة تفاعلية</th><th>تطبيق ورقة العمل</th><th>السلوك والأدوات</th><th style="width:90px;background:#8A1C30;">تكرار المخالفة</th><th>الإجراء المتبع</th><th style="min-width:170px;">المخالفات</th></tr>`;
+  thead.innerHTML = `
+    <tr>
+      <th style="width:30px;">م</th>
+      <th style="min-width:190px; width:190px;">اسم الطالبة</th>
+      <th style="width:78px;">الحضور (ح/ت/غ)</th>
+      <th>مشاركة تفاعلية</th>
+      <th>تطبيق ورقة العمل</th>
+      <th style="width:90px;">السلوك والأدوات</th>
+      <th style="width:80px; background:#8A1C30;">تكرار المخالفة</th>
+      <th>الإجراء المتبع</th>
+      <th style="min-width:230px;">المخالفات</th>
+    </tr>
+  `;
 
   students.forEach((name, idx)=>{
     if(!record.rows[idx]) record.rows[idx] = { attend:"present", lateMinutes:"", violations: [], appStatus: "done", participationSymbols:"", actionTaken:"بدون إجراء" };
@@ -1690,10 +1864,11 @@ function renderTable(){
     const attendSelect = document.createElement('select');
     attendSelect.className = 'attend ' + row.attend;
     ATTEND_OPTIONS.forEach(opt=>{
-      const o = document.createElement('option'); o.value = opt.value; o.textContent = opt.label;
+      const o = document.createElement('option'); o.value = opt.value; o.textContent = opt.label; o.title = opt.full;
       attendSelect.appendChild(o);
     });
     attendSelect.value = row.attend;
+    attendSelect.title = 'ح = حضور ، ت = تأخير ، غ = غياب';
 
     const lateInput = document.createElement('input');
     lateInput.type = 'text'; lateInput.className = 'late-time-input';
@@ -1733,13 +1908,13 @@ function renderTable(){
     tdAttend.appendChild(attendWrap); 
     tr.appendChild(tdAttend);
 
-    const tdPastViolations = document.createElement('td'); tdPastViolations.className='past-cell';
+    const tdPastViolations = document.createElement('td'); tdPastViolations.className = 'rep-cell';
     const pastInfo = countSpecificViolationInPast(idx, row.violations);
     tdPastViolations.style.fontWeight = 'bold';
-    tdPastViolations.style.fontSize = '11px';
+    tdPastViolations.style.fontSize = '17px';
     tdPastViolations.style.color = pastInfo.count > 1 ? 'var(--red)' : '#666';
     tdPastViolations.textContent = pastInfo.label;
-    tr.appendChild(tdPastViolations);
+    // (يُضاف في الترتيب النهائي أسفل الصف)
 
     const tdNotes = document.createElement('td');
     const notesBox = document.createElement('div'); notesBox.className = 'notes-box';
@@ -1824,7 +1999,7 @@ function renderTable(){
     notesBox.appendChild(customInput);
     notesBox.appendChild(violationsList);
     tdNotes.appendChild(notesBox);
-    tr.appendChild(tdNotes);
+    // (تُضاف خلية المخالفات في آخر الصف)
 
     const tdAction = document.createElement('td');
     const actionBox = document.createElement('div'); actionBox.className = 'action-box';
@@ -1856,11 +2031,9 @@ function renderTable(){
     actionBox.appendChild(actionSelect);
     actionBox.appendChild(pledgeBtn);
     tdAction.appendChild(actionBox);
-    tr.appendChild(tdAction);
 
     const tdBehavior = document.createElement('td'); tdBehavior.className = 'total-cell behavior-cell';
-    tdBehavior.textContent = isAbsent ? 'غائب' : getBehaviorText(row);
-    tr.appendChild(tdBehavior);
+    paintBehaviorCell(tdBehavior, row, isAbsent);
 
     const tdAppStatus = document.createElement('td');
     const appSelect = document.createElement('select'); appSelect.className = 'app-status';
@@ -1875,7 +2048,7 @@ function renderTable(){
       updateRowCalculations(tr, row, idx);
       scheduleSave();
     });
-    tdAppStatus.appendChild(appSelect); tr.appendChild(tdAppStatus);
+    tdAppStatus.appendChild(appSelect);
 
     const tdBadges = document.createElement('td');
     const badgeWrap = document.createElement('div'); badgeWrap.className = 'badge-cell';
@@ -1888,23 +2061,25 @@ function renderTable(){
     btnsDiv.className = 'p-buttons';
     ['⭐','🏆','🔥'].forEach(sym=>{
       const b = document.createElement('button'); b.type = 'button'; b.textContent = sym; b.disabled = isAbsent;
+      const isOn = () => (row.participationSymbols || '').split(/\s+/).includes(sym);
+      if(isOn()) b.classList.add('active');
+      b.title = 'اضغطي لتحديد الرمز، واضغطي مرة ثانية لإلغائه';
       b.addEventListener('click', ()=>{
-        row.participationSymbols = (row.participationSymbols ? row.participationSymbols + ' ' : '') + sym;
+        const list = (row.participationSymbols || '').split(/\s+/).filter(Boolean);
+        const next = list.includes(sym) ? list.filter(x => x !== sym) : list.concat(sym);   // تحديد ثم إلغاء
+        row.participationSymbols = next.join(' ');
         symbolsDiv.textContent = row.participationSymbols;
+        b.classList.toggle('active', next.includes(sym));
         scheduleSave();
       });
       btnsDiv.appendChild(b);
     });
-    
-    const clearSymBtn = document.createElement('button');
-    clearSymBtn.type = 'button'; clearSymBtn.className = 'clear-btn'; clearSymBtn.textContent = 'مسح'; clearSymBtn.disabled = isAbsent;
-    clearSymBtn.addEventListener('click', ()=>{ row.participationSymbols = ''; symbolsDiv.textContent = ''; scheduleSave(); });
-    btnsDiv.appendChild(clearSymBtn);
 
     badgeWrap.appendChild(symbolsDiv);
     badgeWrap.appendChild(btnsDiv);
     tdBadges.appendChild(badgeWrap);
-    [tdNum,tdName,tdAttend,tdBadges,tdAppStatus,tdBehavior,tdPastViolations,tdAction,tdNotes].forEach(x=>tr.appendChild(x));
+    // الترتيب: الحضور ← مشاركة تفاعلية ← التطبيق ← السلوك ← التكرار ← الإجراء ← المخالفات (آخر عمود)
+    [tdBadges, tdAppStatus, tdBehavior, tdPastViolations, tdAction, tdNotes].forEach(c => tr.appendChild(c));
 
     tbody.appendChild(tr);
   });
@@ -1960,11 +2135,16 @@ function calcBehaviorScore(row){
   return Math.max(0, score);
 }
 
+function behaviorDeduction(row){ return Math.round((15 - calcBehaviorScore(row)) * 100) / 100; }
 function getBehaviorText(row){
-  const score = calcBehaviorScore(row);
-  const diff = 15 - score;
-  if(diff === 0) return '0';
-  return `-${diff}`;
+  const d = behaviorDeduction(row);
+  return d === 0 ? '0' : `-${d}`;     // على كل مخالفة -0.5 وهكذا
+}
+function paintBehaviorCell(td, row, isAbsent){
+  if(isAbsent){ td.textContent = 'غائب'; td.style.color = 'var(--red)'; td.style.fontWeight = '800'; return; }
+  td.textContent = getBehaviorText(row);
+  td.style.color = behaviorDeduction(row) > 0 ? 'var(--red)' : '#333';
+  td.style.fontWeight = '800';
 }
 
 function calcFinalTotal40(row){
@@ -1979,9 +2159,9 @@ function calcFinalTotal40(row){
 
 function updateRowCalculations(tr, row, studentIdx){
   const behCell = tr.querySelector('.behavior-cell');
-  if(behCell) behCell.textContent = (row.attend === 'absent') ? 'غائب' : getBehaviorText(row);
+  if(behCell) paintBehaviorCell(behCell, row, row.attend === 'absent');
 
-  const pastViolationsTd = tr.querySelector('.past-cell');
+  const pastViolationsTd = tr.querySelector('.rep-cell');
   if(pastViolationsTd){
     const pastInfo = countSpecificViolationInPast(studentIdx, row.violations);
     pastViolationsTd.style.color = pastInfo.count > 1 ? 'var(--red)' : '#666';
@@ -2062,11 +2242,93 @@ document.getElementById('manageNamesBtn').addEventListener('click', ()=>{
 });
 function closeNamesModal(){ namesModal.classList.remove('open'); }
 
+/* ==================== تغيير قائمة الطالبات: البيانات تتبع الطالبة لا مكانها ==================== */
+function nameSimilarity(a, b){
+  const m = a.length, n = b.length; if(!m || !n) return 0;
+  const d = Array.from({length: m + 1}, (_, i) => [i].concat(new Array(n).fill(0)));
+  for(let j = 0; j <= n; j++) d[0][j] = j;
+  for(let i = 1; i <= m; i++) for(let j = 1; j <= n; j++)
+    d[i][j] = Math.min(d[i-1][j] + 1, d[i][j-1] + 1, d[i-1][j-1] + (a[i-1] === b[j-1] ? 0 : 1));
+  return 1 - d[m][n] / Math.max(m, n);
+}
+// يحدّد ما تغيّر: بقاء بنفس الاسم، تصحيح اسم (تشابه عالٍ)، إضافة، حذف
+function planRosterChange(oldList, newList){
+  const used = new Array(oldList.length).fill(false);
+  const mapping = newList.map(() => -1);
+  newList.forEach((n, ni) => { const oi = oldList.findIndex((o, i) => !used[i] && o === n); if(oi >= 0){ used[oi] = true; mapping[ni] = oi; } });
+  const unNew = mapping.map((m, i) => m === -1 ? i : -1).filter(i => i >= 0);
+  const unOld = used.map((u, i) => u ? -1 : i).filter(i => i >= 0);
+  const renamed = [];
+  if(unNew.length <= 4 && unOld.length <= 4){          // تصحيح أسماء قليلة فقط
+    unNew.forEach(ni => {
+      let best = -1, bs = 0.6;
+      unOld.forEach(oi => { if(!used[oi]){ const sim = nameSimilarity(oldList[oi], newList[ni]); if(sim >= bs){ bs = sim; best = oi; } } });
+      if(best >= 0){ used[best] = true; mapping[ni] = best; renamed.push([oldList[best], newList[ni]]); }
+    });
+  }
+  const added = newList.filter((n, i) => mapping[i] === -1);
+  const removed = oldList.filter((o, i) => !used[i]);
+  return { mapping, added, removed, renamed };
+}
+function applyRosterMapping(sd, newStudents, mapping, renamed){
+  const oldPhotos = sd.photos || {};
+  Object.keys(sd.records || {}).forEach(k => {
+    const rec = sd.records[k], oldRows = rec.rows || [];
+    rec.rows = mapping.map(oi => (oi >= 0 && oldRows[oi]) ? oldRows[oi] : normalizeRow({}));
+  });
+  const newPhotos = {};
+  mapping.forEach((oi, ni) => { if(oi >= 0 && oldPhotos[oi]) newPhotos[ni] = oldPhotos[oi]; });
+  sd.photos = newPhotos;
+  const ren = {}; (renamed || []).forEach(([o, n]) => { ren[o] = n; });
+  sd.hiddenCards = (sd.hiddenCards || []).map(n => ren[n] || n).filter(n => newStudents.includes(n));
+  sd.students = newStudents;
+}
 function saveNames(){
   const lines = document.getElementById('namesTextarea').value.split('\n').map(s=>s.trim()).filter(Boolean);
-  const secData = getSectionData();
-  secData.students = lines;
+  const sd = getSectionData();
+  const plan = planRosterChange(sd.students, lines);
+  if(plan.removed.length || plan.renamed.length){
+    const parts = [];
+    if(plan.added.length)   parts.push(`➕ إضافة (${plan.added.length}): ${plan.added.slice(0,6).join('، ')}${plan.added.length>6?'…':''}`);
+    if(plan.renamed.length) parts.push(`✏️ تصحيح اسم (${plan.renamed.length}): ${plan.renamed.slice(0,4).map(([o,n]) => `${o} ← ${n}`).join('، ')}`);
+    if(plan.removed.length) parts.push(`🗑️ حذف (${plan.removed.length}) مع كل سجلاتهن: ${plan.removed.slice(0,6).join('، ')}${plan.removed.length>6?'…':''}`);
+    if(!confirm(parts.join('\n') + '\n\nهل تريدين تطبيق التغييرات؟ (بيانات الطالبات المتبقيات تبقى مرتبطة بأسمائهن)')) return;
+  }
+  applyRosterMapping(sd, lines, plan.mapping, plan.renamed);
   closeNamesModal(); renderPage(); scheduleSave(true);
+}
+// إضافة طالبة في مكانها الصحيح (الترتيب الأبجدي)
+function addStudentQuick(){
+  const name = (prompt('اكتبي اسم الطالبة الجديدة (كما يجب أن يظهر في القائمة):') || '').trim();
+  if(!name) return;
+  const sd = getSectionData();
+  if(sd.students.includes(name)){ alert('هذا الاسم موجود مسبقاً في الشعبة.'); return; }
+  let pos = sd.students.findIndex(n => n.localeCompare(name, 'ar') > 0);
+  if(pos < 0) pos = sd.students.length;
+  const newList = sd.students.slice(); newList.splice(pos, 0, name);
+  const mapping = newList.map((n, i) => i < pos ? i : (i === pos ? -1 : i - 1));
+  applyRosterMapping(sd, newList, mapping, []);
+  renderPage(); scheduleSave(true);
+  alert(`تمت إضافة «${name}» برقم ${pos + 1} في القائمة ✓\nبيانات باقي الطالبات بقيت مع أسمائهن. حدّثي الصفحة في الأجهزة الأخرى.`);
+}
+function openDeleteStudentModal(){
+  const sd = getSectionData();
+  if(!sd.students.length){ alert('لا توجد طالبات في هذه الشعبة.'); return; }
+  document.getElementById('deleteStudentSelect').innerHTML = sd.students.map((n, i) => `<option value="${i}">${i + 1}. ${escHtml(n)}</option>`).join('');
+  document.getElementById('deleteStudentModal').classList.add('open');
+}
+function confirmDeleteStudent(){
+  const sd = getSectionData();
+  const idx = parseInt(document.getElementById('deleteStudentSelect').value, 10);
+  const name = sd.students[idx];
+  if(name === undefined) return;
+  if(!confirm(`سيتم حذف «${name}» وكل سجلاتها (حضور ومخالفات ومشاركة ودرجات) من شعبة ${currentSection} نهائياً.\n\nهل أنتِ متأكدة؟`)) return;
+  const newList = sd.students.filter((_, i) => i !== idx);
+  const mapping = newList.map((_, i) => i < idx ? i : i + 1);
+  applyRosterMapping(sd, newList, mapping, []);
+  document.getElementById('deleteStudentModal').classList.remove('open');
+  renderPage(); scheduleSave(true);
+  alert(`تم حذف «${name}» ✓\nحدّثي الصفحة في الأجهزة الأخرى.`);
 }
 
 function clearEntireSection(){
@@ -2730,12 +2992,12 @@ function generateViolationsReport(){
 
   Object.keys(records).sort().forEach(recKey=>{
     const rec = records[recKey];
-    const dateStr = recKey.split('_')[0] + ' (' + new Date(recKey.split('_')[0]+'T12:00:00').toLocaleDateString('ar-KW',{weekday:'long'}) + ')';
+    const dateStr = recKey.split('_')[0];
 
     rec.rows.forEach((r, idx)=>{
       if(r.violations && r.violations.length > 0){
         const studentName = formatThreePartName(secData.students[idx]);
-        const noteDetail = r.violations.map((v,i)=>`${i+1}) ${v}`).join('<br>') + `<br><b>(العدد: ${r.violations.length})</b>`;
+        const noteDetail = r.violations.join(' ، ');
         
         tableRows += `
           <tr>
@@ -2778,7 +3040,7 @@ function generateBonusReport(){
 
   Object.keys(records).sort().forEach(recKey=>{
     const rec = records[recKey];
-    const dateStr = recKey.split('_')[0] + ' (' + new Date(recKey.split('_')[0]+'T12:00:00').toLocaleDateString('ar-KW',{weekday:'long'}) + ')';
+    const dateStr = recKey.split('_')[0];
 
     rec.rows.forEach((r, idx)=>{
       if(r && r.participationSymbols && r.participationSymbols.trim() !== '' && toArr(r.violations).length === 0){   // المخالفة تحرم البونص
