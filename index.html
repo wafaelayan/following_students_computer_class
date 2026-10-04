@@ -953,6 +953,16 @@ function openLeavePassTab(){
         table { width: 100%; border-collapse: collapse; background: #fff; border-radius: 10px; overflow: hidden; }
         th { background: #8A1C30; color: #fff; padding: 8px; font-size: 12px; }
         td { padding: 8px; border-bottom: 1px solid #E5C7D0; text-align: center; font-size: 13px; }
+        /* قراءة أوضح ومسافات واسعة بين الطالبات لتفادي الضغط الخاطئ */
+        .field label { font-size: 14px; }
+        .field select, .field input { font-size: 16px; padding: 10px; }
+        th { font-size: 14px; padding: 12px 8px; }
+        #winLeaveTableBody td { padding: 22px 10px; font-size: 16px; border-bottom: 3px solid #F3DDE3; }
+        #winLeaveTableBody tr:nth-child(even) td { background: #FDF2F4; }
+        #winLeaveTableBody td:nth-child(2) { font-size: 19px; font-weight: 800; }
+        .btn-del { font-size: 13px !important; padding: 7px 12px !important; background: #fff !important; color: #B8001F !important; border: 1px solid #B8001F !important; border-radius: 8px !important; cursor: pointer; }
+        .btn-issue { font-size: 20px !important; padding: 16px 30px !important; border-radius: 12px !important; }
+        .btn-return { font-size: 18px !important; font-weight: 800 !important; padding: 16px 24px !important; border-radius: 12px !important; background: #1E7A46 !important; color: #fff !important; border: none !important; min-width: 170px; cursor: pointer; }
       </style>
     </head>
     <body>
@@ -978,12 +988,12 @@ function openLeavePassTab(){
             <option value="✏️ أسباب أخرى">✏️ أسباب أخرى</option>
           </select>
         </div>
-        <button class="btn btn-primary" onclick="window.opener.issueWinLeavePass(document)">🟢 تسجيل السماح بالخروج</button>
+        <button class="btn btn-primary btn-issue" onclick="window.opener.issueWinLeavePass(document)">🟢 تسجيل السماح بالخروج</button>
       </div>
       <div class="controls" style="align-items:center;">
         <label style="font-size:13px; font-weight:bold; color:#8A1C30;">📅 التاريخ: <input type="date" id="winLeaveDate" style="font-family:inherit; padding:4px 6px; border:1px solid #E5C7D0; border-radius:6px;" onchange="window.opener.changeWinLeaveDate(document)"></label>
         <label style="font-size:13px; font-weight:bold; color:#8A1C30;"><input type="checkbox" id="winAllClasses" onchange="window.opener.renderWinLeaveTable(document)"> عرض كل الصفوف (الافتراضي: الصف المختار فقط)</label>
-        <label style="font-size:13px; font-weight:bold; color:#8A1C30;"><input type="checkbox" id="winShowEnded" onchange="window.opener.renderWinLeaveTable(document)"> إظهار الاستئذانات المنتهية</label>
+        <label style="font-size:13px; font-weight:bold; color:#8A1C30;"><input type="checkbox" id="winShowEnded" onchange="window.opener.renderWinLeaveTable(document)"> إخفاء الاستئذانات المنتهية</label>
         <button class="btn btn-outline" style="border-color:#B8001F; color:#B8001F;" onclick="window.opener.endClassLeaves(document)">🙈 إنهاء استئذانات هذا الصف (انتهت الحصة)</button>
       </div>
 
@@ -994,7 +1004,6 @@ function openLeavePassTab(){
             <th>م</th>
             <th>اسم الطالبة</th>
             <th>الصف والشعبة</th>
-            <th>اسم المعلمة</th>
             <th>سبب الخروج</th>
             <th>ساعة الخروج</th>
             <th>ساعة العودة</th>
@@ -1086,7 +1095,7 @@ function renderWinLeaveTable(winDoc){
   const allBox = winDoc.getElementById('winAllClasses'), endedBox = winDoc.getElementById('winShowEnded');
   const dateInp = winDoc.getElementById('winLeaveDate');
   if(dateInp && !dateInp.value) dateInp.value = todayStr();
-  const all = allBox && allBox.checked, showEnded = endedBox && endedBox.checked;
+  const all = allBox && allBox.checked, showEnded = !(endedBox && endedBox.checked);   // المنتهية تظهر افتراضياً (رمادية) ويمكن إخفاؤها
   const src = leaveViewSource(winDoc);
   const isToday = !dateInp || !dateInp.value || dateInp.value === todayStr();
   const dayWord = isToday ? 'اليوم' : `بتاريخ ${dateInp.value}`;
@@ -1099,14 +1108,14 @@ function renderWinLeaveTable(winDoc){
   if(cnt){
     const outNow = mine.filter(l => leaveStatus(l) === 'out').length;
     cnt.textContent = `${all ? 'كل الصفوف' : 'الصف المختار'}: ${mine.length} تصريح ${dayWord}` + (isToday ? ` — ${outNow} خارج الفصل الآن` : '') +
-      (!showEnded && hiddenEnded ? ` — ${hiddenEnded} منتهية مخفية (فعّلي «إظهار الاستئذانات المنتهية»)` : '') +
+      (!showEnded && hiddenEnded ? ` — ${hiddenEnded} منتهية مخفية (ألغي «إخفاء الاستئذانات المنتهية» لإظهارها)` : '') +
       (others > 0 ? ` — و${others} لصفوف أخرى (فعّلي «عرض كل الصفوف»)` : '');
   }
   if(list.length === 0){
     let why = 'لا توجد استئذانات نشطة لهذا الصف' + (isToday ? ' حالياً.' : ` بتاريخ ${dateInp.value}.`);
-    if(hiddenEnded) why += ` يوجد ${hiddenEnded} منتهية، فعّلي «إظهار الاستئذانات المنتهية».`;
+    if(hiddenEnded) why += ` يوجد ${hiddenEnded} منتهية، ألغي «إخفاء الاستئذانات المنتهية» لإظهارها.`;
     if(others > 0) why += ` ويوجد ${others} استئذان لصفوف أخرى، فعّلي «عرض كل الصفوف».`;
-    tbody.innerHTML = `<tr><td colspan="9" style="color:#777; padding:16px;">${why}</td></tr>`;
+    tbody.innerHTML = `<tr><td colspan="8" style="color:#777; padding:16px;">${why}</td></tr>`;
     return;
   }
   list.forEach((item, idx)=>{
@@ -1114,18 +1123,18 @@ function renderWinLeaveTable(winDoc){
     const tr = winDoc.createElement('tr');
     if(st === 'expired' || st === 'closed') tr.style.opacity = '0.6';
     const action = st === 'out'
-      ? `<button class="btn btn-outline" style="font-size:10px; padding:2px 5px;" onclick="window.opener.registerWinReturn(${item.id}, document)">🛑 تسجيل العودة</button>`
+      ? `<button class="btn btn-return" onclick="window.opener.registerWinReturn(${item.id}, document)">✅ تسجيل العودة</button>`
       : (st === 'back' ? '✅ مكتمل' : (st === 'closed' ? '⏹️ أُنهي يدوياً' : '⏹️ انتهت الحصة'));
+    const delBtn = `<div style="margin-top:10px;"><button class="btn btn-del" onclick="window.opener.deleteWinLeave(${item.id}, document)">🗑️ حذف (إدخال خاطئ)</button></div>`;
     tr.innerHTML = `
       <td>${idx+1}</td>
       <td style="font-weight:bold;">${escHtml(item.student)}</td>
       <td>${escHtml(item.gradeName)} (${escHtml(item.sec)})</td>
-      <td><b>${escHtml(item.teacher || currentUserDisplayName)}</b></td>
       <td>${escHtml(item.reason)}</td>
       <td>${escHtml(item.outTime)}</td>
       <td>${escHtml(item.inTime || '—')}</td>
       <td style="font-weight:bold; color:${item.inTime ? '#2A7B4C' : '#B8001F'}">${escHtml(item.duration)}</td>
-      <td>${action}</td>`;
+      <td>${action}${delBtn}</td>`;
     tbody.appendChild(tr);
   });
 }
@@ -1234,7 +1243,9 @@ async function recoverLeaveLogs(){
   try{ const snap = await db.ref(DB_PREFIX + 'global_leave_logs').once('value'); toArr(snap.val()).forEach(l => add(l, 'cloudOld')); }catch(e){}
   try{ toArr(JSON.parse(localStorage.getItem(DB_PREFIX + 'global_leave_logs') || '[]')).forEach(l => add(l, 'deviceOld')); }catch(e){}
   try{ toArr(JSON.parse(localStorage.getItem(DB_PREFIX + 'leave_backup_v1') || '[]')).forEach(l => add(l, 'deviceBackup')); }catch(e){}
-  const items = Object.values(found);
+  let dead = {};
+  try{ dead = (await db.ref(DB_PREFIX + 'leave_deleted').once('value')).val() || {}; }catch(e){}
+  const items = Object.values(found).filter(l => !dead[l.id]);
   if(items.length === 0){ alert('لم أجد أي استئذانات قديمة أو نسخ احتياطية في السحابة أو في هذا الجهاز.\n\nجرّبي الضغط على هذا الزر من الجهاز نفسه (والمتصفح نفسه) الذي سجّلتِ منه الاستئذانات.'); return; }
   const dates = [...new Set(items.map(l => l.dateStr))];
   const existing = {};
@@ -1480,6 +1491,22 @@ function backupLeaveItem(item){
     localStorage.setItem(key, JSON.stringify(arr.slice(-1500)));
   }catch(e){}
 }
+async function deleteWinLeave(id, winDoc){
+  const item = leaveViewSource(winDoc).find(l => l.id === id) || leaveLogs.find(l => l.id === id);
+  if(!item) return;
+  if(!confirm(`حذف استئذان الطالبة «${item.student}» (${item.reason} — ${item.outTime}) نهائياً؟\n\nاستخدمي هذا فقط للإدخال الخاطئ.`)) return;
+  try{
+    await db.ref(LEAVE_ROOT + '/' + item.dateStr + '/' + item.id).remove();
+    db.ref(DB_PREFIX + 'leave_deleted/' + item.id).set(true);   // علامة حذف: لا يُسترجع بالخطأ لاحقاً
+  }catch(e){ alert('تعذّر الحذف، تأكدي من الاتصال وأعيدي المحاولة.'); return; }
+  leaveLogs = leaveLogs.filter(l => l.id !== id);
+  leavePastLogs = leavePastLogs.filter(l => l.id !== id);
+  try{
+    const key = DB_PREFIX + 'leave_backup_v1';
+    localStorage.setItem(key, JSON.stringify(JSON.parse(localStorage.getItem(key) || '[]').filter(x => x && x.id !== id)));
+  }catch(e){}
+  renderWinLeaveTable(winDoc);
+}
 function leaveViewSource(winDoc){
   const di = winDoc.getElementById('winLeaveDate');
   const d = di && di.value ? di.value : todayStr();
@@ -1506,9 +1533,10 @@ function migrateOldLeaveLogs(){
   try{
     db.ref(DB_PREFIX + 'leave_migrated_v1').once('value', flag => {
       if(flag.val()) return;
-      db.ref(DB_PREFIX + 'global_leave_logs').once('value', snap => {
+      db.ref(DB_PREFIX + 'global_leave_logs').once('value', async snap => {
         const updates = {};
-        toArr(snap.val()).forEach(l => { if(l && l.id && l.dateStr) updates[l.dateStr + '/' + l.id] = l; });
+        const dead = (await db.ref(DB_PREFIX + 'leave_deleted').once('value')).val() || {};
+        toArr(snap.val()).forEach(l => { if(l && l.id && l.dateStr && !dead[l.id]) updates[l.dateStr + '/' + l.id] = l; });
         const done = () => db.ref(DB_PREFIX + 'leave_migrated_v1').set(true);
         if(Object.keys(updates).length) db.ref(LEAVE_ROOT).update(updates).then(done); else done();
       });
