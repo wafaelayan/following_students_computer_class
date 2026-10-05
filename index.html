@@ -192,6 +192,8 @@
   .rp-item select { margin-top:6px; padding:5px; border-radius:6px; border:1px solid var(--line); font-family:inherit; }
   .rp-check { font-size:12px; display:inline-block; margin-top:5px; }
   .rp-more { margin-top:6px; font-size:12.5px; } .rp-more summary { cursor:pointer; color:var(--pink-dark); }
+  .pledge-banner{ background:#FDECEC; border:2px solid #E5808C; color:#8A0018; border-radius:12px; padding:10px 14px; margin-bottom:10px; font-size:14px; line-height:2.2; }
+  .pledge-chip{ display:inline-block; background:#fff; border:1px solid #E5808C; border-radius:10px; padding:2px 10px; margin:2px 4px; }
   .record-badge{ display:inline-block; padding:6px 14px; border-radius:10px; font-size:13px; font-weight:800; margin:0 0 8px; border:1.5px solid; }
   .record-badge.saved{ background:#EAF2FB; color:#0D2C54; border-color:#9DB9DE; }
   .record-badge.fresh{ background:#FFF4E5; color:#8A4B00; border-color:#F0B35C; }
@@ -207,6 +209,9 @@
   .app-footer{ margin:18px 0 6px; padding-top:10px; border-top:2px double var(--rose); text-align:center; font-size:12.5px; color:#666; }
   .app-footer b{ color:var(--pink-dark); }
   @media (max-width: 880px){ .main-banner{ padding:8px 10px; gap:10px; } .main-banner img{ width:52px; height:52px; } .main-banner-title{ font-size:18px; } .main-banner-sub{ font-size:11px; } }
+  .names-tools{ display:flex; gap:8px; flex-wrap:wrap; align-items:center; margin:6px 0; }
+  .names-del{ display:inline-flex; gap:6px; align-items:center; }
+  .names-del select{ padding:7px; border:1px solid var(--line); border-radius:8px; font-family:inherit; max-width:220px; }
   .p-buttons{ display:flex; gap:2px; }
   .p-buttons button{ border:1px solid var(--line); background:#fff; border-radius:5px; font-size:11.5px; padding:2px 5px; cursor:pointer; }
   .p-buttons button{ font-size:15px; padding:3px 7px; }
@@ -363,6 +368,7 @@
           <button class="btn btn-outline" id="exportBtn">📊 تصدير درجات الفترة (Excel)</button>
         </div>
 
+        <div id="pledgeBanner" class="pledge-banner" style="display:none;"></div>
         <div id="recordStateBadge" class="record-badge"></div>
 
         <div class="lesson-banner">
@@ -397,8 +403,8 @@
             
             <button class="btn btn-primary" id="saveRecordBtn" onclick="manualSaveCurrentRecord()">💾 حفظ بيانات الحصة</button>
             <button class="btn btn-outline" id="manageNamesBtn">✎ إدارة أسماء الطالبات</button>
-            <button class="btn btn-outline" onclick="addStudentQuick()">➕ إضافة طالبة</button>
-            <button class="btn btn-outline" style="color:var(--red); border-color:var(--red);" onclick="openDeleteStudentModal()">🗑️ حذف طالبة</button>
+            
+            
             <button class="btn btn-outline" id="manageCardsBtn" onclick="openCardsModal()">💳 بطاقات الطالبات</button>
           </div>
       </div>
@@ -419,20 +425,13 @@
 
     <div class="top-winners-grid" id="topWinnersGrid"></div>
 
-    <div style="margin-top:25px;">
-      <button class="btn btn-primary" onclick="closeCelebrationModal()" style="padding:10px 25px; font-size:14px;">👏 إغلاق والعودة للسجل</button>
+    <div style="margin-top:14px;">
+      <button class="btn btn-outline" style="border-color:var(--gold); color:#8A6A00; font-size:14px; padding:9px 20px;" onclick="printExcellenceCertificates(lastWinnerIdxs)">🏅 طباعة شهادات التميز لكل المتميزات</button>
+      <div style="font-size:11.5px; color:#777; margin-top:4px;">تُسجَّل الشهادة في ملاحظات أعمال الطالبة تلقائياً.</div>
     </div>
-  </div>
-</div>
 
-<div class="modal-overlay" id="deleteStudentModal">
-  <div class="modal" style="max-width:440px;">
-    <h3>🗑️ حذف طالبة من الشعبة</h3>
-    <p style="font-size:13px; color:#666; margin:0 0 10px;">اختاري الطالبة. سيُحذف اسمها وكل سجلاتها (الحضور والمخالفات والمشاركة والدرجات) من هذه الشعبة، وتبقى بيانات باقي الطالبات كما هي.</p>
-    <select id="deleteStudentSelect" style="width:100%; padding:10px; font-family:inherit; font-size:15px; border:1px solid var(--line); border-radius:8px;"></select>
-    <div class="modal-actions" style="margin-top:12px;">
-      <button class="btn btn-outline" onclick="document.getElementById('deleteStudentModal').classList.remove('open')">إلغاء</button>
-      <button class="btn btn-danger" onclick="confirmDeleteStudent()">حذف الطالبة</button>
+    <div style="margin-top:18px;">
+      <button class="btn btn-primary" onclick="closeCelebrationModal()" style="padding:10px 25px; font-size:14px;">👏 إغلاق والعودة للسجل</button>
     </div>
   </div>
 </div>
@@ -448,8 +447,18 @@
       <label for="pdfFileInput" style="background:var(--pink-dark);">📄 اختر ملف PDF (أسماء الطالبات فقط)</label>
       <input type="file" id="pdfFileInput" accept=".pdf" onchange="importNamesFromPDF(event)">
     </div>
-    <p>أو الصقي الأسماء (اسم في كل سطر) — خاصة بهذه الشعبة فقط.</p>
-    <textarea id="namesTextarea" style="width:100%; min-height:180px; font-family:inherit; font-size:14px; padding:10px; border-radius:8px; border:1px solid var(--line);"></textarea>
+    <div style="margin:8px 0; padding:8px 10px; background:#F3F8F3; border:1px solid #BFD8BF; border-radius:8px; font-size:13px;">
+      <b>عند الاستيراد من ملف:</b>
+      <label style="margin-inline-start:10px;"><input type="radio" name="importMode" value="merge" checked> إضافة الأسماء الجديدة فقط (تبقى بيانات القديمات)</label>
+      <label style="margin-inline-start:10px;"><input type="radio" name="importMode" value="replace"> استبدال القائمة بالكامل</label>
+    </div>
+    <div class="names-tools">
+      <button class="btn btn-outline" onclick="sortNamesAlpha()">↕️ ترتيب أبجدي</button>
+      <button class="btn btn-outline" onclick="addNameInModal()">➕ إضافة طالبة</button>
+      <span class="names-del"><select id="namesDeleteSelect"></select><button class="btn btn-outline" style="color:var(--red); border-color:var(--red);" onclick="deleteNameInModal()">🗑️ حذف الطالبة المختارة</button></span>
+    </div>
+    <p style="font-size:12.5px; color:#555; margin:6px 0;">أو الصقي/عدّلي الأسماء (اسم في كل سطر) — خاصة بهذه الشعبة. <b>بيانات كل طالبة تتبع اسمها</b> عند الإضافة أو الحذف أو الترتيب. اضغطي «حفظ الأسماء» لتطبيق التغييرات.</p>
+    <textarea id="namesTextarea" oninput="refreshNamesDeleteSelect()" style="width:100%; min-height:180px; font-family:inherit; font-size:14px; padding:10px; border-radius:8px; border:1px solid var(--line);"></textarea>
     <div class="modal-actions" style="justify-content:space-between; margin-top:10px;">
       <button class="btn btn-danger" onclick="clearEntireSection()">🚨 مسح وإعادة ضبط أسماء الشعبة بالكامل</button>
       <div>
@@ -514,10 +523,20 @@
 
     <div class="rp-group">
       <h4>🚨 السلوك والانضباط</h4>
+      <div class="rp-item rp-col"><div style="display:flex; justify-content:space-between; gap:8px; align-items:center; flex-wrap:wrap;"><div><b>تقرير الغياب الأسبوعي</b><small>أسماء الغائبات في الصف والأسبوع المختارين.</small></div>
+        <button class="btn btn-primary" onclick="generateAbsenceReport()">📅 استخراج</button></div>
+        <div style="display:flex; gap:8px; flex-wrap:wrap; margin-top:8px;">
+          <select id="absClass"></select>
+          <select id="absWeek"></select>
+        </div></div>
       <div class="rp-item"><div><b>تقرير المخالفات</b><small>سطر لكل مخالفة مع تاريخها ورقم تكرارها والإجراء.</small></div>
         <button class="btn btn-outline" onclick="generateViolationsReport()">🚨 استخراج</button></div>
       <div class="rp-item rp-col"><div style="display:flex; justify-content:space-between; gap:8px; align-items:center;"><div><b>تقرير الاستئذانات</b><small>خروج الطالبات من الحصص: الأسباب والمدد والصفوف.</small></div>
         <span style="display:flex; gap:6px; flex-wrap:wrap;"><button class="btn btn-primary" onclick="generateLeaveReport()">🚪 استخراج</button><button class="btn btn-outline" onclick="exportLeaveReportExcel()">📥 Excel</button></span></div>
+        <div style="margin-top:10px; padding-top:8px; border-top:1px dashed #E5C7D0; display:flex; gap:8px; flex-wrap:wrap; align-items:center; font-size:13px;">
+          ⏱️ حصر من زادت مدة خروجها عن <input type="number" id="lrLongMin" value="10" min="1" style="width:64px; padding:5px; border:1px solid var(--line); border-radius:6px;"> دقيقة
+          <button class="btn btn-outline" style="color:var(--red); border-color:var(--red);" onclick="generateLongLeaveReport()">📋 حصر أسماء المتأخرات في العودة</button>
+        </div>
         <details class="rp-more"><summary>تصفية الاستئذانات (التاريخ، الصف، السبب، الاسم)</summary>
           <div style="display:flex; gap:8px; flex-wrap:wrap; align-items:end; margin-top:8px;">
             <div class="field" style="flex:1 1 120px;"><label>من تاريخ</label><input type="date" id="lrFrom"></div>
@@ -853,6 +872,10 @@ function playCelebrationSound(){
   } catch(e){}
 }
 
+// الصف العاشر: حصتان متتاليتان دائماً (الحصة المزدوجة)
+const DOUBLE_GRADES = ['g10'];
+const PERIOD_NAMES = ['الأولى','الثانية','الثالثة','الرابعة','الخامسة','السادسة','السابعة'];
+function periodSpan(gId){ return DOUBLE_GRADES.includes(gId) ? 2 : 1; }
 const LESSON_TIMINGS = [
   { lessonIndex: 0, startMinutes: 7 * 60 + 55 },
   { lessonIndex: 1, startMinutes: 8 * 60 + 45 },
@@ -863,6 +886,41 @@ const LESSON_TIMINGS = [
   { lessonIndex: 6, startMinutes: 13 * 60 + 10 }
 ];
 
+function hhmm(min){ return `${String(Math.floor(min/60)).padStart(2,'0')}:${String(min%60).padStart(2,'0')}`; }
+function buildPeriodOptions(){
+  const sel = document.getElementById('lessonPeriodSelect'); if(!sel) return;
+  const span = periodSpan(currentGradeId);
+  if(sel.dataset.span === String(span)) return;
+  sel.dataset.span = String(span);
+  let html = '';
+  for(let i = 0; i <= LESSON_TIMINGS.length - span; i++){
+    const t = hhmm(LESSON_TIMINGS[i].startMinutes);
+    html += span === 2
+      ? `<option value="الحصتان ${i+1} و${i+2}">الحصتان ${PERIOD_NAMES[i]} و${PERIOD_NAMES[i+1]} (${t})</option>`
+      : `<option value="الحصة ${i+1}">الحصة ${PERIOD_NAMES[i]} (${t})</option>`;
+  }
+  sel.innerHTML = html;
+}
+// يطابق قيمة الحصة المحفوظة مع الخيارات الحالية (حصة مفردة ↔ مزدوجة)
+function periodValueFor(saved){
+  const sel = document.getElementById('lessonPeriodSelect'), span = periodSpan(currentGradeId);
+  const vals = [...sel.options].map(o => o.value);
+  if(vals.includes(saved)) return saved;
+  const m = /(\d)/.exec(saved || ''); const n = Math.min(m ? parseInt(m[1], 10) : 1, LESSON_TIMINGS.length - span + 1);
+  return span === 2 ? `الحصتان ${n} و${n+1}` : `الحصة ${n}`;
+}
+// بثّ الصف والحصة الحالية من جهاز المتابعة ليعرفها جهاز الاستئذان (وتنتهي التصاريح بنهاية الحصة المزدوجة)
+let liveContext = null, lastPublishedCtx = '';
+function publishLiveContext(){
+  try{
+    if(currentDate !== todayStr()) return;
+    const sel = document.getElementById('lessonPeriodSelect');
+    const ctx = { g: currentGradeId, sec: currentSection, idx: sel ? Math.max(0, sel.selectedIndex) : 0, span: periodSpan(currentGradeId), date: currentDate };
+    const key = JSON.stringify(ctx); if(key === lastPublishedCtx) return; lastPublishedCtx = key;
+    db.ref(DB_PREFIX + 'live_context').set(Object.assign({ ts: Date.now() }, ctx));
+  }catch(e){}
+}
+function liveContextFresh(){ return liveContext && liveContext.date === todayStr() && Date.now() - (liveContext.ts || 0) < 4 * 3600 * 1000; }
 // دقائق التأخير: تُحسب لحظة اختيار «ت» للطالبة، من بداية الحصة المختارة، وتبدأ العدّ بعد أول دقيقة.
 // مثال: الحصة 07:55 وتم تسجيل التأخر عند 08:01 ← 5 دقائق. (الحد الأدنى 1، ويمكن تعديل الرقم يدوياً)
 // لا تُحسب تلقائياً إلا ليوم اليوم؛ في تواريخ سابقة يُترك الرقم لتكتبيه يدوياً.
@@ -879,7 +937,7 @@ function calculateLateMinutes(){
 }
 
 function onPeriodChange(){
-  updateLessonTimer();
+  updateLessonTimer(); publishLiveContext();
   saveLessonDataLocally();
   renderTable();
 }
@@ -896,7 +954,8 @@ function updateLessonTimer(){
   const timing = LESSON_TIMINGS[idx] || LESSON_TIMINGS[0];
   const now = new Date();
   const nowSec = now.getHours()*3600 + now.getMinutes()*60 + now.getSeconds();
-  const startSec = timing.startMinutes*60, endSec = startSec + LESSON_DURATION_MIN*60, total = endSec - startSec;
+  const lastTiming = LESSON_TIMINGS[Math.min(idx + periodSpan(currentGradeId) - 1, LESSON_TIMINGS.length - 1)] || timing;
+  const startSec = timing.startMinutes*60, endSec = lastTiming.startMinutes*60 + LESSON_DURATION_MIN*60, total = endSec - startSec;
   box.classList.remove('warn','danger','idle');
   if(currentDate !== todayStr()){ box.classList.add('idle'); label.textContent = 'العداد لليوم الحالي فقط'; clock.textContent = '--:--'; bar.style.width = '0'; return; }
   if(nowSec < startSec){
@@ -991,6 +1050,7 @@ function openLeavePassTab(){
         <button class="btn btn-primary btn-issue" onclick="window.opener.issueWinLeavePass(document)">🟢 تسجيل السماح بالخروج</button>
       </div>
       <div class="controls" style="align-items:center;">
+        <button class="btn btn-outline" onclick="window.opener.preselectLeaveClass(document)">🎯 صف الحصة الآن</button>
         <label style="font-size:13px; font-weight:bold; color:#8A1C30;">📅 التاريخ: <input type="date" id="winLeaveDate" style="font-family:inherit; padding:4px 6px; border:1px solid #E5C7D0; border-radius:6px;" onchange="window.opener.changeWinLeaveDate(document)"></label>
         <label style="font-size:13px; font-weight:bold; color:#8A1C30;"><input type="checkbox" id="winAllClasses" onchange="window.opener.renderWinLeaveTable(document)"> عرض كل الصفوف (الافتراضي: الصف المختار فقط)</label>
         <label style="font-size:13px; font-weight:bold; color:#8A1C30;"><input type="checkbox" id="winShowEnded" onchange="window.opener.renderWinLeaveTable(document)"> إخفاء الاستئذانات المنتهية</label>
@@ -1019,6 +1079,7 @@ function openLeavePassTab(){
           const gSel = document.getElementById('winGradeSelect');
           gSel.innerHTML = '${gradeOptionsHTML}';
           window.opener.updateWinSections(gSel.value, document);
+          window.opener.preselectLeaveClass(document, true);
           window.opener.renderWinLeaveTable(document);
         };
       <\/script>
@@ -1075,7 +1136,7 @@ function issueWinLeavePass(winDoc){
     teacher: currentUserDisplayName, reason, outTime: timeStr, outTimestamp: now.getTime(),
     inTime: null, duration: 'جاري الخروج...'
   };
-  const per = currentPeriodInfo(now);
+  const per = leavePeriodInfo(now, gId);
   logItem.periodEnd = per.end; logItem.periodLabel = per.label;   // ينتهي التصريح بنهاية الحصة
   try{
     backupLeaveItem(logItem);
@@ -1142,12 +1203,13 @@ function renderWinLeaveTable(winDoc){
 function endClassLeaves(winDoc){
   const gSel = winDoc.getElementById('winGradeSelect'), sSel = winDoc.getElementById('winSectionSelect');
   const key = `${gSel.value}_${sSel.value}`;
+  const W = (winDoc && winDoc.defaultView) || window;
   const active = leaveViewSource(winDoc).filter(l => leaveClassKeyOf(l) === key && leaveStatus(l) === 'out');
-  if(active.length === 0){ alert('لا توجد استئذانات نشطة لهذا الصف.'); return; }
-  if(!confirm(`سيتم إنهاء ${active.length} استئذان نشط لهذا الصف (انتهت الحصة). هل تريدين المتابعة؟`)) return;
+  if(active.length === 0){ W.alert('لا توجد استئذانات نشطة لهذا الصف.'); return; }
+  if(!W.confirm(`سيتم إنهاء ${active.length} استئذان نشط لهذا الصف (انتهت الحصة). هل تريدين المتابعة؟`)) return;
   const updates = {}, ts = Date.now();
   active.forEach(l => { updates[`${l.dateStr}/${l.id}/closed`] = true; updates[`${l.dateStr}/${l.id}/closedAt`] = ts; l.closed = true; });
-  try{ db.ref(LEAVE_ROOT).update(updates); }catch(e){ alert('تعذّر الحفظ، تأكدي من الاتصال.'); }
+  try{ db.ref(LEAVE_ROOT).update(updates); }catch(e){ W.alert('تعذّر الحفظ، تأكدي من الاتصال.'); }
   renderWinLeaveTable(winDoc);
 }
 function registerWinReturn(id, winDoc){
@@ -1173,6 +1235,43 @@ async function loadLeaveRange(from, to){
   return out.sort((a,b)=> (a.id||0) - (b.id||0));
 }
 function leaveMinutes(l){ if(!l.inTime) return null; if(typeof l.durationMin === 'number') return l.durationMin; const n = parseInt(l.duration, 10); return isNaN(n) ? null : n; }
+function initAbsenceFilters(){
+  const c = document.getElementById('absClass'), w = document.getElementById('absWeek'); if(!c || !w) return;
+  const curC = c.value || `${currentGradeId}|${currentSection}`;
+  let opts = '<option value="all">كل الصفوف والشعب</option>';
+  GRADES.forEach(g => (SECTIONS[g.id] || []).forEach(sec => { opts += `<option value="${g.id}|${sec}">${g.name} — ${sec}</option>`; }));
+  c.innerHTML = opts; c.value = curC;
+  const curW = w.value || (document.getElementById('weekSelect') || {}).value || WEEKS[0];
+  w.innerHTML = WEEKS.map(x => `<option value="${x}">${x}</option>`).join(''); w.value = WEEKS.includes(curW) ? curW : WEEKS[0];
+}
+function generateAbsenceReport(){
+  initAbsenceFilters();
+  const scope = document.getElementById('absClass').value, week = document.getElementById('absWeek').value;
+  const targets = [];
+  GRADES.forEach(g => (SECTIONS[g.id] || []).forEach(sec => { if(scope === 'all' || scope === `${g.id}|${sec}`){ const sd = store[g.id] && store[g.id].sections[sec]; if(sd) targets.push({ g, sec, sd }); } }));
+  let body = '', totalAbs = 0, noRecord = [];
+  targets.forEach(({ g, sec, sd }) => {
+    const keys = Object.keys(sd.records || {}).filter(k => sd.records[k] && sd.records[k].week === week && !isPristineRecord(sd.records[k]));
+    if(keys.length === 0){ noRecord.push(`${g.name} (${sec})`); return; }
+    const absent = [];
+    keys.forEach(k => toArrIdx(sd.records[k].rows).forEach((r, idx) => { if(r && r.attend === 'absent') absent.push({ name: sd.students[idx], date: recordDateOf(k) }); }));
+    totalAbs += absent.length;
+    if(scope !== 'all' || absent.length){
+      body += `<h4 style="margin:14px 0 4px; color:#8A1C30;">${escHtml(g.name)} — ${escHtml(sec)} <small style="color:#555;">(${absent.length} غائبة)</small></h4>
+      <table><thead><tr><th>م</th><th>اسم الطالبة</th><th>اليوم</th></tr></thead><tbody>${absent.map((a, i) => `<tr><td>${i + 1}</td><td style="text-align:right; font-weight:bold;">${escHtml(a.name)}</td><td>${escHtml(dayLabel(a.date))}</td></tr>`).join('') || '<tr><td colspan="3" style="padding:10px;">لا توجد غائبات 🎉</td></tr>'}</tbody></table>`;
+    }
+  });
+  const w = window.open('', '_blank');
+  if(!w){ alert('منع المتصفح فتح نافذة التقرير. اسمحي بالنوافذ المنبثقة ثم أعيدي المحاولة.'); return; }
+  w.document.write(`<!DOCTYPE html><html lang="ar" dir="rtl"><head><meta charset="UTF-8"><title>تقرير الغياب الأسبوعي</title><style>@page{size:A4 portrait; margin:10mm;} body{font-family:sans-serif; direction:rtl; padding:15px;} table{width:100%; border-collapse:collapse;} th,td{border:1px solid #0D2C54; padding:6px; text-align:center; font-size:11pt;} th{background:#8A1C30; color:#fff;} tr:nth-child(even) td{background:#FDF2F4;} .bar{margin-bottom:10px;} @media print{.bar{display:none;}}</style></head><body>
+    <div class="bar"><button onclick="window.print()" style="padding:8px 16px; font-family:inherit; cursor:pointer;">🖨️ طباعة</button></div>
+    ${getReportHeaderHTML(`تقرير الغياب الأسبوعي — ${week}`)}
+    <p style="font-size:11pt;">عدد الغائبات: <b style="color:#B8001F;">${totalAbs}</b></p>
+    ${body || '<p style="padding:20px;">لا توجد غائبات في هذا الأسبوع.</p>'}
+    ${noRecord.length ? `<p style="font-size:10pt; color:#555; margin-top:12px;">شعب لم تُسجَّل لها حصة في هذا الأسبوع: ${noRecord.map(escHtml).join('، ')}</p>` : ''}
+    ${getReportFooterHTML()}</body></html>`);
+  w.document.close();
+}
 function initLeaveReportFilters(){
   const from = document.getElementById('lrFrom'), to = document.getElementById('lrTo');
   if(!from.value){ const d0 = new Date(); from.value = `${d0.getFullYear()}-${String(d0.getMonth()+1).padStart(2,'0')}-01`; }
@@ -1196,7 +1295,7 @@ async function generateLeaveReport(){
   if(!w){ alert('منع المتصفح فتح نافذة التقرير. اسمحي بالنوافذ المنبثقة لهذا الموقع ثم أعيدي المحاولة.'); return; }
   w.document.write('<html dir="rtl"><body style="font-family:sans-serif; padding:40px; text-align:center; color:#8A1C30;"><h3>جارٍ تحميل تقرير الاستئذانات...</h3></body></html>');
   let res;
-  try{ res = await getLeaveReportRows(); }
+  try{ await mergeOldLeaveLogs(); res = await getLeaveReportRows(); }
   catch(e){ w.document.body.innerHTML = '<h3 style="color:#B8001F">تعذّر تحميل البيانات من السحابة ⚠️</h3><p>تأكدي من الاتصال بالإنترنت ثم أعيدي المحاولة.</p><p style="direction:ltr;color:#888;font-size:12px">' + escHtml(e && e.message) + '</p>'; return; }
   if(!res){ w.close(); return; }
   const { from, to, rows } = res;
@@ -1222,6 +1321,50 @@ async function generateLeaveReport(){
     <table><thead><tr><th>م</th><th>التاريخ</th><th>الطالبة</th><th>الصف والشعبة</th><th>المعلمة</th><th>السبب</th><th>الخروج</th><th>العودة</th><th>المدة</th><th>الحالة</th></tr></thead><tbody>${body}</tbody></table>
     ${getReportFooterHTML()}</body></html>`;
   w.document.open(); w.document.write(html); w.document.close();
+}
+// حصر من زادت مدة خروجهن عن عدد دقائق معيّن (الافتراضي 10)
+function leaveEffectiveMinutes(l){
+  if(l.inTime) return { min: leaveMinutes(l), est: false };
+  const out = l.outTimestamp; if(!out) return { min: null, est: true };
+  const end = l.closed && l.closedAt ? l.closedAt : (l.periodEnd && Date.now() > l.periodEnd ? l.periodEnd : Date.now());
+  return { min: Math.max(0, Math.floor((end - out) / 60000)), est: true };
+}
+async function generateLongLeaveReport(){
+  initLeaveReportFilters();
+  const limit = parseInt(document.getElementById('lrLongMin').value, 10);
+  if(!(limit >= 1)){ alert('أدخلي عدد دقائق صحيحاً (1 فأكثر).'); return; }
+  const w = window.open('', '_blank');
+  if(!w){ alert('منع المتصفح فتح نافذة التقرير. اسمحي بالنوافذ المنبثقة لهذا الموقع ثم أعيدي المحاولة.'); return; }
+  w.document.write('<html dir="rtl"><body style="font-family:sans-serif; padding:40px; text-align:center; color:#8A1C30;"><h3>جارٍ تحميل التقرير...</h3></body></html>');
+  try{
+    await mergeOldLeaveLogs();
+    const res = await getLeaveReportRows();
+    if(!res){ w.close(); return; }
+    const { from, to, rows } = res;
+    const byStudent = {};
+    rows.forEach(l => {
+      const e = leaveEffectiveMinutes(l);
+      if(e.min === null || e.min <= limit) return;
+      const k = l.student + '|' + l.gradeName + '|' + l.sec;
+      (byStudent[k] = byStudent[k] || { name: l.student, cls: `${l.gradeName} (${l.sec})`, items: [] }).items.push({ l, e });
+    });
+    const list = Object.values(byStudent).sort((a, b) => b.items.length - a.items.length || Math.max(...b.items.map(x => x.e.min)) - Math.max(...a.items.map(x => x.e.min)));
+    const body = list.map((s, i) => `<tr>
+      <td>${i + 1}</td><td style="text-align:right; font-weight:bold;">${escHtml(s.name)}</td><td>${escHtml(s.cls)}</td>
+      <td style="font-weight:bold; color:#B8001F;">${s.items.length}</td>
+      <td style="text-align:right; font-size:9.5pt;">${s.items.map(({ l, e }) => `<div>• ${escHtml(dayLabel(l.dateStr))} — ${escHtml(l.reason)} — <b style="color:#B8001F;">${e.min} دقيقة</b>${e.est ? ' <small>(لم تُسجَّل عودتها: المدة تقديرية)</small>' : ''} — ${escHtml(l.teacher || '')}</div>`).join('')}</td></tr>`).join('');
+    const html = `<!DOCTYPE html><html lang="ar" dir="rtl"><head><meta charset="UTF-8"><title>حصر الاستئذانات الطويلة</title>
+      <style>@page{size:A4 landscape; margin:8mm;} body{font-family:sans-serif; direction:rtl; padding:15px;} table{width:100%; border-collapse:collapse;} th,td{border:1px solid #0D2C54; padding:6px; text-align:center; font-size:10.5pt; vertical-align:top;} th{background:#8A1C30; color:#fff;} tr:nth-child(even) td{background:#FDF2F4;} thead{display:table-header-group;} tr{page-break-inside:avoid;} .bar{margin-bottom:10px;} @media print{.bar{display:none;}}</style></head><body>
+      <div class="bar"><button onclick="window.print()" style="padding:8px 16px; font-family:inherit; cursor:pointer;">🖨️ طباعة</button></div>
+      ${getReportHeaderHTML(`حصر الطالبات اللاتي زادت مدة استئذانهن عن ${limit} دقائق`)}
+      <p style="font-size:10pt;">الفترة: <b>${escHtml(from)}</b> إلى <b>${escHtml(to)}</b> — عدد الطالبات: <b>${list.length}</b> — عدد مرات التجاوز: <b>${list.reduce((a, s) => a + s.items.length, 0)}</b></p>
+      <table><thead><tr><th>م</th><th>اسم الطالبة</th><th>الصف والشعبة</th><th>عدد المرات</th><th>التفاصيل (اليوم — السبب — المدة — المعلمة)</th></tr></thead>
+      <tbody>${body || `<tr><td colspan="5" style="padding:20px;">لا توجد استئذانات تجاوزت ${limit} دقائق في هذه الفترة.</td></tr>`}</tbody></table>
+      ${getReportFooterHTML()}</body></html>`;
+    w.document.open(); w.document.write(html); w.document.close();
+  }catch(e){
+    w.document.body.innerHTML = '<h3 style="color:#B8001F">تعذّر إنشاء التقرير ⚠️</h3><p>تأكدي من الاتصال بالإنترنت ثم أعيدي المحاولة.</p><p style="direction:ltr;color:#888;font-size:12px">' + escHtml(e && e.message) + '</p>';
+  }
 }
 async function exportLeaveReportExcel(){
   initLeaveReportFilters();
@@ -1321,6 +1464,60 @@ async function purgeOldLeaves(){
 }
 
 // المتميزات: من حصلن على 🔥 أو 🏆 بدون أي مخالفة (النجوم لا تُحتسب)
+let lastWinnerIdxs = [];
+// شهادة تميز (A4 أفقي): صفحة لكل طالبة، وتُسجَّل في ملاحظات أعمالها
+function printExcellenceCertificates(idxList){
+  if(!idxList || !idxList.length){ alert('لا توجد طالبات متميزات لطباعة شهاداتهن.'); return; }
+  const record = getRecord(), sd = getSectionData();
+  const grade = GRADES.find(g => g.id === currentGradeId);
+  const d = new Date(currentDate + 'T00:00:00');
+  const dateAr = isNaN(d) ? currentDate : `${AR_DAYS[d.getDay()]} ${d.getDate()}/${d.getMonth()+1}/${d.getFullYear()}`;
+  const lesson = (record.lesson || '').trim();
+  const teacher = (typeof currentUserDisplayName !== 'undefined' && currentUserDisplayName) ? currentUserDisplayName : '';
+  const w = window.open('', '_blank');
+  if(!w){ alert('منع المتصفح فتح نافذة الشهادات. اسمحي بالنوافذ المنبثقة ثم أعيدي المحاولة.'); return; }
+  const pages = idxList.map(idx => {
+    const name = sd.students[idx], row = record.rows[idx];
+    if(row){ row.certificate = true; }
+    const syms = row ? ((row.participationSymbols || '').includes('🔥') ? '🔥 ' : '') + ((row.participationSymbols || '').includes('🏆') ? '🏆' : '') : '';
+    return `<section class="cert-page"><div class="cert-border"><div class="cert-inner">
+      <div class="cert-top">
+        <img src="${getMinistryLogo()}" alt="">
+        <div class="cert-gov">دولة الكويت<br>وزارة التربية<br>منطقة الأحمدي التعليمية</div>
+        <img src="${getSchoolLogo()}" alt="" class="cert-school">
+      </div>
+      <div class="cert-title">شهادة تميز</div>
+      <div class="cert-line">تتشرف إدارة ثانوية موضي سلطان العيسى بنات بمنح الطالبة</div>
+      <div class="cert-name">${escHtml(name)}</div>
+      <div class="cert-line">${escHtml(grade.name)} — شعبة ${escHtml(currentSection)}</div>
+      <div class="cert-line">تقديراً لتميزها وتفاعلها المتميز في الحصة الدراسية بتاريخ <b>${escHtml(dateAr)}</b>${lesson ? ` (درس: ${escHtml(lesson)})` : ''}</div>
+      <div class="cert-syms">${syms}</div>
+      <div class="cert-line" style="margin-top:6px;">متمنين لها دوام التوفيق والنجاح</div>
+      <div class="cert-sign"><div>معلمة المادة<br><b>${escHtml(teacher)}</b></div><div>مديرة المدرسة<br>.....................</div></div>
+    </div></div></section>`;
+  }).join('');
+  w.document.write(`<!DOCTYPE html><html lang="ar" dir="rtl"><head><meta charset="UTF-8"><title>شهادات التميز</title>
+    <link href="https://fonts.googleapis.com/css2?family=Aref+Ruqaa:wght@700&family=Reem+Kufi:wght@500;700&display=swap" rel="stylesheet">
+    <style>
+      @page{ size:A4 landscape; margin:0; } * { -webkit-print-color-adjust:exact; print-color-adjust:exact; }
+      body{ margin:0; font-family:'Reem Kufi','Tajawal',sans-serif; direction:rtl; color:#2C2C2C; }
+      .cert-page{ width:297mm; height:209mm; box-sizing:border-box; padding:8mm; page-break-after:always; }
+      .cert-border{ height:100%; border:3mm double #8A1C30; padding:2mm; box-sizing:border-box; }
+      .cert-inner{ height:100%; border:1px solid #D4A82A; border-radius:4mm; box-sizing:border-box; padding:6mm 14mm; display:flex; flex-direction:column; align-items:center; justify-content:space-between; text-align:center; background:linear-gradient(180deg,#FFFDF5,#fff); }
+      .cert-top{ width:100%; display:flex; justify-content:space-between; align-items:center; }
+      .cert-top img{ height:24mm; width:24mm; object-fit:contain; } .cert-school{ height:28mm !important; width:28mm !important; }
+      .cert-gov{ font-size:11pt; font-weight:700; color:#0D2C54; line-height:1.6; }
+      .cert-title{ font-family:'Aref Ruqaa',serif; font-size:46pt; color:#8A1C30; line-height:1.2; }
+      .cert-line{ font-size:15pt; line-height:1.7; }
+      .cert-name{ font-family:'Aref Ruqaa',serif; font-size:34pt; color:#0D2C54; border-bottom:2px solid #D4A82A; padding:0 18mm 2mm; }
+      .cert-syms{ font-size:24pt; min-height:12mm; }
+      .cert-sign{ width:100%; display:flex; justify-content:space-around; font-size:13pt; line-height:1.8; }
+    </style></head><body>${pages}<script>window.onload=function(){ setTimeout(function(){ window.print(); }, 400); };<\/script></body></html>`);
+  w.document.close();
+  scheduleSave();
+  try{ renderTable(); }catch(e){}
+}
+
 function openCelebrationModal(){
   const record = getRecord();
   const students = getSectionData().students;
@@ -1339,6 +1536,7 @@ function openCelebrationModal(){
   // من جمعت النار والكأس معاً أولاً، ثم النار، ثم الكأس، ثم ترتيب القائمة
   const weight = w => (w.fire && w.trophy) ? 3 : (w.fire ? 2 : 1);
   winners.sort((a, b) => weight(b) - weight(a) || a.idx - b.idx);
+  lastWinnerIdxs = winners.map(w => w.idx);
 
   const grid = document.getElementById('topWinnersGrid');
   grid.innerHTML = '';
@@ -1351,7 +1549,8 @@ function openCelebrationModal(){
     card.className = 'winner-card' + (w.fire && w.trophy ? ' rank-1' : '');
     card.innerHTML = `
       <div class="winner-badge">${w.fire ? '🔥' : ''}${w.trophy ? '🏆' : ''}</div>
-      <div class="winner-name">${escHtml(w.name)}</div>`;
+      <div class="winner-name">${escHtml(w.name)}</div>
+      <button class="btn btn-outline" style="font-size:12px; padding:5px 10px; margin-top:4px;" onclick="printExcellenceCertificates([${w.idx}])">🏅 شهادة تميز</button>`;
     grid.appendChild(card);
   });
   document.getElementById('celebrationSubTitle').textContent =
@@ -1434,16 +1633,16 @@ const ACTION_OPTIONS = [
 ];
 
 const APP_STATUS_OPTIONS = [
-  { value: "done", label: "طبقت ✅", score: 20 },
-  { value: "partial", label: "التطبيق غير كامل ⚠️", score: 10 },
-  { value: "not_done", label: "لم تطبق ❌", score: 0 }
+  { value: "done", label: "طبقت ✅", score: 2 },
+  { value: "partial", label: "التطبيق غير كامل ⚠️", score: 1.5 },
+  { value: "not_done", label: "لم تطبق ❌", score: 1 }
 ];
 
 const WEEKS = Array.from({length:15}, (_,i)=>`الأسبوع ${i+1}`);
 const TERMS = ["الفترة الأولى", "الفترة الثانية"];
 const ATTEND_OPTIONS = [
-  { value:"present", label:"ح", full:"حضور", score:5 },
-  { value:"late",    label:"ت", full:"تأخير", score:4 },
+  { value:"present", label:"ح", full:"حضور", score:1 },
+  { value:"late",    label:"ت", full:"تأخير", score:0.5 },
   { value:"absent",  label:"غ", full:"غياب", score:0 },
 ];
 
@@ -1477,12 +1676,37 @@ function currentPeriodInfo(now){
   const dayStart = new Date(now).setHours(0,0,0,0);
   for(let i = 0; i < LESSON_TIMINGS.length; i++){
     const st = LESSON_TIMINGS[i].startMinutes, en = st + LESSON_DURATION_MIN;
-    if(nowMin < en) return { end: dayStart + en*60000, label: `الحصة ${i+1}` };
+    if(nowMin < en) return { end: dayStart + en*60000, label: `الحصة ${i+1}`, idx: i };
   }
-  return { end: now.getTime() + LESSON_DURATION_MIN*60000, label: '' };
+  return { end: now.getTime() + LESSON_DURATION_MIN*60000, label: '', idx: LESSON_TIMINGS.length - 1 };
+}
+// نهاية الحصة لتصريح خروج: من الحصة التي بثّها جهاز المتابعة (تشمل الحصتين المتتاليتين للعاشر)، وإلا تقدير
+function leavePeriodInfo(now, gId){
+  const dayStart = new Date(now).setHours(0,0,0,0);
+  if(liveContextFresh() && liveContext.g === gId && Number.isInteger(liveContext.idx)){
+    const last = LESSON_TIMINGS[Math.min(liveContext.idx + (liveContext.span || 1) - 1, LESSON_TIMINGS.length - 1)];
+    const end = dayStart + (last.startMinutes + LESSON_DURATION_MIN) * 60000;
+    if(end > now.getTime() - 5 * 60000) return { end, label: (liveContext.span === 2 ? `الحصتان ${liveContext.idx+1} و${liveContext.idx+2}` : `الحصة ${liveContext.idx+1}`) };
+  }
+  const base = currentPeriodInfo(now);
+  if(periodSpan(gId) === 2){          // تقدير: الحصص المزدوجة (1-2، 3-4، 5-6)
+    const bs = base.idx - (base.idx % 2), li = Math.min(bs + 1, LESSON_TIMINGS.length - 1);
+    return { end: dayStart + (LESSON_TIMINGS[li].startMinutes + LESSON_DURATION_MIN) * 60000, label: `الحصتان ${bs+1} و${li+1}` };
+  }
+  return { end: base.end, label: base.label };
 }
 function leaveItemsFromSnap(v){ return Object.values(v || {}).filter(x => x && x.id).sort((a,b)=> (b.id||0) - (a.id||0)); }
 function refreshLeaveWin(){ try{ if(leaveWinRef && !leaveWinRef.closed) renderWinLeaveTable(leaveWinRef.document); }catch(e){} }
+// يفتح شاشة الاستئذان على الصف الذي له حصة الآن (كما بثّه جهاز المتابعة)
+function preselectLeaveClass(winDoc, silent){
+  const W = (winDoc && winDoc.defaultView) || window;
+  if(!liveContextFresh()){ if(!silent) W.alert('لا توجد حصة حالية مسجّلة من جهاز المتابعة.\nافتحي الصف في جهاز المتابعة أولاً (بتاريخ اليوم) ثم اضغطي هذا الزر.'); return; }
+  const c = liveContext, g = winDoc.getElementById('winGradeSelect');
+  if(!g || !GRADES.some(x => x.id === c.g)) return;
+  g.value = c.g; updateWinSections(c.g, winDoc);
+  const sec = winDoc.getElementById('winSectionSelect');
+  if(sec && [...sec.options].some(o => o.value === c.sec)){ sec.value = c.sec; updateWinStudents(winDoc); }
+}
 function backupLeaveItem(item){
   try{
     const key = DB_PREFIX + 'leave_backup_v1';
@@ -1491,14 +1715,12 @@ function backupLeaveItem(item){
     localStorage.setItem(key, JSON.stringify(arr.slice(-1500)));
   }catch(e){}
 }
-async function deleteWinLeave(id, winDoc){
+function deleteWinLeave(id, winDoc){
+  const W = (winDoc && winDoc.defaultView) || window;      // نافذة الاستئذان نفسها (حتى تظهر رسالة التأكيد أمامك)
   const item = leaveViewSource(winDoc).find(l => l.id === id) || leaveLogs.find(l => l.id === id);
-  if(!item) return;
-  if(!confirm(`حذف استئذان الطالبة «${item.student}» (${item.reason} — ${item.outTime}) نهائياً؟\n\nاستخدمي هذا فقط للإدخال الخاطئ.`)) return;
-  try{
-    await db.ref(LEAVE_ROOT + '/' + item.dateStr + '/' + item.id).remove();
-    db.ref(DB_PREFIX + 'leave_deleted/' + item.id).set(true);   // علامة حذف: لا يُسترجع بالخطأ لاحقاً
-  }catch(e){ alert('تعذّر الحذف، تأكدي من الاتصال وأعيدي المحاولة.'); return; }
+  if(!item){ W.alert('لم أجد هذا الاستئذان، حدّثي الصفحة.'); return; }
+  if(!W.confirm(`حذف استئذان الطالبة «${item.student}» (${item.reason} — ${item.outTime}) نهائياً؟\n\nاستخدمي هذا فقط للإدخال الخاطئ.`)) return;
+  // نحذفه من الشاشة فوراً ثم من السحابة
   leaveLogs = leaveLogs.filter(l => l.id !== id);
   leavePastLogs = leavePastLogs.filter(l => l.id !== id);
   try{
@@ -1506,6 +1728,11 @@ async function deleteWinLeave(id, winDoc){
     localStorage.setItem(key, JSON.stringify(JSON.parse(localStorage.getItem(key) || '[]').filter(x => x && x.id !== id)));
   }catch(e){}
   renderWinLeaveTable(winDoc);
+  try{
+    db.ref(DB_PREFIX + 'leave_deleted/' + item.id).set(true);                         // علامة حذف: لا يُسترجع بالخطأ لاحقاً
+    const p = db.ref(LEAVE_ROOT + '/' + item.dateStr + '/' + item.id).remove();
+    if(p && p.catch) p.catch(() => W.alert('تعذّر حذفه من السحابة، تأكدي من الاتصال وأعيدي المحاولة.'));
+  }catch(e){ W.alert('تعذّر الحذف، أعيدي المحاولة.'); }
 }
 function leaveViewSource(winDoc){
   const di = winDoc.getElementById('winLeaveDate');
@@ -1529,20 +1756,22 @@ function bindTodayLeaves(){
   leaveRef.on('value', snap => { leaveLogs = leaveItemsFromSnap(snap.val()); refreshLeaveWin(); });
 }
 // نقل الاستئذانات القديمة (الصيغة السابقة) مرة واحدة إلى الصيغة الجديدة دون حذف الأصل
-function migrateOldLeaveLogs(){
+// يدمج أي استئذانات كتبتها نسخة قديمة من الصفحة (في global_leave_logs) إلى السجل الجديد، دون المساس بالموجود ودون إرجاع المحذوف
+async function mergeOldLeaveLogs(){
+  let added = 0;
   try{
-    db.ref(DB_PREFIX + 'leave_migrated_v1').once('value', flag => {
-      if(flag.val()) return;
-      db.ref(DB_PREFIX + 'global_leave_logs').once('value', async snap => {
-        const updates = {};
-        const dead = (await db.ref(DB_PREFIX + 'leave_deleted').once('value')).val() || {};
-        toArr(snap.val()).forEach(l => { if(l && l.id && l.dateStr && !dead[l.id]) updates[l.dateStr + '/' + l.id] = l; });
-        const done = () => db.ref(DB_PREFIX + 'leave_migrated_v1').set(true);
-        if(Object.keys(updates).length) db.ref(LEAVE_ROOT).update(updates).then(done); else done();
-      });
-    });
+    const dead = (await db.ref(DB_PREFIX + 'leave_deleted').once('value')).val() || {};
+    const old = toArr((await db.ref(DB_PREFIX + 'global_leave_logs').once('value')).val()).filter(l => l && l.id && l.dateStr && !dead[l.id]);
+    if(!old.length) return 0;
+    const dates = [...new Set(old.map(l => l.dateStr))], existing = {};
+    await Promise.all(dates.map(async d => { existing[d] = (await db.ref(LEAVE_ROOT + '/' + d).once('value')).val() || {}; }));
+    const updates = {};
+    old.forEach(l => { if(!existing[l.dateStr][l.id]){ updates[l.dateStr + '/' + l.id] = l; added++; } });
+    if(added) await db.ref(LEAVE_ROOT).update(updates);
   }catch(e){}
+  return added;
 }
+function migrateOldLeaveLogs(){ mergeOldLeaveLogs(); setInterval(mergeOldLeaveLogs, 120000); }
 
 function todayStr(){
   const d = new Date();
@@ -1807,6 +2036,7 @@ function showApp(displayName, deptName){
   }catch(e){}
 
   startLessonTimer();
+  try{ db.ref(DB_PREFIX + 'live_context').on('value', snap => { liveContext = snap.val(); }); }catch(e){}
 
   // سجل الاستئذانات: يتزامن لحظياً بين كل الأجهزة ويتجدد تلقائياً مع بداية كل يوم
   bindTodayLeaves(); migrateOldLeaveLogs(); setInterval(bindTodayLeaves, 60000); setInterval(refreshLeaveWin, 30000);
@@ -1837,7 +2067,7 @@ function scheduleSave(force){
   const secKey = `section_${gId}_${sec}`;
   try{ localStorage.setItem(DB_PREFIX + secKey, JSON.stringify(sd)); }catch(e){}   // نسخة فورية على الجهاز
   setSaveStatus('typing');
-  try{ updateRecordBadge(); }catch(e){}
+  try{ updateRecordBadge(); updatePledgeBanner(); }catch(e){}
   clearTimeout(saveTimers[secKey]);
   saveTimers[secKey] = setTimeout(() => { delete saveTimers[secKey]; flushSection(gId, sec); }, 300);
 }
@@ -1938,7 +2168,8 @@ function renderPage(){
   fillSelect(document.getElementById('weekSelect'), WEEKS, getRecord().week);
   
   const record = getRecord();
-  if(record.period) document.getElementById('lessonPeriodSelect').value = record.period;
+  buildPeriodOptions();
+  document.getElementById('lessonPeriodSelect').value = periodValueFor(record.period);
   document.getElementById('lessonTitleInput').value = record.lesson || '';
   
   renderTable();
@@ -1946,6 +2177,8 @@ function renderPage(){
   lastDateShown = currentDate;
   saveUiState();
   updateRecordBadge();
+  updatePledgeBanner();
+  publishLiveContext();
 }
 
 function renderTable(){
@@ -2098,7 +2331,9 @@ function renderTable(){
 
         const pInfo = countSpecificViolationInPast(idx, row.violations);
         if(pInfo.count >= 3){
-          row.actionTaken = "تعهد خطي";
+          const wasPledge = row.actionTaken === "تعهد خطي";
+          row.actionTaken = "تعهد خطي"; row.pledgeDone = false;
+          if(!wasPledge) setTimeout(() => notifyPledgeNeeded(idx), 150);
         }
 
         renderViolationsChips();
@@ -2116,7 +2351,9 @@ function renderTable(){
 
         const pInfo = countSpecificViolationInPast(idx, row.violations);
         if(pInfo.count >= 3){
-          row.actionTaken = "تعهد خطي";
+          const wasPledge = row.actionTaken === "تعهد خطي";
+          row.actionTaken = "تعهد خطي"; row.pledgeDone = false;
+          if(!wasPledge) setTimeout(() => notifyPledgeNeeded(idx), 150);
         }
 
         renderViolationsChips();
@@ -2215,7 +2452,39 @@ function renderTable(){
   });
 }
 
+// ===== تنبيه التعهد الخطي (تكرار المخالفة نفسها 3 مرات) =====
+function notifyPledgeNeeded(idx){
+  const sd = getSectionData(), name = sd.students[idx], row = getRecord().rows[idx];
+  if(!row) return;
+  const old = document.getElementById('pledgeAlertOverlay'); if(old) old.remove();
+  const ov = document.createElement('div'); ov.id = 'pledgeAlertOverlay';
+  ov.setAttribute('style', 'position:fixed; inset:0; z-index:9999; display:flex; align-items:center; justify-content:center; background:rgba(0,0,0,.5); direction:rtl; font-family:inherit;');
+  ov.innerHTML = `<div style="background:#fff; border:5px solid #B8001F; border-radius:20px; padding:26px 30px; text-align:center; max-width:460px; width:90%; box-shadow:0 20px 50px rgba(0,0,0,.4);">
+    <div style="font-size:42px;">🔔</div>
+    <div style="font-size:22px; font-weight:800; color:#B8001F; margin:6px 0;">يلزم أخذ تعهد خطي</div>
+    <div style="font-size:18px; font-weight:800; margin-bottom:6px;">${escHtml(name)}</div>
+    <div style="font-size:14px; color:#555; line-height:1.7;">كرّرت المخالفة نفسها <b>3 مرات</b>. يلزم إعطاؤها تعهداً خطياً وأخذ توقيعها وولي أمرها.</div>
+    <div style="display:flex; gap:10px; justify-content:center; margin-top:16px; flex-wrap:wrap;">
+      <button class="btn btn-primary" style="font-size:16px; padding:12px 22px;" id="pledgeNowBtn">🖨️ طباعة التعهد الآن</button>
+      <button class="btn btn-outline" style="font-size:16px; padding:12px 22px;" id="pledgeLaterBtn">لاحقاً</button>
+    </div></div>`;
+  document.body.appendChild(ov);
+  document.getElementById('pledgeNowBtn').onclick = () => { ov.remove(); printPledge(name, row); };
+  document.getElementById('pledgeLaterBtn').onclick = () => ov.remove();
+}
+function updatePledgeBanner(){
+  const el = document.getElementById('pledgeBanner'); if(!el) return;
+  const sd = getSectionData(), rec = getRecord();
+  const pending = [];
+  sd.students.forEach((n, i) => { const r = rec.rows[i]; if(r && r.attend !== 'absent' && r.actionTaken === 'تعهد خطي' && !r.pledgeDone) pending.push(i); });
+  if(!pending.length){ el.style.display = 'none'; el.innerHTML = ''; return; }
+  el.style.display = 'block';
+  el.innerHTML = `<b>🔔 تنبيه: يلزم أخذ تعهد خطي</b> (تكرار المخالفة نفسها 3 مرات):` + pending.map(i => ` <span class="pledge-chip">${escHtml(sd.students[i])} <button class="btn btn-primary" style="padding:3px 10px; font-size:12px;" onclick="printPledge(getSectionData().students[${i}], getRecord().rows[${i}])">🖨️ طباعة</button> <button class="btn btn-outline" style="padding:3px 8px; font-size:12px;" onclick="markPledgeDone(${i})">✔ تم</button></span>`).join('');
+}
+function markPledgeDone(i){ const r = getRecord().rows[i]; if(r){ r.pledgeDone = true; scheduleSave(); updatePledgeBanner(); } }
+
 function printPledge(studentName, row){
+  row.pledgeDone = true; scheduleSave(); try{ updatePledgeBanner(); }catch(e){}
   const grade = GRADES.find(g=>g.id===currentGradeId);
   const reasonsText = (row.violations && row.violations.length > 0) ? row.violations.join(' ، ') : "عدم الالتزام بالأنظمة الصفية";
   
@@ -2253,19 +2522,14 @@ function printPledge(studentName, row){
   printWindow.document.close();
 }
 
+// درجة السلوك والتعامل مع الأدوات من 1: كل مخالفة تنقص 0.5 (لا تقل عن صفر)
 function calcBehaviorScore(row){
   if(row.attend === 'absent') return 0;
-  let score = 15;
-  const violationCount = row.violations ? row.violations.length : 0;
-  score -= (violationCount * 0.5);
-  
-  if(row.actionTaken === "تعهد خطي"){
-    score -= 1.0;
-  }
-  return Math.max(0, score);
+  const n = row.violations ? row.violations.length : 0;
+  return Math.max(0, 1 - n * 0.5);
 }
 
-function behaviorDeduction(row){ return Math.round((15 - calcBehaviorScore(row)) * 100) / 100; }
+function behaviorDeduction(row){ return Math.round((1 - calcBehaviorScore(row)) * 100) / 100; }
 function getBehaviorText(row){
   const d = behaviorDeduction(row);
   return d === 0 ? '0' : `-${d}`;     // على كل مخالفة -0.5 وهكذا
@@ -2277,13 +2541,13 @@ function paintBehaviorCell(td, row, isAbsent){
   td.style.fontWeight = '800';
 }
 
+// درجة الأسبوع من 4 = حضور (1؛ التأخر 0.5) + سلوك وأدوات (1؛ كل مخالفة -0.5) + تطبيق ومشاركة (2؛ غير كامل -0.5، لم تطبق -1). الغياب = صفر
 function calcFinalTotal40(row){
   if(row.attend === 'absent') return 0;
   const att = attendScore(row.attend);
   const beh = calcBehaviorScore(row);
-  const appObj = APP_STATUS_OPTIONS.find(a=>a.value === (row.appStatus || 'done'));
-  const app = appObj ? appObj.score : 20;
-
+  const appObj = APP_STATUS_OPTIONS.find(a => a.value === (row.appStatus || 'done'));
+  const app = appObj ? appObj.score : 2;
   return att + beh + app;
 }
 
@@ -2353,16 +2617,19 @@ function handleExportGrades(){
 
   const exportData = secData.students.map((studentName, idx)=>{
     let studentRow = { "اسم الطالبة": studentName };
+    let total = 0;
     WEEKS.forEach(w=>{
       let foundKey = findRecordKeyForWeek(records, w);
-      if(foundKey && records[foundKey].rows && records[foundKey].rows[idx]){
+      if(foundKey && records[foundKey].rows && records[foundKey].rows[idx] && !isPristineRecord(records[foundKey])){
         const r = records[foundKey].rows[idx];
-        const appObj = APP_STATUS_OPTIONS.find(a=>a.value === r.appStatus);
-        studentRow[w] = `حضور: ${attendScore(r.attend)} | سلوك: ${calcBehaviorScore(r)} | تطبيق: ${appObj ? appObj.label : 'تم'}`;
+        const sc = calcFinalTotal40(r);
+        studentRow[w] = r.attend === 'absent' ? 'غ' : sc;     // درجة الأسبوع من 4
+        total += sc;
       } else {
         studentRow[w] = "—";
       }
     });
+    studentRow["المجموع"] = Math.round(total * 10) / 10;
     return studentRow;
   });
 
@@ -2378,9 +2645,61 @@ const namesModal = document.getElementById('namesModal');
 document.getElementById('manageNamesBtn').addEventListener('click', ()=>{
   document.getElementById('modalGradeName').textContent = GRADES.find(g=>g.id===currentGradeId).name + ' - شعبة ' + currentSection;
   document.getElementById('namesTextarea').value = getSectionData().students.join('\n');
+  refreshNamesDeleteSelect();
   namesModal.classList.add('open');
 });
 function closeNamesModal(){ namesModal.classList.remove('open'); }
+
+/* ==================== أدوات قائمة الأسماء داخل «إدارة الأسماء» ==================== */
+function namesLines(){ return document.getElementById('namesTextarea').value.split('\n').map(x => x.trim()).filter(Boolean); }
+function setNamesLines(arr){ document.getElementById('namesTextarea').value = arr.join('\n'); refreshNamesDeleteSelect(); }
+function normName(n){ return String(n).replace(/[\u064B-\u065F\u0670]/g, '').replace(/[أإآ]/g, 'ا').replace(/ى/g, 'ي').replace(/\s+/g, ' ').trim(); }
+function arCompare(a, b){ return normName(a).localeCompare(normName(b), 'ar'); }
+function isSortedAr(list){ for(let i = 1; i < list.length; i++){ if(arCompare(list[i-1], list[i]) > 0) return false; } return true; }
+function refreshNamesDeleteSelect(){
+  const sel = document.getElementById('namesDeleteSelect'); if(!sel) return;
+  const keep = sel.value;
+  sel.innerHTML = namesLines().map((n, i) => `<option value="${i}">${i + 1}. ${escHtml(n)}</option>`).join('');
+  if(keep && sel.querySelector(`option[value="${keep}"]`)) sel.value = keep;
+}
+function sortNamesAlpha(){
+  const list = namesLines(); if(list.length < 2) return;
+  list.sort(arCompare); setNamesLines(list);
+}
+function addNameInModal(){
+  const name = (prompt('اكتبي اسم الطالبة الجديدة:') || '').trim(); if(!name) return;
+  const list = namesLines();
+  if(list.some(n => normName(n) === normName(name))){ alert('هذا الاسم موجود مسبقاً في القائمة.'); return; }
+  if(isSortedAr(list)){ let pos = list.findIndex(n => arCompare(n, name) > 0); if(pos < 0) pos = list.length; list.splice(pos, 0, name); }
+  else list.push(name);
+  setNamesLines(list);
+}
+function deleteNameInModal(){
+  const sel = document.getElementById('namesDeleteSelect'); if(!sel || sel.value === '') return;
+  const list = namesLines(); const i = parseInt(sel.value, 10);
+  if(!confirm(`حذف «${list[i]}» من القائمة؟ (يُطبَّق عند الضغط على «حفظ الأسماء» ويحذف سجلاتها)`)) return;
+  list.splice(i, 1); setNamesLines(list);
+}
+// استيراد من ملف: الافتراضي إضافة الأسماء الجديدة فقط دون المساس بالقديمات
+function applyImportedNames(names){
+  const modeEl = document.querySelector('input[name="importMode"]:checked');
+  const mode = modeEl ? modeEl.value : 'merge';
+  const uniq = []; const seen = new Set();
+  names.forEach(n => { const k = normName(n); if(k && !seen.has(k)){ seen.add(k); uniq.push(n.trim()); } });
+  if(mode === 'replace'){
+    setNamesLines(uniq);
+    alert(`تم جلب ${uniq.length} اسماً واستبدال القائمة.\nتنبيه: الأسماء القديمة غير الموجودة في الملف ستُحذف سجلاتها عند «حفظ الأسماء» (مع رسالة تأكيد).`);
+    return;
+  }
+  const current = namesLines(); const have = new Set(current.map(normName));
+  const added = uniq.filter(n => !have.has(normName(n)));
+  const skipped = uniq.length - added.length;
+  const similar = [];
+  added.forEach(n => { const m = current.find(c => nameSimilarity(normName(c), normName(n)) >= 0.85); if(m) similar.push(`${n} ≈ ${m}`); });
+  const merged = current.concat(added);
+  setNamesLines(isSortedAr(current) ? merged.sort(arCompare) : merged);
+  alert(`أُضيف ${added.length} اسماً جديداً، وتجاهلتُ ${skipped} اسماً موجوداً مسبقاً.\nبيانات الطالبات القديمات لم تُمَس.\n${similar.length ? '\nأسماء مشابهة لأسماء موجودة (راجعيها):\n' + similar.slice(0, 8).join('\n') + '\n' : ''}\nاضغطي «حفظ الأسماء» للتأكيد.`);
+}
 
 /* ==================== تغيير قائمة الطالبات: البيانات تتبع الطالبة لا مكانها ==================== */
 function nameSimilarity(a, b){
@@ -2509,8 +2828,7 @@ function importNamesFromExcel(e){
       });
 
       if(filteredNames.length > 0){
-        document.getElementById('namesTextarea').value = filteredNames.join('\n');
-        alert(`تم جلب ${filteredNames.length} اسم طالبة فقط بنجاح!`);
+        applyImportedNames(filteredNames);
       }
     } catch(err) { alert("حدث خطأ أثناء قراءة الملف."); }
   };
@@ -2570,8 +2888,7 @@ function importNamesFromPDF(e){
       });
 
       if(extractedStudentNames.length > 0){
-        document.getElementById('namesTextarea').value = extractedStudentNames.join('\n');
-        alert(`تم استخراج ${extractedStudentNames.length} اسم طالبة فقط بنجاح وتنقيتها من عناوين سجل الطالب والصفوف!`);
+        applyImportedNames(extractedStudentNames);
       } else {
         alert("لم يتم العثور على قائمة أسماء طالبات واضحة داخل ملف الـ PDF.");
       }
@@ -2768,7 +3085,7 @@ function openReportsModal(){
   document.getElementById('reportSectionName').textContent = grade.name + ' - ' + currentSection;
   fillSelect(document.getElementById('reportStartWeek'), WEEKS, WEEKS[0]);
   fillSelect(document.getElementById('reportEndWeek'), WEEKS, WEEKS[12]);
-  initLeaveReportFilters();
+  initLeaveReportFilters(); initAbsenceFilters();
   reportsModal.classList.add('open');
 }
 function closeReportsModal(){ reportsModal.classList.remove('open'); }
@@ -2867,24 +3184,26 @@ function generatePaperRegisterReport(){
       if(foundKey && records[foundKey].rows && records[foundKey].rows[idx]){
         const r = records[foundKey].rows[idx];
         
-        let attTxt = '✓';
-        if(r.attend === 'absent') attTxt = '<span style="color:#B8001F; font-weight:bold;">غ</span>';
-        else if(r.attend === 'late') attTxt = '<span style="color:#8A5A00; font-weight:bold;">ت</span>';
-
-        let behVal = r.violations ? r.violations.length : 0;
-        let behTxt = behVal > 0 ? `${behVal} <a href="#" onclick="window.opener.showViolationDetailModal('${studentName}', '${weekTitle}'); return false;" title="اضغط لفتح تفاصيل المخالفات" style="color:#B8001F; text-decoration:underline;">🔗</a>` : '✓';
-
-        let appTxt = '✓';
-        if(r.appStatus === 'not_done') appTxt = '✕';
-        else if(r.appStatus === 'partial') appTxt = '<span style="color:#8A5A00; font-weight:bold;">⚠️ غ</span>';
-
-        studentRowsHTML += `<td>${attTxt}</td><td>${behTxt}</td><td style="border-left:1.5px solid #000;">${appTxt}</td>`;
+        const OK = '✓', NO = '<span style="color:#B8001F; font-weight:bold;">✗</span>';
+        if(r.attend === 'absent'){
+          const g = '<span style="color:#B8001F; font-weight:bold;">غ</span>';
+          studentRowsHTML += `<td>${g}</td><td>${g}</td><td style="border-left:1.5px solid #000;">${g}</td>`;
+        } else {
+          const attTxt = r.attend === 'late' ? NO : OK;                                   // التأخر = نصف درجة ← ✗
+          const nV = r.violations ? r.violations.length : 0;
+          const behTxt = nV > 0 ? `${NO} <a href="#" onclick="window.opener.showViolationDetailModal('${studentName}', '${weekTitle}'); return false;" title="اضغط لفتح تفاصيل المخالفات" style="color:#B8001F; text-decoration:none;">🔗</a>` : OK;
+          const appTxt = (r.appStatus === 'not_done' || r.appStatus === 'partial') ? NO : OK;
+          studentRowsHTML += `<td>${attTxt}</td><td>${behTxt}</td><td style="border-left:1.5px solid #000;">${appTxt}</td>`;
+        }
       } else {
         studentRowsHTML += `<td>—</td><td>—</td><td style="border-left:1.5px solid #000;">—</td>`;
       }
     }
 
-    studentRowsHTML += `</tr>`;
+    const regKeys = [];
+    for(let w = 1; w <= 10; w++){ const k = findRecordKeyForWeek(records, `الأسبوع ${w}`); if(k && !isPristineRecord(records[k])) regKeys.push(k); }
+    const sm = worksSummary(secData, idx, regKeys);
+    studentRowsHTML += `<td style="padding:2px 3px;">${worksNotesHTML(sm.notes, 6.5)}</td><td style="font-weight:bold; font-size:8pt; background:#FDF2F4 !important; padding:1px;">${sm.total === null ? '—' : sm.total}</td></tr>`;
   });
 
   const printWindow = window.open('', '_blank');
@@ -2913,6 +3232,8 @@ function generatePaperRegisterReport(){
             <th rowspan="4" style="width:20px;">م</th>
             <th rowspan="4" style="min-width:140px;">الاسم</th>
             <th colspan="30">الاسبوع</th>
+            <th rowspan="4" class="pink-header" style="min-width:110px; font-size:8pt;">ملاحظات (المخالفات وتاريخها والدرجة المخصومة)</th>
+            <th rowspan="4" class="pink-header" style="writing-mode: vertical-rl; font-size:7pt; width:20px; padding:1px;">المجموع</th>
           </tr>
           <tr>
             ${weeksHeaderTop}
@@ -2995,9 +3316,12 @@ function generateTwoPagesWeekRangeReport(){
 
     weeksChunk.forEach(w=>{
       headerTop += `<th colspan="3" style="border-left:2px solid #0D2C54;">${w}</th>`;
-      headerSub += `<th>حضور (5)</th><th>سلوك (15)</th><th style="border-left:2px solid #0D2C54;">تطبيق وتفاعل (20)</th>`;
+      headerSub += `<th>حضور</th><th>سلوك</th><th style="border-left:2px solid #0D2C54;">تطبيق ومشاركة</th>`;
     });
 
+    if(isFinalPage){
+      headerTop += `<th rowspan="2" style="min-width:210px; background:#0D2C54; color:#fff;">ملاحظات (المخالفات وتاريخها والدرجة المخصومة)</th><th rowspan="2" style="background:#0D2C54; color:#fff; width:34px; font-size:8pt; padding:2px;">المجموع</th>`;
+    }
     headerTop += `</tr>`; headerSub += `</tr>`;
 
     let tableRows = '';
@@ -3009,16 +3333,26 @@ function generateTwoPagesWeekRangeReport(){
         let foundKey = findRecordKeyForWeek(records, w);
         if(foundKey && records[foundKey].rows && records[foundKey].rows[studentIdx]){
           const r = records[foundKey].rows[studentIdx];
-          const att = attendScore(r.attend);
-          const beh = calcBehaviorScore(r);
-          const appObj = APP_STATUS_OPTIONS.find(a=>a.value === r.appStatus);
-
-          tableRows += `<td>${att}</td><td>${beh}</td><td style="border-left:2px solid #0D2C54;">${appObj ? appObj.label : 'تم'}</td>`;
+          const OK = '✓', NO = '<b style="color:#B8001F;">✗</b>';
+          if(r.attend === 'absent'){
+            const g = '<b style="color:#B8001F;">غ</b>';
+            tableRows += `<td>${g}</td><td>${g}</td><td style="border-left:2px solid #0D2C54;">${g}</td>`;
+          } else {
+            const attC = r.attend === 'late' ? NO : OK;
+            const behC = (r.violations && r.violations.length) ? NO : OK;
+            const appC = (r.appStatus === 'not_done' || r.appStatus === 'partial') ? NO : OK;
+            tableRows += `<td>${attC}</td><td>${behC}</td><td style="border-left:2px solid #0D2C54;">${appC}</td>`;
+          }
         } else {
           tableRows += `<td>—</td><td>—</td><td style="border-left:2px solid #0D2C54;">—</td>`;
         }
       });
 
+      if(isFinalPage){
+        const keys = selectedWeeks.map(w => findRecordKeyForWeek(records, w)).filter(k => k && !isPristineRecord(records[k]));
+        const sm = worksSummary(secData, studentIdx, keys);
+        tableRows += `<td style="padding:3px 5px;">${worksNotesHTML(sm.notes, 8)}</td><td style="font-weight:bold; font-size:9pt; background:#FDF2F4; padding:2px;">${sm.total === null ? '—' : sm.total}</td>`;
+      }
       tableRows += `</tr>`;
     });
 
@@ -3073,6 +3407,30 @@ function buildViolationCounts(secData){
     });
   });
   return out;
+}
+// المجموع = مجموع درجات الأسابيع المسجلة (كل أسبوع من 4، وعشرة أسابيع = 40)
+// درجة الأسبوع = حضور (1؛ التأخر 0.5) + سلوك (1؛ كل مخالفة -0.5) + تطبيق ومشاركة (2؛ غير كامل -0.5، لم تطبق -1). الغياب = 0
+function worksSummary(secData, idx, recKeys){
+  let sum = 0, n = 0; const notes = [];
+  recKeys.forEach(k => {
+    const rec = secData.records[k]; if(!rec) return;
+    const r = toArrIdx(rec.rows)[idx]; if(!r) return;
+    sum += calcFinalTotal40(r); n++;
+    if(r.attend === 'absent') return;
+    toArr(r.violations).forEach((v, vi) => notes.push({ v, date: recordDateOf(k), ded: vi < 2 ? 0.5 : 0 }));   // السلوك درجة واحدة فقط
+    if(r.actionTaken === 'تعهد خطي') notes.push({ v: 'تعهد خطي (تكرار المخالفة 3 مرات)', date: recordDateOf(k), info: true });
+    if(r.certificate) notes.push({ v: '🏅 نالت شهادة تميز', date: recordDateOf(k), cert: true });
+  });
+  return { total: n ? Math.round(sum * 10) / 10 : null, lessons: n, notes };
+}
+function shortDate(dateStr){ const d = new Date(dateStr + 'T00:00:00'); return isNaN(d) ? dateStr : `${String(d.getDate()).padStart(2,'0')}/${String(d.getMonth()+1).padStart(2,'0')}`; }
+function worksNotesHTML(notes, pt){
+  if(!notes.length) return '·';
+  return notes.map(n => n.cert
+    ? `<div style="text-align:right; font-size:${pt}pt; margin:1px 0; color:#1E7A46; font-weight:bold;">• ${escHtml(n.v)} — ${shortDate(n.date)}</div>`
+    : (n.info
+      ? `<div style="text-align:right; font-size:${pt}pt; margin:1px 0;">• ${escHtml(n.v)} — ${shortDate(n.date)}</div>`
+      : `<div style="text-align:right; font-size:${pt}pt; margin:1px 0;">• ${escHtml(n.v)} — ${shortDate(n.date)} — <b style="color:#B8001F;">${n.ded ? '−' + n.ded : '0 (بلغ السلوك حده الأدنى)'}</b></div>`)).join('');
 }
 const AR_DAYS = ['الأحد','الاثنين','الثلاثاء','الأربعاء','الخميس','الجمعة','السبت'];
 function dayLabel(dateStr){
@@ -3136,9 +3494,11 @@ function generateWeeklyFollowupReport(){
         if(r.attend !== 'absent' && r.appStatus && r.appStatus !== 'done') noApp++;
         if(r.attend !== 'absent') ded += behaviorDeduction(r);
         if(r.actionTaken && r.actionTaken !== 'بدون إجراء') actions.add(r.actionTaken);
+        if(r.attend !== 'absent' && r.certificate) vLines.push(`<div style="text-align:right; margin:1px 0; color:#1E7A46; font-weight:bold;">• 🏅 نالت شهادة تميز</div>`);
+        if(r.attend !== 'absent' && r.actionTaken === 'تعهد خطي') vLines.push(`<div style="text-align:right; margin:1px 0;">• تعهد خطي</div>`);
         toArr(r.violations).forEach((v, vi) => {
           vCount++;
-          vLines.push(`<div style="text-align:right; margin:1px 0;">• ${escHtml(v)} <span style="color:#555;">(${escHtml(dayLabel(recordDateOf(k)))})</span> <b style="color:#B8001F; font-size:11pt;">${counts[`${k}|${idx}|${vi}`] || 1}</b></div>`);
+          vLines.push(`<div style="text-align:right; margin:1px 0;">• ${escHtml(v)} <span style="color:#555;">(${escHtml(dayLabel(recordDateOf(k)))})</span> <b style="color:#B8001F; font-size:11pt;">${counts[`${k}|${idx}|${vi}`] || 1}</b> <b style="color:#B8001F;">${vi < 2 ? '−0.5' : '0'}</b></div>`);
         });
       });
       tP += pres; tL += late; tA += abs; tV += vCount;
@@ -3154,15 +3514,16 @@ function generateWeeklyFollowupReport(){
         <td style="font-size:9pt;">${fire ? '🔥' + fire + ' ' : ''}${cup ? '🏆' + cup + ' ' : ''}${star ? '⭐' + star : ''}${(fire || cup || star) ? '' : '·'}</td>
         <td>${noApp || '·'}</td>
         <td style="${ded > 0 ? 'color:#B8001F; font-weight:bold;' : ''}">${ded > 0 ? '-' + ded : '0'}</td>
+        <td style="font-weight:bold;">${(() => { const w = worksSummary(secData, idx, recKeys); return w.total === null ? '—' : Math.round(w.total / Math.max(1, w.lessons) * 10) / 10; })()}</td>
         <td style="min-width:62mm;">${vLines.join('') || '·'}</td>
         <td style="font-size:9pt;">${[...actions].join('، ') || '·'}</td></tr>`;
     });
     pages += `<section style="page-break-after:always;">
       ${getReportHeaderHTML(`كشف المتابعة الأسبوعي — ${grade.name} (${currentSection}) — ${week}`)}
       <p style="margin:2px 0 8px; font-size:10pt;">الفترة: <b>${escHtml(dayLabel(dates[0]))}</b> إلى <b>${escHtml(dayLabel(dates[dates.length-1]))}</b> — عدد الأيام المسجلة: <b>${recKeys.length}</b> — حضور: <b>${tP}</b> ، تأخر: <b>${tL}</b> ، غياب: <b>${tA}</b> ، مخالفات: <b style="color:#B8001F;">${tV}</b></p>
-      <table class="wf"><thead><tr><th>م</th><th>اسم الطالبة</th><th>ح</th><th>ت</th><th>غ</th><th>المشاركة</th><th>لم تطبق</th><th>خصم السلوك</th><th>المخالفات بالتفصيل (الرقم = عدد تكرارها)</th><th>الإجراء</th></tr></thead>
-      <tbody>${rowsHtml || '<tr><td colspan="10" style="padding:16px;">لا توجد طالبات مخالفات في هذا الأسبوع.</td></tr>'}</tbody></table>
-      <p style="margin:6px 0 0; font-size:8.5pt; color:#555;">ح = حضور ، ت = تأخر (بالدقائق)، غ = غياب. رقم المخالفة = عدد مرات تكرار المخالفة نفسها منذ بداية السجل؛ وعند تكرارها 3 مرات يُسجَّل تعهد خطي.</p>
+      <table class="wf"><thead><tr><th>م</th><th>اسم الطالبة</th><th>ح</th><th>ت</th><th>غ</th><th>المشاركة</th><th>لم تطبق</th><th>خصم السلوك</th><th>درجة الأسبوع (4)</th><th>المخالفات بالتفصيل (الرقم = عدد تكرارها) والدرجة المخصومة</th><th>الإجراء</th></tr></thead>
+      <tbody>${rowsHtml || '<tr><td colspan="11" style="padding:16px;">لا توجد طالبات مخالفات في هذا الأسبوع.</td></tr>'}</tbody></table>
+      <p style="margin:6px 0 0; font-size:8.5pt; color:#555;">ح = حضور ، ت = تأخر (بالدقائق)، غ = غياب. رقم المخالفة = عدد مرات تكرار المخالفة نفسها منذ بداية السجل، وعند 3 مرات يُسجَّل تعهد خطي. درجة الأسبوع من 4 = حضور (1؛ التأخر نصف درجة) + سلوك (1؛ كل مخالفة نصف درجة) + تطبيق ومشاركة (2؛ غير كامل نصف درجة، ولم تطبق درجة). الغياب = صفر.</p>
       ${getReportFooterHTML()}
     </section>`;
   }
