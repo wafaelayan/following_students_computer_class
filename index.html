@@ -146,13 +146,14 @@
   .star-banner label{ font-weight:800; color:var(--pink-dark); font-size:13.5px; white-space:nowrap;}
 
   .table-wrap{ background:#fff; border:1px solid var(--line); border-radius:12px; overflow-x:auto; width:100%; -webkit-overflow-scrolling:touch; margin-bottom:12px; }
-  table{ width:100%; border-collapse:collapse; min-width:850px; }
+  table{ width:100%; border-collapse:collapse; min-width:760px; }
   thead th{ background:var(--pink-dark); color:#fff; font-size:11.5px; font-weight:700; padding:8px 4px; text-align:center; white-space:nowrap; }
   tbody td{ padding:5px 3px; border-bottom:1px solid var(--line); font-size:12.5px; text-align:center; vertical-align:middle; }
   tbody tr:nth-child(even){ background:#FDF8F9; }
   tbody tr:hover{ background:#FADEE3; }
   
   td.name-cell{ text-align:right; font-weight:600; min-width:190px; width:190px; }
+  img.entry-photo{ width:38px; height:38px; border-radius:50%; object-fit:cover; flex:none; border:2px solid #E8C3CB; cursor:zoom-in; }
   td.name-cell input{ width:100%; border:1px solid transparent; background:transparent; font-family:inherit; font-size:14px; font-weight:600; padding:4px 5px; border-radius:5px; -webkit-appearance:none; }
 
   .attend-cell { display:flex; flex-direction:column; align-items:center; gap:2px; width: 62px; margin: 0 auto; }
@@ -176,7 +177,10 @@
   .btn-print-pledge:hover { background:#8A0017; }
 
   .badge-cell { display:flex; flex-direction:column; align-items:center; gap:2px; min-width:95px; }
-  .p-symbols{ min-height:16px; font-size:13px; letter-spacing:1px; }
+  .p-symbols{ min-height:16px; font-size:12px; letter-spacing:0; word-break:break-all; max-width:118px; }
+  .sym-n{ font-size:10px; font-weight:800; color:#B8001F; margin-inline-start:1px; }
+  .p-buttons .sym-undo{ color:#666; font-size:14px; padding:3px 6px; }
+  .p-buttons .sym-undo:disabled{ opacity:.35; }
   /* مركز التقارير */
   .rp-filter { display:flex; gap:10px; flex-wrap:wrap; align-items:center; background:#FDF2F4; border:1px solid var(--line); border-radius:10px; padding:8px 12px; margin-bottom:12px; font-size:13px; }
   .rp-filter select { padding:5px; border-radius:6px; border:1px solid var(--line); font-family:inherit; }
@@ -212,6 +216,18 @@
   .names-tools{ display:flex; gap:8px; flex-wrap:wrap; align-items:center; margin:6px 0; }
   .names-del{ display:inline-flex; gap:6px; align-items:center; }
   .names-del select{ padding:7px; border:1px solid var(--line); border-radius:8px; font-family:inherit; max-width:220px; }
+  /* تثبيت عمودي الرقم والاسم عند التحريك الأفقي + تقليل المسافات */
+  .table-wrap thead th, .table-wrap tbody td{ padding-left:3px; padding-right:3px; }
+  .table-wrap thead th:nth-child(1), .table-wrap tbody td:nth-child(1){ position:sticky; right:0; z-index:3; width:30px; min-width:30px; }
+  .table-wrap thead th:nth-child(2), .table-wrap tbody td:nth-child(2){ position:sticky; right:30px; z-index:3; min-width:120px; box-shadow:-3px 0 6px rgba(0,0,0,.12); }
+  .table-wrap thead th:nth-child(1), .table-wrap thead th:nth-child(2){ background:var(--pink-dark); z-index:4; }
+  .table-wrap tbody td:nth-child(1), .table-wrap tbody td:nth-child(2){ background:#fff; }
+  .table-wrap tbody tr:nth-child(even) td:nth-child(1), .table-wrap tbody tr:nth-child(even) td:nth-child(2){ background:#FDF8F9; }
+  .table-wrap tbody tr:hover td:nth-child(1), .table-wrap tbody tr:hover td:nth-child(2){ background:#FADEE3; }
+  .notes-box{ min-width:116px !important; }
+  .gi-grid{ display:grid; grid-template-columns:1fr 1fr; gap:2px 4px; font-size:14px; font-weight:800; }
+  .gi small{ display:block; font-size:9.5px; color:#666; font-weight:600; line-height:1; }
+  .gi.low{ color:var(--red); }
   .p-buttons{ display:flex; gap:2px; }
   .p-buttons button{ border:1px solid var(--line); background:#fff; border-radius:5px; font-size:11.5px; padding:2px 5px; cursor:pointer; }
   .p-buttons button{ font-size:15px; padding:3px 7px; }
@@ -426,8 +442,8 @@
     <div class="top-winners-grid" id="topWinnersGrid"></div>
 
     <div style="margin-top:14px;">
-      <button class="btn btn-outline" style="border-color:var(--gold); color:#8A6A00; font-size:14px; padding:9px 20px;" onclick="printExcellenceCertificates(lastWinnerIdxs)">🏅 طباعة شهادات التميز لكل المتميزات</button>
-      <div style="font-size:11.5px; color:#777; margin-top:4px;">تُسجَّل الشهادة في ملاحظات أعمال الطالبة تلقائياً.</div>
+      <button class="btn btn-outline" style="border-color:var(--gold); color:#8A6A00; font-size:14px; padding:9px 20px;" onclick="printExcellenceCertificates(lastWinnerIdxs)">🏅 طباعة شهادات كل المتميزات (8 في الورقة)</button>
+      <div style="font-size:11.5px; color:#777; margin-top:4px;">8 شهادات في كل ورقة A4 لاصقة، وتُسجَّل في ملاحظات أعمال الطالبة تلقائياً.</div>
     </div>
 
     <div style="margin-top:18px;">
@@ -507,7 +523,7 @@
       <b>📅 الأسابيع المطلوبة:</b>
       <label>من <select id="reportStartWeek"></select></label>
       <label>إلى <select id="reportEndWeek"></select></label>
-      <span class="rp-hint">تُطبَّق على كشفي «الأسبوعي» و«صفحتين» فقط</span>
+      <span class="rp-hint">تُطبَّق على: الكشف الأسبوعي، وكشف المتابعة الرسمي، وكشف الأعمال على صفحتين</span>
     </div>
 
     <div class="rp-group">
@@ -515,6 +531,10 @@
       <div class="rp-item"><div><b>الكشف الأسبوعي التفصيلي</b><small>لكل أسبوع صفحة: الحضور والمشاركة والسلوك والمخالفات بتفاصيلها وتكرارها. للمراجعة الأسبوعية.</small>
         <label class="rp-check"><input type="checkbox" id="wfOnlyViolators"> المخالفات فقط</label></div>
         <button class="btn btn-primary" onclick="generateWeeklyFollowupReport()">🗂️ استخراج</button></div>
+      <div class="rp-item"><div><b>دفتر المتابعة الرسمي (كشف الدرجات)</b><small>نفس دفتر الدرجات المعتمد: 9 أسابيع × 4 بنود (5 درجات لكل بند)، ومجموع القسمين و«مجموع الأعمال من 40» بمعادلاته.</small>
+        <select id="gbScope"><option value="current">الصف والشعبة الحالية فقط</option><option value="all">كل الصفوف والشعب (كل شعبة في صفحة)</option></select>
+        <select id="gbLayout"><option value="all">كل الأسابيع في صفحة واحدة</option><option value="split">صفحتان: الأسابيع 1–5، ثم 6–9 مع المجاميع</option></select></div>
+        <button class="btn btn-primary" onclick="generateOfficialGradebook()">📒 استخراج</button></div>
       <div class="rp-item"><div><b>كشف المتابعة بالنموذج الرسمي</b><small>دفتر المتابعة الرسمي لكل الأسابيع في جدول واحد.</small></div>
         <button class="btn btn-outline" onclick="generatePaperRegisterReport()">📄 استخراج</button></div>
       <div class="rp-item"><div><b>كشف الأعمال على صفحتين</b><small>الأسابيع المختارة موزعة على صفحتين A4 (6 أسابيع في الصفحة).</small></div>
@@ -1048,10 +1068,12 @@ function openLeavePassTab(){
           </select>
         </div>
         <button class="btn btn-primary btn-issue" onclick="window.opener.issueWinLeavePass(document)">🟢 تسجيل السماح بالخروج</button>
+        <button class="btn btn-outline" onclick="window.opener.showStudentLeaveReportFromPopup(document)">📄 سجل استئذانات الطالبة</button>
       </div>
       <div class="controls" style="align-items:center;">
         <button class="btn btn-outline" onclick="window.opener.preselectLeaveClass(document)">🎯 صف الحصة الآن</button>
-        <label style="font-size:13px; font-weight:bold; color:#8A1C30;">📅 التاريخ: <input type="date" id="winLeaveDate" style="font-family:inherit; padding:4px 6px; border:1px solid #E5C7D0; border-radius:6px;" onchange="window.opener.changeWinLeaveDate(document)"></label>
+        <label style="font-size:13px; font-weight:bold; color:#8A1C30;">🗓️ عرض: <select id="winLeaveRange" style="font-family:inherit; padding:5px 8px; border:1px solid #E5C7D0; border-radius:6px;" onchange="window.opener.onLeaveRangeChange(document)"><option value="1">اليوم فقط</option><option value="7">آخر 7 أيام</option><option value="30" selected>آخر 30 يوماً</option><option value="200">كل المسجّل</option></select></label>
+        <label style="font-size:13px; font-weight:bold; color:#8A1C30;">📅 أو يوم محدد: <input type="date" id="winLeaveDate" style="font-family:inherit; padding:4px 6px; border:1px solid #E5C7D0; border-radius:6px;" onchange="window.opener.changeWinLeaveDate(document)"> <button class="btn btn-outline" style="padding:3px 9px; font-size:12px;" onclick="window.opener.clearLeaveDate(document)">✖ كل التواريخ</button></label>
         <label style="font-size:13px; font-weight:bold; color:#8A1C30;"><input type="checkbox" id="winAllClasses" onchange="window.opener.renderWinLeaveTable(document)"> عرض كل الصفوف (الافتراضي: الصف المختار فقط)</label>
         <label style="font-size:13px; font-weight:bold; color:#8A1C30;"><input type="checkbox" id="winShowEnded" onchange="window.opener.renderWinLeaveTable(document)"> إخفاء الاستئذانات المنتهية</label>
         <button class="btn btn-outline" style="border-color:#B8001F; color:#B8001F;" onclick="window.opener.endClassLeaves(document)">🙈 إنهاء استئذانات هذا الصف (انتهت الحصة)</button>
@@ -1062,6 +1084,7 @@ function openLeavePassTab(){
         <thead>
           <tr>
             <th>م</th>
+            <th>التاريخ</th>
             <th>اسم الطالبة</th>
             <th>الصف والشعبة</th>
             <th>سبب الخروج</th>
@@ -1080,7 +1103,7 @@ function openLeavePassTab(){
           gSel.innerHTML = '${gradeOptionsHTML}';
           window.opener.updateWinSections(gSel.value, document);
           window.opener.preselectLeaveClass(document, true);
-          window.opener.renderWinLeaveTable(document);
+          window.opener.refreshLeaveRange(document);
         };
       <\/script>
     </body>
@@ -1105,6 +1128,97 @@ function updateWinStudents(winDoc){
   renderWinLeaveTable(winDoc);
 }
 
+// ===== تنبيه: الطالبة تجاوزت 5 دقائق في استئذانات سابقة — والقرار بيد المعلمة =====
+const LEAVE_ALERT_MIN = 5;
+let leaveIssuing = false;
+function ymdOf(d){ return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`; }
+async function getStudentLeaveHistory(student, classKey, gradeName, sec){
+  const c = new Date(); c.setDate(c.getDate() - 200);
+  let items = [];
+  try{
+    const snap = await Promise.race([
+      db.ref(LEAVE_ROOT).orderByKey().startAt(ymdOf(c)).once('value'),
+      new Promise((_, rej) => setTimeout(() => rej(new Error('timeout')), 3500))
+    ]);
+    snap.forEach(day => { Object.values(day.val() || {}).forEach(x => { if(x && x.id) items.push(x); }); });
+  }catch(e){
+    try{ items = JSON.parse(localStorage.getItem(DB_PREFIX + 'leave_backup_v1') || '[]'); }catch(_){}
+  }
+  const seen = new Set();
+  return items.filter(l => l && l.student === student && ((l.classKey && l.classKey === classKey) || (!l.classKey && l.gradeName === gradeName && l.sec === sec)))
+    .filter(l => { if(seen.has(l.id)) return false; seen.add(l.id); return true; })
+    .sort((a, b) => (a.id || 0) - (b.id || 0));
+}
+async function issueWinLeavePass(winDoc){
+  if(leaveIssuing) return;
+  const W = (winDoc && winDoc.defaultView) || window;
+  const gId = winDoc.getElementById('winGradeSelect').value;
+  const gradeName = (GRADES.find(g => g.id === gId) || {}).name;
+  const sec = winDoc.getElementById('winSectionSelect').value;
+  const student = winDoc.getElementById('winStudentSelect').value;
+  leaveIssuing = true;
+  try{
+    const hist = await getStudentLeaveHistory(student, `${gId}_${sec}`, gradeName, sec);
+    const over = hist.filter(l => { const m = leaveMinutes(l); return m !== null && m > LEAVE_ALERT_MIN; });
+    if(over.length){
+      const ok = await askLeaveDecision(winDoc, student, over, hist, gradeName, sec);
+      if(!ok) return;                                   // المعلمة قررت عدم السماح: لا يُسجَّل شيء
+    }
+    issueWinLeavePassNow(winDoc);
+  }catch(e){ W.alert('تعذّر التحقق من سجل الطالبة، حاولي مرة أخرى.'); }
+  finally{ leaveIssuing = false; }
+}
+function askLeaveDecision(winDoc, student, over, hist, gradeName, sec){
+  return new Promise(resolve => {
+    const old = winDoc.getElementById('leaveWarn'); if(old) old.remove();
+    const rows = over.slice(-6).map(l => `<tr><td>${escHtml(l.dateStr)}</td><td>${escHtml(dayLabel(l.dateStr).split(' ')[0])}</td><td style="color:#B8001F; font-weight:800;">${leaveMinutes(l)} دقيقة</td><td>${escHtml(l.reason)}</td></tr>`).join('');
+    const box = winDoc.createElement('div'); box.id = 'leaveWarn';
+    box.setAttribute('style', "position:fixed; inset:0; z-index:9999; display:flex; align-items:center; justify-content:center; background:rgba(0,0,0,.55); font-family:'Tajawal',sans-serif; direction:rtl; padding:12px;");
+    box.innerHTML = `<div style="background:#fff; border:5px solid #E08A00; border-radius:20px; padding:22px 26px; max-width:620px; width:100%; max-height:92vh; overflow:auto; text-align:center; box-shadow:0 20px 50px rgba(0,0,0,.4);">
+      <div style="font-size:40px;">⚠️</div>
+      <div style="font-size:23px; font-weight:800; color:#B8001F; margin:4px 0;">تنبيه: طالبة كثيرة الاستئذان</div>
+      <div style="font-size:19px; font-weight:800; color:#8A4B00;">${escHtml(student)}</div>
+      <div style="font-size:15px; color:#444; line-height:1.8; margin-top:4px;">تجاوزت مدة <b>${LEAVE_ALERT_MIN} دقائق</b> في <b style="color:#B8001F;">${over.length}</b> من استئذاناتها السابقة (من أصل ${hist.length} استئذان).</div>
+      <table style="width:100%; border-collapse:collapse; margin:12px 0; font-size:14px;"><thead><tr style="background:#8A1C30; color:#fff;"><th style="padding:6px;">التاريخ</th><th>اليوم</th><th>المدة</th><th>السبب</th></tr></thead><tbody>${rows}</tbody></table>
+      <div style="font-size:13px; color:#666; margin-bottom:12px;">القرار لكِ: هل تسمحين لها بالخروج؟</div>
+      <div style="display:flex; gap:10px; justify-content:center; flex-wrap:wrap;">
+        <button id="lwAllow" style="font-family:inherit; font-size:18px; font-weight:800; padding:14px 26px; border:none; border-radius:12px; background:#1E7A46; color:#fff; cursor:pointer;">✅ السماح بالخروج</button>
+        <button id="lwDeny" style="font-family:inherit; font-size:18px; font-weight:800; padding:14px 26px; border:none; border-radius:12px; background:#B8001F; color:#fff; cursor:pointer;">⛔ عدم السماح</button>
+        <button id="lwReport" style="font-family:inherit; font-size:15px; font-weight:700; padding:14px 18px; border:1.5px solid #8A1C30; border-radius:12px; background:#fff; color:#8A1C30; cursor:pointer;">🖨️ تقرير استئذاناتها</button>
+      </div></div>`;
+    winDoc.body.appendChild(box);
+    winDoc.getElementById('lwAllow').onclick = () => { box.remove(); resolve(true); };
+    winDoc.getElementById('lwDeny').onclick = () => { box.remove(); resolve(false); };
+    winDoc.getElementById('lwReport').onclick = () => printStudentLeaveReport(student, hist, winDoc.defaultView, gradeName, sec);
+  });
+}
+// تقرير استئذانات طالبة: التاريخ واليوم والمدة والسبب
+function printStudentLeaveReport(student, hist, W, gradeName, sec){
+  const win = (W || window).open('', '_blank');
+  if(!win){ (W || window).alert('منع المتصفح فتح نافذة التقرير. اسمحي بالنوافذ المنبثقة ثم أعيدي المحاولة.'); return; }
+  const mins = hist.map(leaveMinutes).filter(m => m !== null);
+  const over = mins.filter(m => m > LEAVE_ALERT_MIN).length;
+  const avg = mins.length ? Math.round(mins.reduce((a, b) => a + b, 0) / mins.length * 10) / 10 : 0;
+  const noReturn = hist.filter(l => !l.inTime).length;
+  const body = hist.map((l, i) => { const m = leaveMinutes(l); const bad = m !== null && m > LEAVE_ALERT_MIN;
+    return `<tr><td>${i + 1}</td><td>${escHtml(l.dateStr)}</td><td>${escHtml(dayLabel(l.dateStr).split(' ')[0])}</td><td>${escHtml(l.reason)}</td><td>${escHtml(l.outTime)}</td><td>${escHtml(l.inTime || '—')}</td><td style="${bad ? 'color:#B8001F; font-weight:bold;' : ''}">${m === null ? 'لم تُسجَّل العودة' : m + ' دقيقة'}</td><td>${escHtml(l.teacher || '')}</td></tr>`; }).join('');
+  win.document.write(`<!DOCTYPE html><html lang="ar" dir="rtl"><head><meta charset="UTF-8"><title>استئذانات ${escHtml(student)}</title>
+    <style>@page{size:A4 portrait; margin:10mm;} body{font-family:sans-serif; direction:rtl; padding:15px;} table{width:100%; border-collapse:collapse;} th,td{border:1px solid #0D2C54; padding:6px; text-align:center; font-size:10.5pt;} th{background:#8A1C30; color:#fff;} tr:nth-child(even) td{background:#FDF2F4;} .bar{margin-bottom:10px;} @media print{.bar{display:none;}}</style></head><body>
+    <div class="bar"><button onclick="window.print()" style="padding:8px 16px; font-family:inherit; cursor:pointer;">🖨️ طباعة</button></div>
+    ${getReportHeaderHTML(`تقرير استئذانات الطالبة: ${student}`)}
+    <p style="font-size:11pt; line-height:1.9;">${escHtml(gradeName || '')} — ${escHtml(sec || '')}<br>
+    عدد الاستئذانات: <b>${hist.length}</b> — متوسط المدة: <b>${avg} دقيقة</b> — استئذانات تجاوزت ${LEAVE_ALERT_MIN} دقائق: <b style="color:#B8001F;">${over}</b>${noReturn ? ` — لم تُسجَّل عودتها: <b>${noReturn}</b>` : ''}</p>
+    <table><thead><tr><th>م</th><th>التاريخ</th><th>اليوم</th><th>السبب</th><th>الخروج</th><th>العودة</th><th>المدة</th><th>المعلمة</th></tr></thead><tbody>${body || '<tr><td colspan="8" style="padding:16px;">لا توجد استئذانات سابقة.</td></tr>'}</tbody></table>
+    ${getReportFooterHTML()}</body></html>`);
+  win.document.close();
+}
+async function showStudentLeaveReportFromPopup(winDoc){
+  const gId = winDoc.getElementById('winGradeSelect').value, sec = winDoc.getElementById('winSectionSelect').value, student = winDoc.getElementById('winStudentSelect').value;
+  const gradeName = (GRADES.find(g => g.id === gId) || {}).name;
+  const hist = await getStudentLeaveHistory(student, `${gId}_${sec}`, gradeName, sec);
+  printStudentLeaveReport(student, hist, winDoc.defaultView, gradeName, sec);
+}
+
 function showLeaveToast(winDoc, kind, student, extra){
   const isOut = kind === 'out';
   const title = isOut ? '✅ يُسمح لكِ بالخروج' : '🏫 أهلاً بعودتكِ للمختبر';
@@ -1123,7 +1237,7 @@ function showLeaveToast(winDoc, kind, student, extra){
     setTimeout(() => { try{ box.remove(); }catch(e){} }, 4500);
   }catch(e){ alert(`${title}\n${student}${extra ? '\n' + extra : ''}`); }
 }
-function issueWinLeavePass(winDoc){
+function issueWinLeavePassNow(winDoc){
   const gId = winDoc.getElementById('winGradeSelect').value;
   const gradeName = GRADES.find(g=>g.id===gId).name;
   const sec = winDoc.getElementById('winSectionSelect').value;
@@ -1154,12 +1268,14 @@ function renderWinLeaveTable(winDoc){
   tbody.innerHTML = '';
   const gSel = winDoc.getElementById('winGradeSelect'), sSel = winDoc.getElementById('winSectionSelect');
   const allBox = winDoc.getElementById('winAllClasses'), endedBox = winDoc.getElementById('winShowEnded');
-  const dateInp = winDoc.getElementById('winLeaveDate');
-  if(dateInp && !dateInp.value) dateInp.value = todayStr();
+  const dateInp = winDoc.getElementById('winLeaveDate'), rangeSel = winDoc.getElementById('winLeaveRange');
   const all = allBox && allBox.checked, showEnded = !(endedBox && endedBox.checked);   // المنتهية تظهر افتراضياً (رمادية) ويمكن إخفاؤها
   const src = leaveViewSource(winDoc);
-  const isToday = !dateInp || !dateInp.value || dateInp.value === todayStr();
-  const dayWord = isToday ? 'اليوم' : `بتاريخ ${dateInp.value}`;
+  const dVal = dateInp && dateInp.value, rangeV = rangeSel ? rangeSel.value : '30';
+  const showsToday = dVal ? dVal === todayStr() : true;           // هل تتضمن العرض اليوم الحالي؟
+  const isToday = dVal ? dVal === todayStr() : rangeV === '1';
+  const rangeLabel = { '7': 'آخر 7 أيام', '30': 'آخر 30 يوماً', '200': 'كل المسجّل' }[rangeV];
+  const dayWord = dVal ? (isToday ? 'اليوم' : `بتاريخ ${dVal}`) : (rangeV === '1' ? 'اليوم' : `(${rangeLabel})`);
   const myKey = (gSel && sSel) ? `${gSel.value}_${sSel.value}` : '';
   const mine = all ? src : src.filter(l => leaveClassKeyOf(l) === myKey);
   const others = src.length - mine.length;
@@ -1167,16 +1283,16 @@ function renderWinLeaveTable(winDoc){
   const list = showEnded ? mine : mine.filter(l => !leaveIsEnded(l));
   const cnt = winDoc.getElementById('winLeaveCount');
   if(cnt){
-    const outNow = mine.filter(l => leaveStatus(l) === 'out').length;
-    cnt.textContent = `${all ? 'كل الصفوف' : 'الصف المختار'}: ${mine.length} تصريح ${dayWord}` + (isToday ? ` — ${outNow} خارج الفصل الآن` : '') +
+    const outNow = mine.filter(l => l.dateStr === todayStr() && leaveStatus(l) === 'out').length;
+    cnt.textContent = `${all ? 'كل الصفوف' : 'الصف المختار'}: ${mine.length} تصريح ${dayWord}` + (showsToday ? ` — ${outNow} خارج الفصل الآن` : '') +
       (!showEnded && hiddenEnded ? ` — ${hiddenEnded} منتهية مخفية (ألغي «إخفاء الاستئذانات المنتهية» لإظهارها)` : '') +
       (others > 0 ? ` — و${others} لصفوف أخرى (فعّلي «عرض كل الصفوف»)` : '');
   }
   if(list.length === 0){
-    let why = 'لا توجد استئذانات نشطة لهذا الصف' + (isToday ? ' حالياً.' : ` بتاريخ ${dateInp.value}.`);
+    let why = 'لا توجد استئذانات لهذا الصف' + (dVal ? (isToday ? ' اليوم.' : ` بتاريخ ${dVal}.`) : (rangeV === '1' ? ' اليوم.' : ` ${dayWord}.`));
     if(hiddenEnded) why += ` يوجد ${hiddenEnded} منتهية، ألغي «إخفاء الاستئذانات المنتهية» لإظهارها.`;
     if(others > 0) why += ` ويوجد ${others} استئذان لصفوف أخرى، فعّلي «عرض كل الصفوف».`;
-    tbody.innerHTML = `<tr><td colspan="8" style="color:#777; padding:16px;">${why}</td></tr>`;
+    tbody.innerHTML = `<tr><td colspan="9" style="color:#777; padding:16px;">${why}</td></tr>`;
     return;
   }
   list.forEach((item, idx)=>{
@@ -1189,6 +1305,7 @@ function renderWinLeaveTable(winDoc){
     const delBtn = `<div style="margin-top:10px;"><button class="btn btn-del" onclick="window.opener.deleteWinLeave(${item.id}, document)">🗑️ حذف (إدخال خاطئ)</button></div>`;
     tr.innerHTML = `
       <td>${idx+1}</td>
+      <td style="font-size:14px; white-space:nowrap;">${escHtml(dayLabel(item.dateStr))}${item.dateStr === todayStr() ? '<br><small style="color:#1E7A46;">اليوم</small>' : ''}</td>
       <td style="font-weight:bold;">${escHtml(item.student)}</td>
       <td>${escHtml(item.gradeName)} (${escHtml(item.sec)})</td>
       <td>${escHtml(item.reason)}</td>
@@ -1464,55 +1581,86 @@ async function purgeOldLeaves(){
 }
 
 // المتميزات: من حصلن على 🔥 أو 🏆 بدون أي مخالفة (النجوم لا تُحتسب)
-let lastWinnerIdxs = [];
-// شهادة تميز (A4 أفقي): صفحة لكل طالبة، وتُسجَّل في ملاحظات أعمالها
+let lastWinnerIdxs = [], lastWinnerTypes = {};
+// الشهادة تُحتسب تلقائياً من الرموز (🔥/🏆 بدون مخالفة وبدون غياب) حتى لو لم تُطبع؛ الأعلى 🔥 ثم 🏆 = نجمة الحصة
+function autoCert(rec, idx){
+  const rows = toArrIdx(rec.rows);
+  const r = rows[idx]; if(!r || r.attend === 'absent') return '';
+  if(r.certificate) return r.certificate;
+  const stat = x => { if(!x || x.attend === 'absent' || toArr(x.violations).length > 0) return null; const sy = x.participationSymbols || ''; const f = (sy.match(/🔥/g) || []).length, c = (sy.match(/🏆/g) || []).length; return (f || c) ? { f, c } : null; };
+  const me = stat(r); if(!me) return '';
+  let top = null;
+  rows.forEach(x => { const t = stat(x); if(t && (!top || t.f > top.f || (t.f === top.f && t.c > top.c))) top = t; });
+  return (top && top.f >= 1 && me.f === top.f && me.c === top.c) ? 'star' : 'medal';
+}
+function certLabel(c){ return c === 'star' ? '⭐ نالت لقب نجمة الحصة' : (c === 'medal' ? '🏅 نالت وسام التمييز' : '🏅 نالت شهادة تميز'); }
+
+// شهادة تقدير صغيرة: 8 شهادات في كل ورقة A4 (2×4) للطباعة على ورق لاصق
 function printExcellenceCertificates(idxList){
   if(!idxList || !idxList.length){ alert('لا توجد طالبات متميزات لطباعة شهاداتهن.'); return; }
   const record = getRecord(), sd = getSectionData();
   const grade = GRADES.find(g => g.id === currentGradeId);
   const d = new Date(currentDate + 'T00:00:00');
-  const dateAr = isNaN(d) ? currentDate : `${AR_DAYS[d.getDay()]} ${d.getDate()}/${d.getMonth()+1}/${d.getFullYear()}`;
+  const dateAr = isNaN(d) ? currentDate : `${d.getDate()}-${d.getMonth()+1}-${d.getFullYear()}`;
+  const today = new Date(); const issued = `${today.getDate()}-${today.getMonth()+1}-${today.getFullYear()}`;
   const lesson = (record.lesson || '').trim();
   const teacher = (typeof currentUserDisplayName !== 'undefined' && currentUserDisplayName) ? currentUserDisplayName : '';
+  const dept = (typeof currentDepartmentName !== 'undefined' && currentDepartmentName) ? currentDepartmentName : 'قسم الحاسوب';
+  const secNum = (String(currentSection).match(/(\d+)(?!.*\d)/) || [])[1];
+  const classLine = `${grade.name} – شعبة ${secNum || currentSection}`;
   const w = window.open('', '_blank');
   if(!w){ alert('منع المتصفح فتح نافذة الشهادات. اسمحي بالنوافذ المنبثقة ثم أعيدي المحاولة.'); return; }
-  const pages = idxList.map(idx => {
+  const labels = idxList.map(idx => {
     const name = sd.students[idx], row = record.rows[idx];
-    if(row){ row.certificate = true; }
-    const syms = row ? ((row.participationSymbols || '').includes('🔥') ? '🔥 ' : '') + ((row.participationSymbols || '').includes('🏆') ? '🏆' : '') : '';
-    return `<section class="cert-page"><div class="cert-border"><div class="cert-inner">
-      <div class="cert-top">
+    const type = lastWinnerTypes[idx] === 'star' ? 'star' : 'medal';
+    if(row){ row.certificate = type; }
+    const title = type === 'star' ? 'نجمة الحصة' : 'وسام التمييز';
+    const pill = type === 'star' ? 'نجمة الحصة — المركز الأول' : 'وسام التمييز';
+    const gain = type === 'star' ? 'لقب «نجمة الحصة»' : '«وسام التمييز»';
+    return `<div class="lbl"><div class="cb"><div class="ci">
+      <div class="hd">
         <img src="${getMinistryLogo()}" alt="">
-        <div class="cert-gov">دولة الكويت<br>وزارة التربية<br>منطقة الأحمدي التعليمية</div>
-        <img src="${getSchoolLogo()}" alt="" class="cert-school">
+        <div class="hd-t"><b>ثانوية موضي سلطان العيسى بنات</b><span>${escHtml(dept)} — المعلمة: ${escHtml(teacher)}</span></div>
+        <img src="${getSchoolLogo()}" alt="">
       </div>
-      <div class="cert-title">شهادة تميز</div>
-      <div class="cert-line">تتشرف إدارة ثانوية موضي سلطان العيسى بنات بمنح الطالبة</div>
-      <div class="cert-name">${escHtml(name)}</div>
-      <div class="cert-line">${escHtml(grade.name)} — شعبة ${escHtml(currentSection)}</div>
-      <div class="cert-line">تقديراً لتميزها وتفاعلها المتميز في الحصة الدراسية بتاريخ <b>${escHtml(dateAr)}</b>${lesson ? ` (درس: ${escHtml(lesson)})` : ''}</div>
-      <div class="cert-syms">${syms}</div>
-      <div class="cert-line" style="margin-top:6px;">متمنين لها دوام التوفيق والنجاح</div>
-      <div class="cert-sign"><div>معلمة المادة<br><b>${escHtml(teacher)}</b></div><div>مديرة المدرسة<br>.....................</div></div>
-    </div></div></section>`;
-  }).join('');
-  w.document.write(`<!DOCTYPE html><html lang="ar" dir="rtl"><head><meta charset="UTF-8"><title>شهادات التميز</title>
-    <link href="https://fonts.googleapis.com/css2?family=Aref+Ruqaa:wght@700&family=Reem+Kufi:wght@500;700&display=swap" rel="stylesheet">
+      <div class="ttl">شهادة تقدير</div>
+      <div class="pill ${type}">${type === 'star' ? '⭐ ' : '🏅 '}${pill}</div>
+      <div class="intro">تتشرف معلمة مادة الحاسوب بتقديم هذه الشهادة للطالبة المتميزة</div>
+      <div class="nm">${escHtml(name)}</div>
+      <div class="cls">${escHtml(classLine)}</div>
+      <div class="bd">وذلك لحصولها على ${gain} في ${escHtml(record.week || '')}${lesson ? ` – درس: <b>${escHtml(lesson)}</b>` : ''} – بتاريخ <b>${escHtml(dateAr)}</b>، تقديرًا لمشاركتها المتميزة وتفاعلها الإيجابي، ومتمنين لها دوام التوفيق والنجاح.</div>
+      <div class="ft"><div>معلمة المادة<br><b>${escHtml(teacher)}</b></div><div class="stamp">تاريخ الإصدار<br>${escHtml(issued)}</div></div>
+    </div></div></div>`;
+  });
+  const sheets = [];
+  for(let i = 0; i < labels.length; i += 8) sheets.push(`<section class="sheet">${labels.slice(i, i + 8).join('')}</section>`);
+  w.document.write(`<!DOCTYPE html><html lang="ar" dir="rtl"><head><meta charset="UTF-8"><title>شهادات التقدير</title>
+    <link href="https://fonts.googleapis.com/css2?family=Aref+Ruqaa:wght@700&family=Cairo:wght@600;800;900&family=Tajawal:wght@400;500;700&display=swap" rel="stylesheet">
     <style>
-      @page{ size:A4 landscape; margin:0; } * { -webkit-print-color-adjust:exact; print-color-adjust:exact; }
-      body{ margin:0; font-family:'Reem Kufi','Tajawal',sans-serif; direction:rtl; color:#2C2C2C; }
-      .cert-page{ width:297mm; height:209mm; box-sizing:border-box; padding:8mm; page-break-after:always; }
-      .cert-border{ height:100%; border:3mm double #8A1C30; padding:2mm; box-sizing:border-box; }
-      .cert-inner{ height:100%; border:1px solid #D4A82A; border-radius:4mm; box-sizing:border-box; padding:6mm 14mm; display:flex; flex-direction:column; align-items:center; justify-content:space-between; text-align:center; background:linear-gradient(180deg,#FFFDF5,#fff); }
-      .cert-top{ width:100%; display:flex; justify-content:space-between; align-items:center; }
-      .cert-top img{ height:24mm; width:24mm; object-fit:contain; } .cert-school{ height:28mm !important; width:28mm !important; }
-      .cert-gov{ font-size:11pt; font-weight:700; color:#0D2C54; line-height:1.6; }
-      .cert-title{ font-family:'Aref Ruqaa',serif; font-size:46pt; color:#8A1C30; line-height:1.2; }
-      .cert-line{ font-size:15pt; line-height:1.7; }
-      .cert-name{ font-family:'Aref Ruqaa',serif; font-size:34pt; color:#0D2C54; border-bottom:2px solid #D4A82A; padding:0 18mm 2mm; }
-      .cert-syms{ font-size:24pt; min-height:12mm; }
-      .cert-sign{ width:100%; display:flex; justify-content:space-around; font-size:13pt; line-height:1.8; }
-    </style></head><body>${pages}<script>window.onload=function(){ setTimeout(function(){ window.print(); }, 400); };<\/script></body></html>`);
+      /* قياس الملصق: 8 في الورقة (2×4). عدّلي هذه القيم إن اختلف قياس ورقك اللاصق */
+      :root{ --lw:105mm; --lh:74.25mm; --mt:0mm; --ml:0mm; }
+      @page{ size:A4 portrait; margin:0; } *{ box-sizing:border-box; -webkit-print-color-adjust:exact; print-color-adjust:exact; }
+      body{ margin:0; font-family:'Tajawal','Cairo',sans-serif; direction:rtl; color:#2C2C2C; background:#eee; }
+      .bar{ padding:8px 14px; background:#1F2430; color:#fff; font-size:13px; } .bar button{ font-family:inherit; padding:6px 14px; margin-inline-end:10px; cursor:pointer; }
+      .sheet{ width:210mm; height:297mm; margin:6mm auto; padding:var(--mt) var(--ml); background:#fff; display:grid; grid-template-columns:repeat(2,var(--lw)); grid-template-rows:repeat(4,var(--lh)); page-break-after:always; justify-content:center; align-content:start; }
+      .lbl{ width:var(--lw); height:var(--lh); padding:2mm; }
+      .cb{ height:100%; border:0.6mm solid #8A1C30; padding:0.7mm; border-radius:1.2mm; }
+      .ci{ height:100%; border:0.25mm solid #C9A227; border-radius:0.8mm; padding:1.6mm 3mm 1.4mm; display:flex; flex-direction:column; align-items:center; justify-content:space-between; text-align:center; background:linear-gradient(180deg,#FFFEFB,#fff); overflow:hidden; }
+      .hd{ width:100%; display:flex; align-items:center; justify-content:space-between; gap:1.5mm; }
+      .hd img{ width:9.5mm; height:9.5mm; object-fit:contain; flex:none; }
+      .hd-t{ display:flex; flex-direction:column; line-height:1.35; } .hd-t b{ font-family:'Cairo',sans-serif; font-weight:800; font-size:6.6pt; color:#1F2430; } .hd-t span{ font-size:5.4pt; color:#555; font-weight:500; }
+      .ttl{ font-family:'Cairo',sans-serif; font-weight:900; font-size:15.5pt; color:#8A1C30; line-height:1.15; }
+      .pill{ font-family:'Cairo',sans-serif; font-weight:800; font-size:6.4pt; color:#fff; background:#1F2430; border-radius:6mm; padding:0.7mm 3.2mm; } .pill.medal{ background:#8A1C30; }
+      .intro{ font-size:6.2pt; color:#555; font-weight:500; }
+      .nm{ font-family:'Aref Ruqaa',serif; font-weight:700; font-size:15pt; color:#1F2430; border-bottom:0.3mm solid #C9A227; padding:0 6mm 0.4mm; line-height:1.35; }
+      .cls{ font-family:'Cairo',sans-serif; font-weight:600; font-size:6.6pt; color:#444; }
+      .bd{ font-size:6pt; line-height:1.65; font-weight:500; color:#333; } .bd b{ color:#8A1C30; }
+      .ft{ width:100%; display:flex; justify-content:space-between; align-items:flex-end; font-size:5.6pt; color:#555; line-height:1.5; } .ft b{ color:#1F2430; font-size:6.2pt; }
+      .stamp{ border:0.3mm dashed #C9A227; border-radius:50%; width:12mm; height:12mm; display:flex; align-items:center; justify-content:center; text-align:center; font-size:4.6pt; line-height:1.3; }
+      @media print{ body{ background:#fff; } .bar{ display:none; } .sheet{ margin:0; } }
+    </style></head><body>
+    <div class="bar"><button onclick="window.print()">🖨️ طباعة</button> ${labels.length} شهادة — 8 في كل ورقة A4 (ورق لاصق). اختاري «الحجم 100%» وبدون هوامش في نافذة الطباعة.</div>
+    ${sheets.join('')}<script>window.onload=function(){ setTimeout(function(){ window.print(); }, 500); };<\/script></body></html>`);
   w.document.close();
   scheduleSave();
   try{ renderTable(); }catch(e){}
@@ -1528,33 +1676,39 @@ function openCelebrationModal(){
     const r = record.rows[idx];
     if(!r || r.attend === 'absent') return;
     const syms = r.participationSymbols || '';
-    const fire = syms.includes('🔥'), trophy = syms.includes('🏆');
-    if(!fire && !trophy) return;
+    const fireN = (syms.match(/🔥/g) || []).length, cupN = (syms.match(/🏆/g) || []).length;
+    if(!fireN && !cupN) return;
     if(toArr(r.violations).length > 0){ excludedByViolation++; return; }
-    winners.push({ name, idx, fire, trophy });
+    winners.push({ name, idx, fireN, cupN });
   });
-  // من جمعت النار والكأس معاً أولاً، ثم النار، ثم الكأس، ثم ترتيب القائمة
-  const weight = w => (w.fire && w.trophy) ? 3 : (w.fire ? 2 : 1);
-  winners.sort((a, b) => weight(b) - weight(a) || a.idx - b.idx);
+  // الترتيب: الأكثر 🔥 ثم الأكثر 🏆 ثم ترتيب القائمة
+  winners.sort((a, b) => b.fireN - a.fireN || b.cupN - a.cupN || a.idx - b.idx);
   lastWinnerIdxs = winners.map(w => w.idx);
+  // «نجمة الحصة»: صاحبة أعلى عدد 🔥 (مع تعادل الكؤوس)؛ والباقيات «وسام التمييز»
+  lastWinnerTypes = {};
+  const top = winners[0];
+  winners.forEach(w => { lastWinnerTypes[w.idx] = (top && top.fireN >= 1 && w.fireN === top.fireN && w.cupN === top.cupN) ? 'star' : 'medal'; });
 
   const grid = document.getElementById('topWinnersGrid');
   grid.innerHTML = '';
   if(winners.length === 0){
-    alert("لا توجد طالبات حصلن على 🔥 أو 🏆 بدون مخالفات في هذه الحصة بعد." + (excludedByViolation ? `\n(استُبعدت ${excludedByViolation} بسبب المخالفات)` : ''));
+    alert("لا توجد طالبات حصلن على 🔥 أو 🏆 بدون مخالفات في هذه الحصة بعد." + (excludedByViolation ? `\\n(استُبعدت ${excludedByViolation} بسبب المخالفات)` : ''));
     return;
   }
-  winners.forEach((w, i)=>{
+  winners.forEach(w => {
+    const isStar = lastWinnerTypes[w.idx] === 'star';
     const card = document.createElement('div');
-    card.className = 'winner-card' + (w.fire && w.trophy ? ' rank-1' : '');
+    card.className = 'winner-card' + (isStar ? ' rank-1' : '');
     card.innerHTML = `
-      <div class="winner-badge">${w.fire ? '🔥' : ''}${w.trophy ? '🏆' : ''}</div>
+      <div class="winner-badge">${isStar ? '⭐' : '🏅'}</div>
+      <div style="font-size:11px; font-weight:800; color:var(--pink-dark);">${isStar ? 'نجمة الحصة — المركز الأول' : 'وسام التمييز'}</div>
       <div class="winner-name">${escHtml(w.name)}</div>
-      <button class="btn btn-outline" style="font-size:12px; padding:5px 10px; margin-top:4px;" onclick="printExcellenceCertificates([${w.idx}])">🏅 شهادة تميز</button>`;
+      <div class="winner-stats">${w.fireN ? '🔥 ' + w.fireN : ''} ${w.cupN ? ' &nbsp;🏆 ' + w.cupN : ''}</div>
+      <button class="btn btn-outline" style="font-size:12px; padding:5px 10px; margin-top:4px;" onclick="printExcellenceCertificates([${w.idx}])">🏅 شهادة</button>`;
     grid.appendChild(card);
   });
   document.getElementById('celebrationSubTitle').textContent =
-    `طالبات متميزات في ${grade.name} (${currentSection}): ${winners.length}` + (excludedByViolation ? ` — استُبعدت ${excludedByViolation} بسبب المخالفات` : '') + ' · 🔥 و🏆 فقط';
+    `${grade.name} (${currentSection}): ${winners.length} متميزة` + (excludedByViolation ? ` — استُبعدت ${excludedByViolation} بسبب المخالفات` : '') + ' · الأكثر 🔥 = نجمة الحصة';
   document.getElementById('celebrationModal').classList.add('open');
   playCelebrationSound();
   if(window.confetti){ confetti({ particleCount: 100, spread: 70, origin: { y: 0.6 } }); }
@@ -1723,6 +1877,7 @@ function deleteWinLeave(id, winDoc){
   // نحذفه من الشاشة فوراً ثم من السحابة
   leaveLogs = leaveLogs.filter(l => l.id !== id);
   leavePastLogs = leavePastLogs.filter(l => l.id !== id);
+  leaveRangeLogs = leaveRangeLogs.filter(l => l.id !== id);
   try{
     const key = DB_PREFIX + 'leave_backup_v1';
     localStorage.setItem(key, JSON.stringify(JSON.parse(localStorage.getItem(key) || '[]').filter(x => x && x.id !== id)));
@@ -1734,13 +1889,34 @@ function deleteWinLeave(id, winDoc){
     if(p && p.catch) p.catch(() => W.alert('تعذّر حذفه من السحابة، تأكدي من الاتصال وأعيدي المحاولة.'));
   }catch(e){ W.alert('تعذّر الحذف، أعيدي المحاولة.'); }
 }
+let leaveRangeLogs = [];      // استئذانات الأيام السابقة (ضمن النطاق المختار) لعرضها في شاشة الاستئذان
+async function loadLeaveRangeCache(days){
+  const c = new Date(); c.setDate(c.getDate() - days);
+  const y = new Date(); y.setDate(y.getDate() - 1);
+  const snap = await db.ref(LEAVE_ROOT).orderByKey().startAt(ymdOf(c)).endAt(ymdOf(y)).once('value');
+  const out = [];
+  snap.forEach(day => { Object.values(day.val() || {}).forEach(x => { if(x && x.id) out.push(x); }); });
+  leaveRangeLogs = out;
+}
+async function refreshLeaveRange(winDoc){
+  const di = winDoc.getElementById('winLeaveDate'), rg = winDoc.getElementById('winLeaveRange');
+  const v = rg ? rg.value : '30';
+  if((!di || !di.value) && v !== '1'){ try{ await loadLeaveRangeCache(parseInt(v, 10)); }catch(e){} }
+  renderWinLeaveTable(winDoc);
+}
+function onLeaveRangeChange(winDoc){ const di = winDoc.getElementById('winLeaveDate'); if(di) di.value = ''; refreshLeaveRange(winDoc); }
+function clearLeaveDate(winDoc){ const di = winDoc.getElementById('winLeaveDate'); if(di) di.value = ''; refreshLeaveRange(winDoc); }
 function leaveViewSource(winDoc){
-  const di = winDoc.getElementById('winLeaveDate');
-  const d = di && di.value ? di.value : todayStr();
-  return d === todayStr() ? leaveLogs : (leavePastDate === d ? leavePastLogs : []);
+  const di = winDoc.getElementById('winLeaveDate'), rg = winDoc.getElementById('winLeaveRange');
+  const d = di && di.value;
+  if(d) return d === todayStr() ? leaveLogs : (leavePastDate === d ? leavePastLogs : []);
+  const v = rg ? rg.value : '30';
+  if(v === '1') return leaveLogs;
+  return leaveLogs.concat(leaveRangeLogs.filter(x => x.dateStr !== todayStr())).sort((a, b) => (b.dateStr || '').localeCompare(a.dateStr || '') || (b.id || 0) - (a.id || 0));   // الأحدث أولاً
 }
 async function changeWinLeaveDate(winDoc){
-  const d = winDoc.getElementById('winLeaveDate').value || todayStr();
+  const d = winDoc.getElementById('winLeaveDate').value;
+  if(!d){ refreshLeaveRange(winDoc); return; }
   if(d !== todayStr()){
     try{ const snap = await db.ref(LEAVE_ROOT + '/' + d).once('value'); leavePastLogs = leaveItemsFromSnap(snap.val()); leavePastDate = d; }
     catch(e){ leavePastLogs = []; leavePastDate = d; }
@@ -2040,6 +2216,7 @@ function showApp(displayName, deptName){
 
   // سجل الاستئذانات: يتزامن لحظياً بين كل الأجهزة ويتجدد تلقائياً مع بداية كل يوم
   bindTodayLeaves(); migrateOldLeaveLogs(); setInterval(bindTodayLeaves, 60000); setInterval(refreshLeaveWin, 30000);
+  setInterval(() => { try{ if(leaveWinRef && !leaveWinRef.closed) refreshLeaveRange(leaveWinRef.document); }catch(e){} }, 120000);
 
   currentGradeId = GRADES[0].id;
   currentSection = SECTIONS[GRADES[0].id][0];
@@ -2196,9 +2373,9 @@ function renderTable(){
       <th style="width:78px;">الحضور (ح/ت/غ)</th>
       <th>مشاركة تفاعلية</th>
       <th>تطبيق ورقة العمل</th>
-      <th style="width:90px;">السلوك والأدوات</th>
+      <th style="width:150px;">درجات الأسبوع (5 لكل بند)</th>
       <th style="width:80px; background:#8A1C30;">تكرار المخالفة</th>
-      <th style="min-width:230px;">المخالفات</th>
+      <th style="min-width:130px;">المخالفات</th>
       <th>الإجراء المتبع</th>
     </tr>
   `;
@@ -2218,7 +2395,14 @@ function renderTable(){
     const tdName = document.createElement('td'); tdName.className = 'name-cell';
     const nameInput = document.createElement('input'); nameInput.value = name;
     nameInput.addEventListener('change', ()=>{ students[idx] = nameInput.value.trim() || name; scheduleSave(); });
-    tdName.appendChild(nameInput);
+    const wrapN = document.createElement('div'); wrapN.style.cssText = 'display:flex;align-items:center;gap:6px;';
+    const photoSrc = (getSectionData().photos || {})[idx];
+    if(photoSrc){
+      const im = document.createElement('img'); im.src = photoSrc; im.alt = ''; im.className = 'entry-photo'; im.title = 'اضغطي للتكبير';
+      im.addEventListener('click', ()=>{ const ov = document.createElement('div'); ov.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,.75);z-index:99999;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:10px;color:#fff;font-weight:700;font-size:18px;'; ov.innerHTML = '<img src="' + photoSrc + '" style="max-width:85vw;max-height:75vh;border-radius:12px;border:3px solid #fff;"><div>' + escHtml(students[idx] || '') + '</div>'; ov.addEventListener('click', ()=>ov.remove()); document.body.appendChild(ov); });
+      wrapN.appendChild(im);
+    }
+    wrapN.appendChild(nameInput); tdName.appendChild(wrapN);
     tr.appendChild(tdName);
 
     const tdAttend = document.createElement('td');
@@ -2426,21 +2610,25 @@ function renderTable(){
 
     const btnsDiv = document.createElement('div');
     btnsDiv.className = 'p-buttons';
-    ['⭐','🏆','🔥'].forEach(sym=>{
-      const b = document.createElement('button'); b.type = 'button'; b.textContent = sym; b.disabled = isAbsent;
-      const isOn = () => (row.participationSymbols || '').split(/\s+/).includes(sym);
-      if(isOn()) b.classList.add('active');
-      b.title = 'اضغطي لتحديد الرمز، واضغطي مرة ثانية لإلغائه';
-      b.addEventListener('click', ()=>{
-        const list = (row.participationSymbols || '').split(/\s+/).filter(Boolean);
-        const next = list.includes(sym) ? list.filter(x => x !== sym) : list.concat(sym);   // تحديد ثم إلغاء
-        row.participationSymbols = next.join(' ');
-        symbolsDiv.textContent = row.participationSymbols;
-        b.classList.toggle('active', next.includes(sym));
-        scheduleSave();
+    const symList = () => (row.participationSymbols || '').split(/\s+/).filter(Boolean);
+    const paintSyms = () => {
+      btnsDiv.innerHTML = '';
+      const list = symList();
+      ['⭐','🏆','🔥'].forEach(sym => {
+        const n = list.filter(x => x === sym).length;
+        const b = document.createElement('button'); b.type = 'button'; b.disabled = isAbsent;
+        b.innerHTML = n ? `${sym}<sup class="sym-n">${n}</sup>` : sym;
+        if(n) b.classList.add('active');
+        b.title = 'اضغطي لإضافة الرمز (يمكن تكراره)';
+        b.addEventListener('click', () => { const l = symList(); l.push(sym); row.participationSymbols = l.join(' '); symbolsDiv.textContent = row.participationSymbols; paintSyms(); scheduleSave(); });
+        btnsDiv.appendChild(b);
       });
-      btnsDiv.appendChild(b);
-    });
+      const undo = document.createElement('button'); undo.type = 'button'; undo.textContent = '↩'; undo.className = 'sym-undo';
+      undo.disabled = isAbsent || !list.length; undo.title = 'تراجع عن آخر رمز أُضيف';
+      undo.addEventListener('click', () => { const l = symList(); l.pop(); row.participationSymbols = l.join(' '); symbolsDiv.textContent = row.participationSymbols; paintSyms(); scheduleSave(); });
+      btnsDiv.appendChild(undo);
+    };
+    paintSyms();
 
     badgeWrap.appendChild(symbolsDiv);
     badgeWrap.appendChild(btnsDiv);
@@ -2522,35 +2710,142 @@ function printPledge(studentName, row){
   printWindow.document.close();
 }
 
-// درجة السلوك والتعامل مع الأدوات من 1: كل مخالفة تنقص 0.5 (لا تقل عن صفر)
-function calcBehaviorScore(row){
-  if(row.attend === 'absent') return 0;
-  const n = row.violations ? row.violations.length : 0;
-  return Math.max(0, 1 - n * 0.5);
+// دفتر الدرجات المعتمد: كل أسبوع 4 بنود، لكل بند 5 درجات (المجموع 20 في الأسبوع):
+//   سلوك، تعامل مع الأدوات، تطبيق، مشاركة.
+// كل مخالفة تنقص 0.5 من السلوك، والتأخر مخالفة؛ وإذا نفدت درجات السلوك تنقص من المشاركة.
+// التطبيق: كامل 5، غير كامل ينقص 0.5، لم تطبق ينقص 1. الغياب = صفر في كل البنود.
+const ITEM_MAX = 5;
+function weekItems(row){
+  if(row.attend === 'absent') return { beh: 0, tools: 0, app: 0, part: 0, behDed: 0, partDed: 0 };
+  const n = (row.violations ? row.violations.length : 0) + (row.attend === 'late' ? 1 : 0);
+  const ded = n * 0.5;
+  const behDed = Math.min(ITEM_MAX, ded), partDed = Math.min(ITEM_MAX, Math.max(0, ded - ITEM_MAX));
+  const appDed = row.appStatus === 'not_done' ? 1 : (row.appStatus === 'partial' ? 0.5 : 0);
+  return { beh: ITEM_MAX - behDed, tools: ITEM_MAX, app: ITEM_MAX - appDed, part: ITEM_MAX - partDed, behDed, partDed };
 }
-
-function behaviorDeduction(row){ return Math.round((1 - calcBehaviorScore(row)) * 100) / 100; }
-function getBehaviorText(row){
-  const d = behaviorDeduction(row);
-  return d === 0 ? '0' : `-${d}`;     // على كل مخالفة -0.5 وهكذا
-}
+function calcBehaviorScore(row){ return weekItems(row).beh; }
+function behaviorDeduction(row){ return weekItems(row).behDed; }
+function calcFinalTotal40(row){ const w = weekItems(row); return w.beh + w.tools + w.app + w.part; }   // درجة الأسبوع من 20
+const fmtG = n => Number.isInteger(n) ? String(n) : String(Math.round(n * 10) / 10);
+function getBehaviorText(row){ const w = weekItems(row); return `${fmtG(w.beh)}|${fmtG(w.tools)}|${fmtG(w.app)}|${fmtG(w.part)}`; }
+// في الجدول الرئيسي: درجات البنود الأربعة (من 5 لكل بند) للأسبوع الحالي
 function paintBehaviorCell(td, row, isAbsent){
-  if(isAbsent){ td.textContent = 'غائب'; td.style.color = 'var(--red)'; td.style.fontWeight = '800'; return; }
-  td.textContent = getBehaviorText(row);
-  td.style.color = behaviorDeduction(row) > 0 ? 'var(--red)' : '#333';
-  td.style.fontWeight = '800';
+  if(isAbsent){ td.innerHTML = '<b style="color:var(--red)">غائبة</b>'; return; }
+  const w = weekItems(row);
+  const c = v => v < ITEM_MAX ? ' class="gi low"' : ' class="gi"';
+  td.innerHTML = `<div class="gi-grid"><span${c(w.beh)}><small>سلوك</small>${fmtG(w.beh)}</span><span${c(w.tools)}><small>أدوات</small>${fmtG(w.tools)}</span><span${c(w.app)}><small>تطبيق</small>${fmtG(w.app)}</span><span${c(w.part)}><small>مشاركة</small>${fmtG(w.part)}</span></div>`;
+}
+// يُحتسب الأسبوع للطالبة فقط إذا كُتب عنوان الدرس أو سُجّل غيابها؛ وإلا تبقى أعمدته فارغة
+function weekCounted(rec, row){ return !!row && (row.attend === 'absent' || !!(((rec && rec.lesson) || '') + '').trim()); }
+function recordCounted(rec){ return !!rec && (((rec.lesson || '') + '').trim() !== '' || toArrIdx(rec.rows).some(r => r && r.attend === 'absent')); }
+// أربع خانات رقمية لأسبوع: سلوك، أدوات، تطبيق، مشاركة (فارغة إن لم يُحتسب الأسبوع، وغ بالأحمر للغياب)
+function itemCellsHTML(rec, r, lastBorder, behExtra){
+  const cell = (inner, last) => `<td${last ? ` style="${lastBorder}"` : ''}>${inner}</td>`;
+  if(!r || !weekCounted(rec, r)) return cell('') + cell('') + cell('') + cell('', true);
+  if(r.attend === 'absent'){ const g = '<b style="color:#B8001F;">غ</b>'; return cell(g) + cell(g) + cell(g) + cell(g, true); }
+  const w = weekItems(r);
+  const col = v => v < ITEM_MAX ? ` style="color:#B8001F; font-weight:bold;"` : '';
+  return `<td${col(w.beh)}>${fmtG(w.beh)}${behExtra || ''}</td><td${col(w.tools)}>${fmtG(w.tools)}</td><td${col(w.app)}>${fmtG(w.app)}</td><td style="${lastBorder}${w.part < ITEM_MAX ? ' color:#B8001F; font-weight:bold;' : ''}">${fmtG(w.part)}</td>`;
 }
 
-// درجة الأسبوع من 4 = حضور (1؛ التأخر 0.5) + سلوك وأدوات (1؛ كل مخالفة -0.5) + تطبيق ومشاركة (2؛ غير كامل -0.5، لم تطبق -1). الغياب = صفر
-function calcFinalTotal40(row){
-  if(row.attend === 'absent') return 0;
-  const att = attendScore(row.attend);
-  const beh = calcBehaviorScore(row);
-  const appObj = APP_STATUS_OPTIONS.find(a => a.value === (row.appStatus || 'done'));
-  const app = appObj ? appObj.score : 2;
-  return att + beh + app;
+// ===== دفتر المتابعة الرسمي (كشف الدرجات) — نفس معادلات الملف الرسمي =====
+// القسم الأول: الأسابيع 1–5 (÷5) ، القسم الثاني: الأسابيع 6–9 (÷4) ، ويُقرَّب كل بند لأقرب نصف درجة
+const GB_WEEKS = 9;
+function round05(x){ const f = x - Math.floor(x); return f >= 0.75 ? Math.floor(x) + 1 : (f >= 0.25 ? Math.floor(x) + 0.5 : Math.floor(x)); }
+function gbWeekVals(secData, idx, w){
+  const k = findRecordKeyForWeek(secData.records, `الأسبوع ${w}`);
+  const rec = k ? secData.records[k] : null;
+  const date = (rec && recordCounted(rec)) ? recordDateOf(k) : '';
+  const r = rec ? toArrIdx(rec.rows)[idx] : null;
+  if(!r || !weekCounted(rec, r)) return { counted: false, date };
+  const it = weekItems(r);
+  return { counted: true, absent: r.attend === 'absent', vals: [it.beh, it.tools, it.app, it.part], date };
 }
-
+function gbOfficial(secData, idx){
+  const weeks = []; for(let w = 1; w <= GB_WEEKS; w++) weeks.push(gbWeekVals(secData, idx, w));
+  const sec = (from, to, div) => [0, 1, 2, 3].map(i => {
+    const nums = weeks.slice(from - 1, to).filter(x => x.counted).map(x => x.vals[i]);
+    return nums.length ? round05(nums.reduce((a, b) => a + b, 0) / div) : '';
+  });
+  const s1 = sec(1, 5, 5), s2 = sec(6, GB_WEEKS, 4);
+  const tot = a => a[0] === '' ? '' : a.reduce((x, y) => x + (y === '' ? 0 : y), 0);
+  const t1 = tot(s1), t2 = tot(s2);
+  const total = (t1 === '' && t2 === '') ? '' : (t1 === '' ? 0 : t1) + (t2 === '' ? 0 : t2);
+  return { weeks, s1, s2, t1, t2, total };
+}
+function gradebookPage(g, sec, sd, part){
+  part = part || 'all';
+  const wFrom = part === 'p2' ? 6 : 1, wTo = part === 'p1' ? 5 : GB_WEEKS, showSum = part !== 'p1';
+  const wkW = part === 'all' ? 4.1 : (part === 'p1' ? 8.4 : 6.4);
+  const WN = ['الأول','الثاني','الثالث','الرابع','الخامس','السادس','السابع','الثامن','التاسع'];
+  const teacher = (typeof currentUserDisplayName !== 'undefined' && currentUserDisplayName) ? currentUserDisplayName : '';
+  let h1 = '', h2 = '', h3 = '', cg = '<col style="width:4mm"><col style="width:30mm">';
+  const firstOff = gbOfficial(sd, 0);
+  for(let w = wFrom; w <= wTo; w++){
+    const d = firstOff.weeks[w-1].date;
+    // تاريخ الحصة: نأخذه من أي طالبة لها حصة محتسبة في ذلك الأسبوع
+    let dt = d; if(!dt){ for(let i = 1; i < sd.students.length && !dt; i++){ dt = gbOfficial(sd, i).weeks[w-1].date; } }
+    h1 += `<th colspan="4" class="wk">الأسبوع ${WN[w-1]}</th>`;
+    h2 += `<th colspan="4" class="dt">${dt ? shortDate(dt) : ''}</th>`;
+    h3 += ['سلوك','أدوات','تطبيق','مشاركة'].map(x => `<th class="vt">${x}</th>`).join('');
+    cg += `<col style="width:${wkW}mm">`.repeat(4);
+  }
+  const sumHead = lab => ['سلوك','أدوات','تطبيق','مشاركة'].map(x => `<th class="vt s">${x}</th>`).join('') + '<th class="vt s tt">المجموع</th>';
+  if(showSum) cg += '<col style="width:5.6mm">'.repeat(4) + '<col style="width:6.6mm">' + '<col style="width:5.6mm">'.repeat(4) + '<col style="width:6.6mm">' + '<col style="width:8mm">' + '<col style="width:8mm"><col style="width:9mm"><col style="width:8mm"><col style="width:8mm">';
+  let rows = '';
+  sd.students.forEach((name, idx) => {
+    const o = gbOfficial(sd, idx);
+    rows += `<tr><td>${idx + 1}</td><td class="nm">${escHtml(formatThreePartName(name))}</td>`;
+    o.weeks.slice(wFrom - 1, wTo).forEach(wk => {
+      if(!wk.counted) rows += '<td></td><td></td><td></td><td></td>';
+      else if(wk.absent) rows += '<td class="ab">غ</td><td class="ab">غ</td><td class="ab">غ</td><td class="ab">غ</td>';
+      else rows += wk.vals.map(v => `<td${v < ITEM_MAX ? ' class="lo"' : ''}>${fmtG(v)}</td>`).join('');
+    });
+    const cellsOf = (a, t) => a.map(v => `<td class="sm">${v === '' ? '' : fmtG(v)}</td>`).join('') + `<td class="sm tt">${t === '' ? '' : fmtG(t)}</td>`;
+    if(showSum) rows += cellsOf(o.s1, o.t1) + cellsOf(o.s2, o.t2) + `<td class="tot">${o.total === '' ? '' : fmtG(o.total)}</td><td></td><td></td><td></td><td></td>`;
+    rows += '</tr>';
+  });
+  return `<section class="gb"><div class="gb-hd">
+      <div class="gb-t1"><b>منطقة الأحمدي التعليمية — ثانوية موضي سلطان العيسى بنات</b> &nbsp;|&nbsp; كشف متابعة المتعلمين لمادة الحاسوب — المجال: تكنولوجيا المعلومات والاتصالات (تقنية المعلومات) — المرحلة الثانوية</div>
+      <div class="gb-t2">الصف / الشعبة: <b>${escHtml(g.name)} / ${escHtml(sec)}</b> &nbsp;|&nbsp; المعلمة: <b>${escHtml(teacher)}</b> &nbsp;|&nbsp; الفترة الدراسية الأولى &nbsp;|&nbsp; العام الدراسي 2026 / 2027 &nbsp;|&nbsp; توزيع الدرجات: الأعمال 40 (قسم أول 20 + قسم ثانٍ 20) + الامتحان 60 = 100${part === 'p1' ? ' &nbsp;|&nbsp; <b>الصفحة 1 من 2: الأسابيع 1–5</b>' : (part === 'p2' ? ' &nbsp;|&nbsp; <b>الصفحة 2 من 2: الأسابيع 6–9 + مجاميع كل الأسابيع</b>' : '')}</div>
+    </div>
+    <table class="gbt"><colgroup>${cg}</colgroup><thead>
+      <tr><th rowspan="3">م</th><th rowspan="3">اسم الطالبة</th>${h1}${showSum ? `
+        <th colspan="5" class="sec">القسم الأول — الأسابيع 1–5 (20)</th><th colspan="5" class="sec">القسم الثاني — الأسابيع 6–9 (20)</th>
+        <th rowspan="3" class="vt tot">مجموع الأعمال (40)</th><th colspan="3" class="ex">الامتحان (60)</th><th rowspan="3" class="vt ex">المجموع (100)</th>` : ''}</tr>
+      <tr>${h2}${showSum ? `<th colspan="5" class="sec2"></th><th colspan="5" class="sec2"></th><th rowspan="2" class="vt ex">المشروع (20)</th><th rowspan="2" class="vt ex">الاختبار العملي (40)</th><th rowspan="2" class="vt ex">المجموع (60)</th>` : ''}</tr>
+      <tr>${h3}${showSum ? sumHead() + sumHead() : ''}</tr>
+    </thead><tbody>${rows}</tbody></table>
+    <div class="gb-ft">كل بند من 5 درجات أسبوعياً. السلوك: كل مخالفة (والتأخر) تنقص نصف درجة، وإذا نفد السلوك تنقص من المشاركة. التطبيق: غير كامل −0.5، لم تطبق −1. الغياب (غ) = صفر. درجة كل بند في القسم = مجموع درجات أسابيعه ÷ عدد أسابيع القسم (5 للأول، 4 للثاني) مقرّبة لأقرب نصف درجة. تُحتسب الحصة بعد كتابة عنوان الدرس أو تسجيل الغياب.</div></section>`;
+}
+function generateOfficialGradebook(){
+  const scope = (document.getElementById('gbScope') || {}).value || 'current';
+  const targets = [];
+  if(scope === 'all'){ GRADES.forEach(g => (SECTIONS[g.id] || []).forEach(sec => { const sd = store[g.id] && store[g.id].sections[sec]; if(sd) targets.push({ g, sec, sd }); })); }
+  else targets.push({ g: GRADES.find(x => x.id === currentGradeId), sec: currentSection, sd: getSectionData() });
+  const w = window.open('', '_blank');
+  if(!w){ alert('منع المتصفح فتح نافذة التقرير. اسمحي بالنوافذ المنبثقة ثم أعيدي المحاولة.'); return; }
+  const layout = (document.getElementById('gbLayout') || {}).value || 'all';
+  const pages = targets.map(t => layout === 'split' ? gradebookPage(t.g, t.sec, t.sd, 'p1') + gradebookPage(t.g, t.sec, t.sd, 'p2') : gradebookPage(t.g, t.sec, t.sd)).join('');
+  w.document.write(`<!DOCTYPE html><html lang="ar" dir="rtl"><head><meta charset="UTF-8"><title>دفتر المتابعة الرسمي</title>
+    <style>
+      @page{ size:A4 landscape; margin:5mm; } *{ box-sizing:border-box; -webkit-print-color-adjust:exact; print-color-adjust:exact; }
+      body{ margin:0; font-family:'Tajawal','Cairo',sans-serif; direction:rtl; color:#111; }
+      .bar{ padding:6px 10px; background:#1F2430; color:#fff; font-size:12px; } .bar button{ font-family:inherit; padding:5px 12px; margin-inline-end:8px; cursor:pointer; }
+      .gb{ page-break-after:always; padding:1mm; } .gb-hd{ margin-bottom:1.2mm; text-align:center; } .gb-t1{ font-size:8.5pt; } .gb-t2{ font-size:7.5pt; margin-top:0.8mm; color:#333; }
+      table.gbt{ width:100%; border-collapse:collapse; table-layout:fixed; } .gbt th, .gbt td{ border:0.25mm solid #444; padding:0; text-align:center; font-size:6pt; height:4.5mm; overflow:hidden; line-height:1.1; }
+      .gbt th{ background:#E8EEF7; font-weight:700; } .gbt th.wk{ background:#1F3A5F; color:#fff; font-size:6.4pt; } .gbt th.dt{ background:#FAF3F0; font-size:5.6pt; height:3.6mm; }
+      .gbt th.sec{ background:#2E6F57; color:#fff; font-size:6.4pt; } .gbt th.sec2{ background:#fff; height:3.6mm; } .gbt th.ex{ background:#B8860B; color:#fff; } .gbt th.tot{ background:#8A1C30; color:#fff; }
+      .vt{ writing-mode:vertical-rl; font-size:5.4pt !important; height:13mm !important; } .gbt th.s{ background:#DDEFE6; }
+      .nm{ text-align:right; padding:0 1mm !important; font-weight:700; font-size:6.4pt !important; white-space:nowrap; overflow:hidden; }
+      .lo{ color:#B8001F; font-weight:700; } .ab{ color:#B8001F; font-weight:800; } .sm{ background:#F3FAF6; font-weight:700; } .tt{ background:#DDEFE6 !important; } .tot{ background:#FDF2F4; font-weight:800; font-size:7pt !important; }
+      .gb-ft{ margin-top:1.2mm; font-size:5.8pt; color:#444; line-height:1.5; }
+      @media print{ .bar{ display:none; } }
+    </style></head><body>
+    <div class="bar"><button onclick="window.print()">🖨️ طباعة</button> ${targets.length} صف — كل صف في صفحة A4 أفقية. اختاري «الحجم 100%» وبدون هوامش.</div>
+    ${pages}</body></html>`);
+  w.document.close();
+}
 function updateRowCalculations(tr, row, studentIdx){
   const behCell = tr.querySelector('.behavior-cell');
   if(behCell) paintBehaviorCell(behCell, row, row.attend === 'absent');
@@ -2620,16 +2915,16 @@ function handleExportGrades(){
     let total = 0;
     WEEKS.forEach(w=>{
       let foundKey = findRecordKeyForWeek(records, w);
-      if(foundKey && records[foundKey].rows && records[foundKey].rows[idx] && !isPristineRecord(records[foundKey])){
+      if(foundKey && records[foundKey].rows && records[foundKey].rows[idx] && !isPristineRecord(records[foundKey]) && weekCounted(records[foundKey], records[foundKey].rows[idx])){
         const r = records[foundKey].rows[idx];
         const sc = calcFinalTotal40(r);
-        studentRow[w] = r.attend === 'absent' ? 'غ' : sc;     // درجة الأسبوع من 4
-        total += sc;
+        studentRow[w] = r.attend === 'absent' ? 'غ' : sc;     // درجة الأسبوع من 20
       } else {
         studentRow[w] = "—";
       }
     });
-    studentRow["المجموع"] = Math.round(total * 10) / 10;
+    const off = gbOfficial(secData, idx);
+    studentRow["مجموع الأعمال (40)"] = off.total === '' ? '' : off.total;
     return studentRow;
   });
 
@@ -3006,6 +3301,9 @@ function printAllCards(){
   const schLogoHTML = schLogoData ? `<img src="${schLogoData}" style="width:14mm; height:14mm; object-fit:contain;">` : `<img src="${getSchoolLogo()}" style="width:14mm; height:14mm; object-fit:contain;">`;
 
   const isGrade12 = currentGradeId === 'g12s' || currentGradeId === 'g12l';
+  // بطاقات الثاني عشر بنفس تصميم العاشر مع عكس مكان الشعارين
+  const firstLogo = isGrade12 ? minLogoHTML : schLogoHTML;
+  const secondLogo = isGrade12 ? schLogoHTML : minLogoHTML;
 
   let cardsHTML = '';
   secData.students.forEach((name, idx)=>{
@@ -3013,38 +3311,16 @@ function printAllCards(){
     const photo = secData.photos[idx];
     const shortName = formatThreePartName(name);
 
-    if(isGrade12){
-      cardsHTML += `
-        <div style="width:90mm; height:60mm; border:2.5px solid #E85A71; border-radius:4mm; padding:3mm; display:flex; flex-direction:column; justify-content:space-between; page-break-inside:avoid; box-sizing:border-box; background:linear-gradient(135deg, #0A1826 0%, #1E3A52 100%); color:#fff; position:relative; overflow:hidden;">
-          <div style="position:absolute; right:-10mm; bottom:-10mm; font-size:90pt; opacity:0.1; color:#E85A71; pointer-events:none;">🎓</div>
-          <div style="display:flex; justify-content:space-between; align-items:center; border-bottom:1.5px solid #E85A71; padding-bottom:2px; z-index:1;">
-            ${schLogoHTML}
-            <div style="text-align:center;">
-              <h4 style="margin:0; font-family:'Reem Kufi', sans-serif; font-size:15pt; color:#FF8DA1; font-weight:800;">بطاقة طالبة</h4>
-              <p style="margin:2px 0 0; font-size:8.5pt; font-weight:800; color:#E0E0E0;">ثانوية موضي سلطان العيسى - بنات</p>
-            </div>
-            ${minLogoHTML}
-          </div>
-          <div style="display:flex; justify-content:space-between; align-items:center; flex:1; z-index:1;">
-            <div style="text-align:right;">
-              <p style="margin:0; font-size:11.5pt; font-weight:800; color:#FFFFFF;">الاسم: <span style="color:#FF8DA1;">${shortName}</span></p>
-              <p style="margin:4px 0 0; font-size:11pt; font-weight:800; color:#E0E0E0;">الصف: <span style="color:#FF8DA1;">${currentSection}</span></p>
-            </div>
-            ${photo ? `<img src="${photo}" style="width:22.5mm; height:30mm; border-radius:2mm; object-fit:cover; border:1.5px solid #E85A71;">` : '<div style="width:22.5mm; height:30mm; border:1.5px dashed #E85A71; border-radius:2mm; font-size:8pt; text-align:center; display:flex; align-items:center; justify-content:center; color:#FF8DA1; background:rgba(232,90,113,0.05);">صورة<br>الخريجة</div>'}
-          </div>
-          <div style="text-align:center; border-top:1px dashed #E85A71; padding-top:2px; font-size:9.5pt; color:#FF8DA1; font-weight:800; z-index:1;">🌸 🎓 خريجة 2026-2027 🎓 🌸</div>
-        </div>
-      `;
-    } else {
+    {
       cardsHTML += `
         <div style="width:90mm; height:60mm; border:2px solid #0D2C54; border-radius:4mm; padding:3mm; display:flex; flex-direction:column; justify-content:space-between; page-break-inside:avoid; box-sizing:border-box; background:#fff;">
           <div style="display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid #0D2C54; padding-bottom:2px;">
-            ${schLogoHTML}
+            ${firstLogo}
             <div style="text-align:center;">
               <h4 style="margin:0; font-family:'Reem Kufi', sans-serif; font-size:15pt; color:#0D2C54; font-weight:800;">بطاقة طالبة</h4>
               <p style="margin:2px 0 0; font-size:8.5pt; font-weight:800; color:#000000;">ثانوية موضي سلطان العيسى - بنات</p>
             </div>
-            ${minLogoHTML}
+            ${secondLogo}
           </div>
           <div style="display:flex; justify-content:space-between; align-items:center; flex:1;">
             <div style="text-align:right;">
@@ -3149,61 +3425,50 @@ function generatePaperRegisterReport(){
   const grade = GRADES.find(g=>g.id===currentGradeId);
   const secData = getSectionData();
   const records = secData ? secData.records : {};
+  const BL = 'border-left:1.5px solid #000;';
+  // الأسابيع المختارة في مركز التقارير (من - إلى) وليس كل الأسابيع، بحد أقصى 10 أسابيع في الورقة
+  const siW = WEEKS.indexOf(document.getElementById('reportStartWeek').value), eiW = WEEKS.indexOf(document.getElementById('reportEndWeek').value);
+  let nums = [];
+  for(let i = Math.min(siW, eiW); i <= Math.max(siW, eiW); i++) nums.push(i + 1);
+  if(nums.length > 10){ alert('الكشف الرسمي يتسع لـ 10 أسابيع كحد أقصى في الورقة، فسيُطبع أول 10 أسابيع من النطاق المختار.'); nums = nums.slice(0, 10); }
+  const rangeLabel = nums.length === 1 ? `الأسبوع ${nums[0]}` : `الأسابيع ${nums[0]} – ${nums[nums.length - 1]}`;
 
   let weeksHeaderTop = '';
-  for(let w=1; w<=10; w++){
-    weeksHeaderTop += `<th colspan="3" style="border-left:1.5px solid #000;">${w}</th>`;
-  }
+  for(const w of nums){ weeksHeaderTop += `<th colspan="4" style="${BL}">${w}</th>`; }
 
   let datesHeaderSub = '';
-  for(let w=1; w<=10; w++){
-    const weekTitle = `الأسبوع ${w}`;
-    let foundKey = findRecordKeyForWeek(records, weekTitle);
-    let dateVal = foundKey ? foundKey.split('_')[0] : '—';
-    datesHeaderSub += `<th colspan="3" style="font-size:6.5pt; font-weight:bold; border-left:1.5px solid #000; background:#FAF3F0 !important;">${dateVal}</th>`;
+  for(const w of nums){
+    const k = findRecordKeyForWeek(records, `الأسبوع ${w}`);
+    const dateVal = (k && recordCounted(records[k])) ? shortDate(k.split('_')[0]) : '';
+    datesHeaderSub += `<th colspan="4" style="font-size:6.5pt; font-weight:bold; ${BL} background:#FAF3F0 !important;">${dateVal}</th>`;
   }
 
   let weeksHeaderSub = '';
-  for(let w=1; w<=10; w++){
+  for(const w of nums){
     weeksHeaderSub += `
-      <th style="writing-mode: vertical-rl; font-size:7.5pt; padding:2px; background:#EBF1F5 !important;">حضور</th>
-      <th style="writing-mode: vertical-rl; font-size:7.5pt; padding:2px; background:#F2EBF5 !important;">سلوك وأدوات</th>
-      <th style="writing-mode: vertical-rl; font-size:7.5pt; padding:2px; background:#EBF5EC !important; border-left:1.5px solid #000;">مشاركة وتفاعل</th>
-    `;
+      <th style="writing-mode: vertical-rl; font-size:7pt; padding:2px; background:#EBF1F5 !important;">سلوك</th>
+      <th style="writing-mode: vertical-rl; font-size:7pt; padding:2px; background:#F2EBF5 !important;">أدوات</th>
+      <th style="writing-mode: vertical-rl; font-size:7pt; padding:2px; background:#EBF5EC !important;">تطبيق</th>
+      <th style="writing-mode: vertical-rl; font-size:7pt; padding:2px; background:#FBF3E4 !important; ${BL}">مشاركة</th>`;
   }
 
   let studentRowsHTML = '';
   secData.students.forEach((studentName, idx)=>{
     const shortName = formatThreePartName(studentName);
     studentRowsHTML += `<tr><td>${idx+1}</td><td style="text-align:right; font-weight:bold; padding-right:4px;">${shortName}</td>`;
-    
-    for(let w=1; w<=10; w++){
-      const weekTitle = `الأسبوع ${w}`;
-      let foundKey = findRecordKeyForWeek(records, weekTitle);
-      
-      if(foundKey && records[foundKey].rows && records[foundKey].rows[idx]){
-        const r = records[foundKey].rows[idx];
-        
-        const OK = '✓', NO = '<span style="color:#B8001F; font-weight:bold;">✗</span>';
-        if(r.attend === 'absent'){
-          const g = '<span style="color:#B8001F; font-weight:bold;">غ</span>';
-          studentRowsHTML += `<td>${g}</td><td>${g}</td><td style="border-left:1.5px solid #000;">${g}</td>`;
-        } else {
-          const attTxt = r.attend === 'late' ? NO : OK;                                   // التأخر = نصف درجة ← ✗
-          const nV = r.violations ? r.violations.length : 0;
-          const behTxt = nV > 0 ? `${NO} <a href="#" onclick="window.opener.showViolationDetailModal('${studentName}', '${weekTitle}'); return false;" title="اضغط لفتح تفاصيل المخالفات" style="color:#B8001F; text-decoration:none;">🔗</a>` : OK;
-          const appTxt = (r.appStatus === 'not_done' || r.appStatus === 'partial') ? NO : OK;
-          studentRowsHTML += `<td>${attTxt}</td><td>${behTxt}</td><td style="border-left:1.5px solid #000;">${appTxt}</td>`;
-        }
-      } else {
-        studentRowsHTML += `<td>—</td><td>—</td><td style="border-left:1.5px solid #000;">—</td>`;
-      }
-    }
-
     const regKeys = [];
-    for(let w = 1; w <= 10; w++){ const k = findRecordKeyForWeek(records, `الأسبوع ${w}`); if(k && !isPristineRecord(records[k])) regKeys.push(k); }
+    for(const w of nums){
+      const weekTitle = `الأسبوع ${w}`;
+      const k = findRecordKeyForWeek(records, weekTitle);
+      const rec = k ? records[k] : null;
+      const r = rec ? toArrIdx(rec.rows)[idx] : null;
+      const link = (r && weekCounted(rec, r) && r.attend !== 'absent' && ((r.violations || []).length || r.attend === 'late'))
+        ? ` <a href="#" onclick="window.opener.showViolationDetailModal('${studentName}', '${weekTitle}'); return false;" title="تفاصيل المخالفات" style="color:#B8001F; text-decoration:none;">🔗</a>` : '';
+      studentRowsHTML += itemCellsHTML(rec, r, BL, link);
+      if(k && rec && !isPristineRecord(rec)) regKeys.push(k);
+    }
     const sm = worksSummary(secData, idx, regKeys);
-    studentRowsHTML += `<td style="padding:2px 3px;">${worksNotesHTML(sm.notes, 6.5)}</td><td style="font-weight:bold; font-size:8pt; background:#FDF2F4 !important; padding:1px;">${sm.total === null ? '—' : sm.total}</td></tr>`;
+    studentRowsHTML += `<td style="padding:2px 3px;">${worksNotesHTML(sm.notes, 6)}</td><td style="font-weight:bold; font-size:8pt; background:#FDF2F4 !important; padding:1px;">${sm.total === null ? '' : sm.total}</td></tr>`;
   });
 
   const printWindow = window.open('', '_blank');
@@ -3225,13 +3490,13 @@ function generatePaperRegisterReport(){
       </style>
     </head>
     <body>
-      ${getReportHeaderHTML(`كشف المتابعة للصف : ${grade.name} (${currentSection})`)}
+      ${getReportHeaderHTML(`كشف المتابعة للصف : ${grade.name} (${currentSection}) — ${rangeLabel}`)}
       <table>
         <thead>
           <tr>
             <th rowspan="4" style="width:20px;">م</th>
             <th rowspan="4" style="min-width:140px;">الاسم</th>
-            <th colspan="30">الاسبوع</th>
+            <th colspan="${nums.length * 4}">الاسبوع</th>
             <th rowspan="4" class="pink-header" style="min-width:110px; font-size:8pt;">ملاحظات (المخالفات وتاريخها والدرجة المخصومة)</th>
             <th rowspan="4" class="pink-header" style="writing-mode: vertical-rl; font-size:7pt; width:20px; padding:1px;">المجموع</th>
           </tr>
@@ -3315,8 +3580,10 @@ function generateTwoPagesWeekRangeReport(){
     let headerSub = `<tr>`;
 
     weeksChunk.forEach(w=>{
-      headerTop += `<th colspan="3" style="border-left:2px solid #0D2C54;">${w}</th>`;
-      headerSub += `<th>حضور</th><th>سلوك</th><th style="border-left:2px solid #0D2C54;">تطبيق ومشاركة</th>`;
+      const rk = findRecordKeyForWeek(records, w);
+      const dt = (rk && recordCounted(records[rk])) ? `<br><small style="font-weight:normal;">${shortDate(rk.split('_')[0])}</small>` : '';
+      headerTop += `<th colspan="4" style="border-left:2px solid #0D2C54;">${w}${dt}</th>`;
+      headerSub += `<th>سلوك</th><th>أدوات</th><th>تطبيق</th><th style="border-left:2px solid #0D2C54;">مشاركة</th>`;
     });
 
     if(isFinalPage){
@@ -3330,28 +3597,16 @@ function generateTwoPagesWeekRangeReport(){
       tableRows += `<tr><td>${studentIdx+1}</td><td style="text-align:right; font-weight:bold; padding-right:6px;">${shortName}</td>`;
       
       weeksChunk.forEach(w=>{
-        let foundKey = findRecordKeyForWeek(records, w);
-        if(foundKey && records[foundKey].rows && records[foundKey].rows[studentIdx]){
-          const r = records[foundKey].rows[studentIdx];
-          const OK = '✓', NO = '<b style="color:#B8001F;">✗</b>';
-          if(r.attend === 'absent'){
-            const g = '<b style="color:#B8001F;">غ</b>';
-            tableRows += `<td>${g}</td><td>${g}</td><td style="border-left:2px solid #0D2C54;">${g}</td>`;
-          } else {
-            const attC = r.attend === 'late' ? NO : OK;
-            const behC = (r.violations && r.violations.length) ? NO : OK;
-            const appC = (r.appStatus === 'not_done' || r.appStatus === 'partial') ? NO : OK;
-            tableRows += `<td>${attC}</td><td>${behC}</td><td style="border-left:2px solid #0D2C54;">${appC}</td>`;
-          }
-        } else {
-          tableRows += `<td>—</td><td>—</td><td style="border-left:2px solid #0D2C54;">—</td>`;
-        }
+        const foundKey = findRecordKeyForWeek(records, w);
+        const rec = foundKey ? records[foundKey] : null;
+        const r = rec ? toArrIdx(rec.rows)[studentIdx] : null;
+        tableRows += itemCellsHTML(rec, r, 'border-left:2px solid #0D2C54;', '');
       });
 
       if(isFinalPage){
         const keys = selectedWeeks.map(w => findRecordKeyForWeek(records, w)).filter(k => k && !isPristineRecord(records[k]));
         const sm = worksSummary(secData, studentIdx, keys);
-        tableRows += `<td style="padding:3px 5px;">${worksNotesHTML(sm.notes, 8)}</td><td style="font-weight:bold; font-size:9pt; background:#FDF2F4; padding:2px;">${sm.total === null ? '—' : sm.total}</td>`;
+        tableRows += `<td style="padding:3px 5px;">${worksNotesHTML(sm.notes, 8)}</td><td style="font-weight:bold; font-size:9pt; background:#FDF2F4; padding:2px;">${sm.total === null ? '' : sm.total}</td>`;
       }
       tableRows += `</tr>`;
     });
@@ -3414,14 +3669,18 @@ function worksSummary(secData, idx, recKeys){
   let sum = 0, n = 0; const notes = [];
   recKeys.forEach(k => {
     const rec = secData.records[k]; if(!rec) return;
-    const r = toArrIdx(rec.rows)[idx]; if(!r) return;
+    const r = toArrIdx(rec.rows)[idx]; if(!r || !weekCounted(rec, r)) return;
     sum += calcFinalTotal40(r); n++;
     if(r.attend === 'absent') return;
-    toArr(r.violations).forEach((v, vi) => notes.push({ v, date: recordDateOf(k), ded: vi < 2 ? 0.5 : 0 }));   // السلوك درجة واحدة فقط
+    const events = [];
+    if(r.attend === 'late') events.push('تأخر عن الحصة' + (r.lateMinutes ? ` (${r.lateMinutes} د)` : ''));
+    toArr(r.violations).forEach(v => events.push(v));
+    events.forEach((v, i) => notes.push({ v, date: recordDateOf(k), ded: i < 20 ? 0.5 : 0, from: i < 10 ? 'من السلوك' : (i < 20 ? 'من المشاركة' : '') }));
     if(r.actionTaken === 'تعهد خطي') notes.push({ v: 'تعهد خطي (تكرار المخالفة 3 مرات)', date: recordDateOf(k), info: true });
-    if(r.certificate) notes.push({ v: '🏅 نالت شهادة تميز', date: recordDateOf(k), cert: true });
+    { const ce = autoCert(rec, idx); if(ce) notes.push({ v: certLabel(ce), date: recordDateOf(k), cert: true }); }
   });
-  return { total: n ? Math.round(sum * 10) / 10 : null, lessons: n, notes };
+  const off = gbOfficial(secData, idx);
+  return { total: off.total === '' ? null : off.total, weekSum: Math.round(sum * 10) / 10, lessons: n, notes };   // total = مجموع الأعمال (40) بمعادلات الدفتر الرسمي
 }
 function shortDate(dateStr){ const d = new Date(dateStr + 'T00:00:00'); return isNaN(d) ? dateStr : `${String(d.getDate()).padStart(2,'0')}/${String(d.getMonth()+1).padStart(2,'0')}`; }
 function worksNotesHTML(notes, pt){
@@ -3430,7 +3689,7 @@ function worksNotesHTML(notes, pt){
     ? `<div style="text-align:right; font-size:${pt}pt; margin:1px 0; color:#1E7A46; font-weight:bold;">• ${escHtml(n.v)} — ${shortDate(n.date)}</div>`
     : (n.info
       ? `<div style="text-align:right; font-size:${pt}pt; margin:1px 0;">• ${escHtml(n.v)} — ${shortDate(n.date)}</div>`
-      : `<div style="text-align:right; font-size:${pt}pt; margin:1px 0;">• ${escHtml(n.v)} — ${shortDate(n.date)} — <b style="color:#B8001F;">${n.ded ? '−' + n.ded : '0 (بلغ السلوك حده الأدنى)'}</b></div>`)).join('');
+      : `<div style="text-align:right; font-size:${pt}pt; margin:1px 0;">• ${escHtml(n.v)} — ${shortDate(n.date)} — <b style="color:#B8001F;">${n.ded ? '−' + n.ded + (n.from ? ' ' + n.from : '') : '0 (لا خصم إضافي)'}</b></div>`)).join('');
 }
 const AR_DAYS = ['الأحد','الاثنين','الثلاثاء','الأربعاء','الخميس','الجمعة','السبت'];
 function dayLabel(dateStr){
@@ -3484,21 +3743,24 @@ function generateWeeklyFollowupReport(){
     const dates = recKeys.map(recordDateOf);
     let rowsHtml = '', n = 1, tP = 0, tL = 0, tA = 0, tV = 0, shown = 0;
     secData.students.forEach((name, idx) => {
-      let pres = 0, late = 0, abs = 0, lateMin = 0, fire = 0, cup = 0, star = 0, noApp = 0, ded = 0, vCount = 0;
+      let pres = 0, late = 0, abs = 0, lateMin = 0, fire = 0, cup = 0, star = 0, noApp = 0, ded = 0, vCount = 0, partDedSum = 0;
       const actions = new Set(); const vLines = [];
       recKeys.forEach(k => {
-        const rec = secData.records[k]; const r = toArrIdx(rec.rows)[idx]; if(!r) return;
+        const rec = secData.records[k]; const r = toArrIdx(rec.rows)[idx]; if(!r || !weekCounted(rec, r)) return;
         if(r.attend === 'absent') abs++; else if(r.attend === 'late'){ late++; lateMin += parseInt(r.lateMinutes, 10) || 0; } else pres++;
         const syms = r.participationSymbols || '';
         fire += (syms.match(/🔥/g) || []).length; cup += (syms.match(/🏆/g) || []).length; star += (syms.match(/⭐/g) || []).length;
         if(r.attend !== 'absent' && r.appStatus && r.appStatus !== 'done') noApp++;
-        if(r.attend !== 'absent') ded += behaviorDeduction(r);
+        if(r.attend !== 'absent'){ const wi = weekItems(r); ded += wi.behDed; partDedSum += wi.partDed; }
         if(r.actionTaken && r.actionTaken !== 'بدون إجراء') actions.add(r.actionTaken);
-        if(r.attend !== 'absent' && r.certificate) vLines.push(`<div style="text-align:right; margin:1px 0; color:#1E7A46; font-weight:bold;">• 🏅 نالت شهادة تميز</div>`);
+        { const ce = autoCert(rec, idx); if(r.attend !== 'absent' && ce) vLines.push(`<div style="text-align:right; margin:1px 0; color:#1E7A46; font-weight:bold;">• ${certLabel(ce)} <span style="color:#555;">(${escHtml(dayLabel(recordDateOf(k)))})</span></div>`); }
         if(r.attend !== 'absent' && r.actionTaken === 'تعهد خطي') vLines.push(`<div style="text-align:right; margin:1px 0;">• تعهد خطي</div>`);
+        let evI = 0;
+        if(r.attend === 'late'){ vLines.push(`<div style="text-align:right; margin:1px 0;">• تأخر عن الحصة${r.lateMinutes ? ' (' + escHtml(r.lateMinutes) + ' د)' : ''} <b style="color:#B8001F;">−0.5</b></div>`); evI++; }
         toArr(r.violations).forEach((v, vi) => {
           vCount++;
-          vLines.push(`<div style="text-align:right; margin:1px 0;">• ${escHtml(v)} <span style="color:#555;">(${escHtml(dayLabel(recordDateOf(k)))})</span> <b style="color:#B8001F; font-size:11pt;">${counts[`${k}|${idx}|${vi}`] || 1}</b> <b style="color:#B8001F;">${vi < 2 ? '−0.5' : '0'}</b></div>`);
+          const evDed = (evI + vi) < 20 ? '−0.5' : '0';
+          vLines.push(`<div style="text-align:right; margin:1px 0;">• ${escHtml(v)} <span style="color:#555;">(${escHtml(dayLabel(recordDateOf(k)))})</span> <b style="color:#B8001F; font-size:11pt;">${counts[`${k}|${idx}|${vi}`] || 1}</b> <b style="color:#B8001F;">${evDed}</b></div>`);
         });
       });
       tP += pres; tL += late; tA += abs; tV += vCount;
@@ -3513,17 +3775,17 @@ function generateWeeklyFollowupReport(){
         <td style="${abs ? 'color:#B8001F; font-weight:bold;' : ''}">${abs || '·'}</td>
         <td style="font-size:9pt;">${fire ? '🔥' + fire + ' ' : ''}${cup ? '🏆' + cup + ' ' : ''}${star ? '⭐' + star : ''}${(fire || cup || star) ? '' : '·'}</td>
         <td>${noApp || '·'}</td>
-        <td style="${ded > 0 ? 'color:#B8001F; font-weight:bold;' : ''}">${ded > 0 ? '-' + ded : '0'}</td>
-        <td style="font-weight:bold;">${(() => { const w = worksSummary(secData, idx, recKeys); return w.total === null ? '—' : Math.round(w.total / Math.max(1, w.lessons) * 10) / 10; })()}</td>
+        <td style="${(ded > 0 || partDedSum > 0) ? 'color:#B8001F; font-weight:bold;' : ''}">${ded > 0 ? '-' + ded : '0'}${partDedSum > 0 ? '<br><small>م −' + partDedSum + '</small>' : ''}</td>
+        <td style="font-weight:bold;">${(() => { const w = worksSummary(secData, idx, recKeys); return w.lessons ? Math.round(w.weekSum / w.lessons * 10) / 10 : ''; })()}</td>
         <td style="min-width:62mm;">${vLines.join('') || '·'}</td>
         <td style="font-size:9pt;">${[...actions].join('، ') || '·'}</td></tr>`;
     });
     pages += `<section style="page-break-after:always;">
       ${getReportHeaderHTML(`كشف المتابعة الأسبوعي — ${grade.name} (${currentSection}) — ${week}`)}
       <p style="margin:2px 0 8px; font-size:10pt;">الفترة: <b>${escHtml(dayLabel(dates[0]))}</b> إلى <b>${escHtml(dayLabel(dates[dates.length-1]))}</b> — عدد الأيام المسجلة: <b>${recKeys.length}</b> — حضور: <b>${tP}</b> ، تأخر: <b>${tL}</b> ، غياب: <b>${tA}</b> ، مخالفات: <b style="color:#B8001F;">${tV}</b></p>
-      <table class="wf"><thead><tr><th>م</th><th>اسم الطالبة</th><th>ح</th><th>ت</th><th>غ</th><th>المشاركة</th><th>لم تطبق</th><th>خصم السلوك</th><th>درجة الأسبوع (4)</th><th>المخالفات بالتفصيل (الرقم = عدد تكرارها) والدرجة المخصومة</th><th>الإجراء</th></tr></thead>
+      <table class="wf"><thead><tr><th>م</th><th>اسم الطالبة</th><th>ح</th><th>ت</th><th>غ</th><th>المشاركة</th><th>لم تطبق</th><th>خصم السلوك</th><th>درجة الأسبوع (20)</th><th>المخالفات بالتفصيل (الرقم = عدد تكرارها) والدرجة المخصومة</th><th>الإجراء</th></tr></thead>
       <tbody>${rowsHtml || '<tr><td colspan="11" style="padding:16px;">لا توجد طالبات مخالفات في هذا الأسبوع.</td></tr>'}</tbody></table>
-      <p style="margin:6px 0 0; font-size:8.5pt; color:#555;">ح = حضور ، ت = تأخر (بالدقائق)، غ = غياب. رقم المخالفة = عدد مرات تكرار المخالفة نفسها منذ بداية السجل، وعند 3 مرات يُسجَّل تعهد خطي. درجة الأسبوع من 4 = حضور (1؛ التأخر نصف درجة) + سلوك (1؛ كل مخالفة نصف درجة) + تطبيق ومشاركة (2؛ غير كامل نصف درجة، ولم تطبق درجة). الغياب = صفر.</p>
+      <p style="margin:6px 0 0; font-size:8.5pt; color:#555;">ح = حضور ، ت = تأخر (بالدقائق)، غ = غياب. رقم المخالفة = عدد مرات تكرار المخالفة نفسها منذ بداية السجل، وعند 3 مرات يُسجَّل تعهد خطي. درجة الأسبوع من 20 = سلوك (5) + تعامل مع الأدوات (5) + تطبيق (5) + مشاركة (5). التأخر مخالفة؛ كل مخالفة تنقص نصف درجة من السلوك، وإذا نفد السلوك تنقص من المشاركة. التطبيق: غير كامل −0.5، ولم تطبق −1. الغياب = صفر. تُحتسب الحصة بعد كتابة عنوان الدرس أو تسجيل الغياب.</p>
       ${getReportFooterHTML()}
     </section>`;
   }
