@@ -153,6 +153,7 @@
   tbody tr:hover{ background:#FADEE3; }
   
   td.name-cell{ text-align:right; font-weight:600; min-width:190px; width:190px; }
+  input.proj-input{ width:76px; padding:6px; border:1.5px solid var(--rose); border-radius:8px; font-family:inherit; font-size:14px; font-weight:700; text-align:center; }
   img.entry-photo{ width:38px; height:38px; border-radius:50%; object-fit:cover; flex:none; border:2px solid #E8C3CB; cursor:zoom-in; }
   td.name-cell input{ width:100%; border:1px solid transparent; background:transparent; font-family:inherit; font-size:14px; font-weight:600; padding:4px 5px; border-radius:5px; -webkit-appearance:none; }
 
@@ -471,6 +472,7 @@
     <div class="names-tools">
       <button class="btn btn-outline" onclick="sortNamesAlpha()">↕️ ترتيب أبجدي</button>
       <button class="btn btn-outline" onclick="addNameInModal()">➕ إضافة طالبة</button>
+      <button class="btn btn-outline" onclick="openTransferModal()">🔀 نقل طالبات إلى شعبة أخرى</button>
       <span class="names-del"><select id="namesDeleteSelect"></select><button class="btn btn-outline" style="color:var(--red); border-color:var(--red);" onclick="deleteNameInModal()">🗑️ حذف الطالبة المختارة</button></span>
     </div>
     <p style="font-size:12.5px; color:#555; margin:6px 0;">أو الصقي/عدّلي الأسماء (اسم في كل سطر) — خاصة بهذه الشعبة. <b>بيانات كل طالبة تتبع اسمها</b> عند الإضافة أو الحذف أو الترتيب. اضغطي «حفظ الأسماء» لتطبيق التغييرات.</p>
@@ -2372,7 +2374,7 @@ function renderTable(){
       <th style="min-width:190px; width:190px;">اسم الطالبة</th>
       <th style="width:78px;">الحضور (ح/ت/غ)</th>
       <th>مشاركة تفاعلية</th>
-      <th>تطبيق ورقة العمل</th>
+      <th>${isProjWeek(record.week) ? 'تطبيق المشروع (من 10)' : 'تطبيق ورقة العمل'}</th>
       <th style="width:150px;">درجات الأسبوع (5 لكل بند)</th>
       <th style="width:80px; background:#8A1C30;">تكرار المخالفة</th>
       <th style="min-width:130px;">المخالفات</th>
@@ -2587,6 +2589,18 @@ function renderTable(){
     paintBehaviorCell(tdBehavior, row, isAbsent);
 
     const tdAppStatus = document.createElement('td');
+    if(isProjWeek(record.week)){
+      const pin = document.createElement('input'); pin.type = 'number'; pin.min = '0'; pin.max = '10'; pin.step = '0.5';
+      pin.placeholder = 'من 10'; pin.className = 'proj-input'; pin.disabled = isAbsent;
+      pin.value = (row.projectScore === undefined || row.projectScore === null) ? '' : row.projectScore;
+      pin.addEventListener('input', ()=>{
+        let v = pin.value === '' ? '' : Math.max(0, Math.min(10, parseFloat(pin.value) || 0));
+        if(v === ''){ delete row.projectScore; } else { row.projectScore = v; }
+        updateRowCalculations(tr, row, idx);
+        scheduleSave();
+      });
+      tdAppStatus.appendChild(pin);
+    } else {
     const appSelect = document.createElement('select'); appSelect.className = 'app-status';
     appSelect.disabled = isAbsent;
     APP_STATUS_OPTIONS.forEach(opt=>{
@@ -2600,6 +2614,7 @@ function renderTable(){
       scheduleSave();
     });
     tdAppStatus.appendChild(appSelect);
+    }
 
     const tdBadges = document.createElement('td');
     const badgeWrap = document.createElement('div'); badgeWrap.className = 'badge-cell';
@@ -2715,23 +2730,27 @@ function printPledge(studentName, row){
 // كل مخالفة تنقص 0.5 من السلوك، والتأخر مخالفة؛ وإذا نفدت درجات السلوك تنقص من المشاركة.
 // التطبيق: كامل 5، غير كامل ينقص 0.5، لم تطبق ينقص 1. الغياب = صفر في كل البنود.
 const ITEM_MAX = 5;
-function weekItems(row){
+// الأسبوعان 9 و10: بدل «تطبيق ورقة العمل» يوجد «تطبيق المشروع» من 10؛ ويُحتسب بند التطبيق = درجة المشروع ÷ 2 (10 = كامل 5)
+function isProjWeek(w){ return w === 'الأسبوع 9' || w === 'الأسبوع 10'; }
+function projScore(row){ const v = parseFloat(row && row.projectScore); return isNaN(v) ? 0 : Math.max(0, Math.min(10, v)); }
+function weekItems(row, proj){
   if(row.attend === 'absent') return { beh: 0, tools: 0, app: 0, part: 0, behDed: 0, partDed: 0 };
   const n = (row.violations ? row.violations.length : 0) + (row.attend === 'late' ? 1 : 0);
   const ded = n * 0.5;
   const behDed = Math.min(ITEM_MAX, ded), partDed = Math.min(ITEM_MAX, Math.max(0, ded - ITEM_MAX));
   const appDed = row.appStatus === 'not_done' ? 1 : (row.appStatus === 'partial' ? 0.5 : 0);
-  return { beh: ITEM_MAX - behDed, tools: ITEM_MAX, app: ITEM_MAX - appDed, part: ITEM_MAX - partDed, behDed, partDed };
+  const appVal = proj ? projScore(row) / 2 : ITEM_MAX - appDed;
+  return { beh: ITEM_MAX - behDed, tools: ITEM_MAX, app: appVal, part: ITEM_MAX - partDed, behDed, partDed };
 }
 function calcBehaviorScore(row){ return weekItems(row).beh; }
 function behaviorDeduction(row){ return weekItems(row).behDed; }
-function calcFinalTotal40(row){ const w = weekItems(row); return w.beh + w.tools + w.app + w.part; }   // درجة الأسبوع من 20
+function calcFinalTotal40(row, proj){ const w = weekItems(row, proj); return w.beh + w.tools + w.app + w.part; }   // درجة الأسبوع من 20
 const fmtG = n => Number.isInteger(n) ? String(n) : String(Math.round(n * 10) / 10);
 function getBehaviorText(row){ const w = weekItems(row); return `${fmtG(w.beh)}|${fmtG(w.tools)}|${fmtG(w.app)}|${fmtG(w.part)}`; }
 // في الجدول الرئيسي: درجات البنود الأربعة (من 5 لكل بند) للأسبوع الحالي
 function paintBehaviorCell(td, row, isAbsent){
   if(isAbsent){ td.innerHTML = '<b style="color:var(--red)">غائبة</b>'; return; }
-  const w = weekItems(row);
+  const w = weekItems(row, isProjWeek((getRecord() || {}).week));
   const c = v => v < ITEM_MAX ? ' class="gi low"' : ' class="gi"';
   td.innerHTML = `<div class="gi-grid"><span${c(w.beh)}><small>سلوك</small>${fmtG(w.beh)}</span><span${c(w.tools)}><small>أدوات</small>${fmtG(w.tools)}</span><span${c(w.app)}><small>تطبيق</small>${fmtG(w.app)}</span><span${c(w.part)}><small>مشاركة</small>${fmtG(w.part)}</span></div>`;
 }
@@ -2743,7 +2762,7 @@ function itemCellsHTML(rec, r, lastBorder, behExtra){
   const cell = (inner, last) => `<td${last ? ` style="${lastBorder}"` : ''}>${inner}</td>`;
   if(!r || !weekCounted(rec, r)) return cell('') + cell('') + cell('') + cell('', true);
   if(r.attend === 'absent'){ const g = '<b style="color:#B8001F;">غ</b>'; return cell(g) + cell(g) + cell(g) + cell(g, true); }
-  const w = weekItems(r);
+  const w = weekItems(r, isProjWeek(rec && rec.week));
   const col = v => v < ITEM_MAX ? ` style="color:#B8001F; font-weight:bold;"` : '';
   return `<td${col(w.beh)}>${fmtG(w.beh)}${behExtra || ''}</td><td${col(w.tools)}>${fmtG(w.tools)}</td><td${col(w.app)}>${fmtG(w.app)}</td><td style="${lastBorder}${w.part < ITEM_MAX ? ' color:#B8001F; font-weight:bold;' : ''}">${fmtG(w.part)}</td>`;
 }
@@ -2758,8 +2777,19 @@ function gbWeekVals(secData, idx, w){
   const date = (rec && recordCounted(rec)) ? recordDateOf(k) : '';
   const r = rec ? toArrIdx(rec.rows)[idx] : null;
   if(!r || !weekCounted(rec, r)) return { counted: false, date };
-  const it = weekItems(r);
+  const it = weekItems(r, isProjWeek(rec.week));
   return { counted: true, absent: r.attend === 'absent', vals: [it.beh, it.tools, it.app, it.part], date };
+}
+// درجة المشروع (من 20) = مجموع درجتي الأسبوعين 9 و10 (كل أسبوع من 10)
+function gbProject(secData, idx){
+  let sum = 0, any = false;
+  ['الأسبوع 9', 'الأسبوع 10'].forEach(wk => {
+    const k = findRecordKeyForWeek(secData.records, wk); const rec = k ? secData.records[k] : null;
+    const r = rec ? toArrIdx(rec.rows)[idx] : null;
+    if(!r || !weekCounted(rec, r)) return;
+    any = true; if(r.attend !== 'absent') sum += projScore(r);
+  });
+  return any ? Math.min(20, sum) : '';
 }
 function gbOfficial(secData, idx){
   const weeks = []; for(let w = 1; w <= GB_WEEKS; w++) weeks.push(gbWeekVals(secData, idx, w));
@@ -2771,7 +2801,8 @@ function gbOfficial(secData, idx){
   const tot = a => a[0] === '' ? '' : a.reduce((x, y) => x + (y === '' ? 0 : y), 0);
   const t1 = tot(s1), t2 = tot(s2);
   const total = (t1 === '' && t2 === '') ? '' : (t1 === '' ? 0 : t1) + (t2 === '' ? 0 : t2);
-  return { weeks, s1, s2, t1, t2, total };
+  const proj = gbProject(secData, idx);
+  return { weeks, s1, s2, t1, t2, total, proj, grand: (proj === '' ? '' : (total === '' ? 0 : total) + proj) };
 }
 function gradebookPage(g, sec, sd, part){
   part = part || 'all';
@@ -2802,12 +2833,12 @@ function gradebookPage(g, sec, sd, part){
       else rows += wk.vals.map(v => `<td${v < ITEM_MAX ? ' class="lo"' : ''}>${fmtG(v)}</td>`).join('');
     });
     const cellsOf = (a, t) => a.map(v => `<td class="sm">${v === '' ? '' : fmtG(v)}</td>`).join('') + `<td class="sm tt">${t === '' ? '' : fmtG(t)}</td>`;
-    if(showSum) rows += cellsOf(o.s1, o.t1) + cellsOf(o.s2, o.t2) + `<td class="tot">${o.total === '' ? '' : fmtG(o.total)}</td><td></td><td></td><td></td><td></td>`;
+    if(showSum) rows += cellsOf(o.s1, o.t1) + cellsOf(o.s2, o.t2) + `<td class="tot">${o.total === '' ? '' : fmtG(o.total)}</td><td class="sm">${o.proj === '' ? '' : fmtG(o.proj)}</td><td></td><td class="sm">${o.proj === '' ? '' : fmtG(o.proj)}</td><td class="tot">${o.grand === '' ? '' : fmtG(o.grand)}</td>`;
     rows += '</tr>';
   });
   return `<section class="gb"><div class="gb-hd">
       <div class="gb-t1"><b>منطقة الأحمدي التعليمية — ثانوية موضي سلطان العيسى بنات</b> &nbsp;|&nbsp; كشف متابعة المتعلمين لمادة الحاسوب — المجال: تكنولوجيا المعلومات والاتصالات (تقنية المعلومات) — المرحلة الثانوية</div>
-      <div class="gb-t2">الصف / الشعبة: <b>${escHtml(g.name)} / ${escHtml(sec)}</b> &nbsp;|&nbsp; المعلمة: <b>${escHtml(teacher)}</b> &nbsp;|&nbsp; الفترة الدراسية الأولى &nbsp;|&nbsp; العام الدراسي 2026 / 2027 &nbsp;|&nbsp; توزيع الدرجات: الأعمال 40 (قسم أول 20 + قسم ثانٍ 20) + الامتحان 60 = 100${part === 'p1' ? ' &nbsp;|&nbsp; <b>الصفحة 1 من 2: الأسابيع 1–5</b>' : (part === 'p2' ? ' &nbsp;|&nbsp; <b>الصفحة 2 من 2: الأسابيع 6–9 + مجاميع كل الأسابيع</b>' : '')}</div>
+      <div class="gb-t2">الصف / الشعبة: <b>${escHtml(g.name)} / ${escHtml(sec)}</b> &nbsp;|&nbsp; المعلمة: <b>${escHtml(teacher)}</b> &nbsp;|&nbsp; الفترة الدراسية الأولى &nbsp;|&nbsp; العام الدراسي 2026 / 2027${part === 'p1' ? ' &nbsp;|&nbsp; <b>الصفحة 1 من 2: الأسابيع 1–5</b>' : (part === 'p2' ? ' &nbsp;|&nbsp; <b>الصفحة 2 من 2: الأسابيع 6–9 + مجاميع كل الأسابيع</b>' : '')}</div>
     </div>
     <table class="gbt"><colgroup>${cg}</colgroup><thead>
       <tr><th rowspan="3">م</th><th rowspan="3">اسم الطالبة</th>${h1}${showSum ? `
@@ -2816,7 +2847,7 @@ function gradebookPage(g, sec, sd, part){
       <tr>${h2}${showSum ? `<th colspan="5" class="sec2"></th><th colspan="5" class="sec2"></th><th rowspan="2" class="vt ex">المشروع (20)</th><th rowspan="2" class="vt ex">الاختبار العملي (40)</th><th rowspan="2" class="vt ex">المجموع (60)</th>` : ''}</tr>
       <tr>${h3}${showSum ? sumHead() + sumHead() : ''}</tr>
     </thead><tbody>${rows}</tbody></table>
-    <div class="gb-ft">كل بند من 5 درجات أسبوعياً. السلوك: كل مخالفة (والتأخر) تنقص نصف درجة، وإذا نفد السلوك تنقص من المشاركة. التطبيق: غير كامل −0.5، لم تطبق −1. الغياب (غ) = صفر. درجة كل بند في القسم = مجموع درجات أسابيعه ÷ عدد أسابيع القسم (5 للأول، 4 للثاني) مقرّبة لأقرب نصف درجة. تُحتسب الحصة بعد كتابة عنوان الدرس أو تسجيل الغياب.</div></section>`;
+    </section>`;
 }
 function generateOfficialGradebook(){
   const scope = (document.getElementById('gbScope') || {}).value || 'current';
@@ -2917,7 +2948,7 @@ function handleExportGrades(){
       let foundKey = findRecordKeyForWeek(records, w);
       if(foundKey && records[foundKey].rows && records[foundKey].rows[idx] && !isPristineRecord(records[foundKey]) && weekCounted(records[foundKey], records[foundKey].rows[idx])){
         const r = records[foundKey].rows[idx];
-        const sc = calcFinalTotal40(r);
+        const sc = calcFinalTotal40(r, isProjWeek(records[foundKey].week));
         studentRow[w] = r.attend === 'absent' ? 'غ' : sc;     // درجة الأسبوع من 20
       } else {
         studentRow[w] = "—";
@@ -2994,6 +3025,78 @@ function applyImportedNames(names){
   const merged = current.concat(added);
   setNamesLines(isSortedAr(current) ? merged.sort(arCompare) : merged);
   alert(`أُضيف ${added.length} اسماً جديداً، وتجاهلتُ ${skipped} اسماً موجوداً مسبقاً.\nبيانات الطالبات القديمات لم تُمَس.\n${similar.length ? '\nأسماء مشابهة لأسماء موجودة (راجعيها):\n' + similar.slice(0, 8).join('\n') + '\n' : ''}\nاضغطي «حفظ الأسماء» للتأكيد.`);
+}
+
+
+/* ==================== نقل طالبات (مع كامل بياناتهن) إلى شعبة أخرى ==================== */
+function openTransferModal(){
+  const sd = getSectionData();
+  if(!sd.students.length){ alert('لا توجد طالبات في هذه الشعبة.'); return; }
+  let m = document.getElementById('transferModal');
+  if(!m){ m = document.createElement('div'); m.className = 'modal-overlay'; m.id = 'transferModal'; document.body.appendChild(m); }
+  const gOpts = GRADES.map(g => `<option value="${g.id}"${g.id === currentGradeId ? ' selected' : ''}>${escHtml(g.name)}</option>`).join('');
+  m.innerHTML = `<div class="modal" style="max-width:560px;">
+    <h3>🔀 نقل طالبات من شعبة ${escHtml(currentSection)} إلى شعبة أخرى</h3>
+    <p style="font-size:13px; color:#555; margin:4px 0 8px;">تُنقل الطالبة مع كل سجلاتها (حضور، مخالفات، مشاركة، تطبيق، شهادات) وصورتها، وتُحذف من هذه الشعبة. الحصص الموجودة في الشعبة الجديدة تُضاف إليها الطالبة، والناقصة تُنشأ بنفس الدرس والتاريخ.</p>
+    <div style="display:flex; gap:8px; flex-wrap:wrap; margin-bottom:8px;">
+      <label>الصف: <select id="trGrade" onchange="trFillSections()">${gOpts}</select></label>
+      <label>الشعبة الجديدة: <select id="trSec"></select></label>
+    </div>
+    <div style="max-height:260px; overflow:auto; border:1px solid var(--line); border-radius:8px; padding:6px;">
+      ${sd.students.map((n, i) => `<label style="display:block; padding:3px 4px;"><input type="checkbox" class="trChk" value="${i}"> ${i + 1}. ${escHtml(n)}</label>`).join('')}
+    </div>
+    <div class="modal-actions" style="margin-top:10px;">
+      <button class="btn btn-outline" onclick="document.getElementById('transferModal').classList.remove('open')">إلغاء</button>
+      <button class="btn btn-primary" onclick="confirmTransfer()">نقل المحددات</button>
+    </div></div>`;
+  m.classList.add('open'); trFillSections();
+}
+function trFillSections(){
+  const g = document.getElementById('trGrade').value;
+  document.getElementById('trSec').innerHTML = (SECTIONS[g] || []).filter(x => !(g === currentGradeId && x === currentSection)).map(x => `<option value="${escHtml(x)}">${escHtml(x)}</option>`).join('');
+}
+function confirmTransfer(){
+  const src = getSectionData();
+  const idxs = [...document.querySelectorAll('.trChk:checked')].map(c => parseInt(c.value, 10)).sort((a, b) => a - b);
+  const gT = document.getElementById('trGrade').value, sT = document.getElementById('trSec').value;
+  if(!idxs.length){ alert('حددي طالبة واحدة على الأقل.'); return; }
+  if(!sT || (gT === currentGradeId && sT === currentSection)){ alert('اختاري شعبة مختلفة.'); return; }
+  const tgt = store[gT] && store[gT].sections[sT];
+  if(!tgt){ alert('تعذّر الوصول لبيانات الشعبة الجديدة.'); return; }
+  const names = idxs.map(i => src.students[i]);
+  const dup = names.filter(n => tgt.students.some(t => normName(t) === normName(n)));
+  if(dup.length){ alert('هذه الأسماء موجودة أصلاً في الشعبة الجديدة، لن أنقلها حتى لا تتكرر:\n' + dup.join('\n')); return; }
+  const gName = (GRADES.find(g => g.id === gT) || {}).name || gT;
+  if(!confirm(`نقل ${names.length} طالبة (${names.slice(0, 5).join('، ')}${names.length > 5 ? '…' : ''}) إلى ${gName} / ${sT} مع كل بياناتهن؟`)) return;
+  const sorted = isSortedAr(tgt.students);
+  idxs.forEach(si => {
+    const name = src.students[si];
+    let pos = tgt.students.length;
+    if(sorted){ const f = tgt.students.findIndex(n => arCompare(n, name) > 0); if(f >= 0) pos = f; }
+    const newList = tgt.students.slice(); newList.splice(pos, 0, name);
+    const mapping = newList.map((n, i) => i < pos ? i : (i === pos ? -1 : i - 1));
+    applyRosterMapping(tgt, newList, mapping, []);
+    Object.keys(src.records || {}).forEach(k => {
+      const rec = src.records[k]; if(!rec) return;
+      const row = toArrIdx(rec.rows)[si];
+      let tr = tgt.records[k];
+      if(!tr){
+        if(isPristineRecord(rec)) return;
+        tr = tgt.records[k] = JSON.parse(JSON.stringify(Object.assign({}, rec, { rows: [] })));
+        tr.rows = tgt.students.map(() => normalizeRow({}));
+      }
+      if(row) tr.rows[pos] = JSON.parse(JSON.stringify(row));
+    });
+    if(src.photos && src.photos[si]) tgt.photos[pos] = src.photos[si];
+  });
+  // الحذف من الشعبة الحالية
+  const keep = src.students.map((_, i) => i).filter(i => !idxs.includes(i));
+  applyRosterMapping(src, keep.map(i => src.students[i]), keep, []);
+  document.getElementById('transferModal').classList.remove('open');
+  closeNamesModal();
+  flushSection(gT, sT);
+  renderPage(); scheduleSave(true);
+  alert(`تم نقل ${names.length} طالبة إلى ${gName} / ${sT} ✓\nحدّثي الصفحة في الأجهزة الأخرى.`);
 }
 
 /* ==================== تغيير قائمة الطالبات: البيانات تتبع الطالبة لا مكانها ==================== */
@@ -3670,7 +3773,7 @@ function worksSummary(secData, idx, recKeys){
   recKeys.forEach(k => {
     const rec = secData.records[k]; if(!rec) return;
     const r = toArrIdx(rec.rows)[idx]; if(!r || !weekCounted(rec, r)) return;
-    sum += calcFinalTotal40(r); n++;
+    sum += calcFinalTotal40(r, isProjWeek(rec.week)); n++;
     if(r.attend === 'absent') return;
     const events = [];
     if(r.attend === 'late') events.push('تأخر عن الحصة' + (r.lateMinutes ? ` (${r.lateMinutes} د)` : ''));
