@@ -1009,6 +1009,7 @@ function setLessonDuration(){
 }
 
 function openLeavePassTab(){
+  try{ warmLeaveHistory(true); }catch(e){}
   const leaveWin = window.open('', '_blank');
   leaveWinRef = leaveWin;
   let gradeOptionsHTML = GRADES.map(g => `<option value="${g.id}">${g.name}</option>`).join('');
@@ -1134,18 +1135,26 @@ function updateWinStudents(winDoc){
 const LEAVE_ALERT_MIN = 5;
 let leaveIssuing = false;
 function ymdOf(d){ return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`; }
-async function getStudentLeaveHistory(student, classKey, gradeName, sec){
+// سجل الاستئذانات للتحقق من كثرة الخروج: يُحمَّل في الخلفية ويُخزَّن، فلا ينتظر زر «تسجيل الخروج» الشبكة
+let leaveHistCache = null, leaveHistLoading = false;
+function warmLeaveHistory(force){
+  if(leaveHistLoading) return;
+  if(!force && leaveHistCache && Date.now() - leaveHistCache.ts < 300000) return;
+  leaveHistLoading = true;
   const c = new Date(); c.setDate(c.getDate() - 200);
-  let items = [];
-  try{
-    const snap = await Promise.race([
-      db.ref(LEAVE_ROOT).orderByKey().startAt(ymdOf(c)).once('value'),
-      new Promise((_, rej) => setTimeout(() => rej(new Error('timeout')), 3500))
-    ]);
-    snap.forEach(day => { Object.values(day.val() || {}).forEach(x => { if(x && x.id) items.push(x); }); });
-  }catch(e){
-    try{ items = JSON.parse(localStorage.getItem(DB_PREFIX + 'leave_backup_v1') || '[]'); }catch(_){}
-  }
+  Promise.race([
+    db.ref(LEAVE_ROOT).orderByKey().startAt(ymdOf(c)).once('value'),
+    new Promise((_, rej) => setTimeout(() => rej(new Error('timeout')), 15000))
+  ]).then(snap => {
+    const items = []; snap.forEach(day => { Object.values(day.val() || {}).forEach(x => { if(x && x.id) items.push(x); }); });
+    leaveHistCache = { items, ts: Date.now() };
+  }).catch(() => {}).then(() => { leaveHistLoading = false; });
+}
+async function getStudentLeaveHistory(student, classKey, gradeName, sec){
+  warmLeaveHistory();                                   // تحديث في الخلفية للمرة القادمة
+  let items = leaveHistCache ? leaveHistCache.items.slice() : [];
+  try{ items = items.concat(JSON.parse(localStorage.getItem(DB_PREFIX + 'leave_backup_v1') || '[]')); }catch(_){}
+  items = items.concat(leaveLogs || []);
   const seen = new Set();
   return items.filter(l => l && l.student === student && ((l.classKey && l.classKey === classKey) || (!l.classKey && l.gradeName === gradeName && l.sec === sec)))
     .filter(l => { if(seen.has(l.id)) return false; seen.add(l.id); return true; })
@@ -2755,8 +2764,8 @@ function paintBehaviorCell(td, row, isAbsent){
   td.innerHTML = `<div class="gi-grid"><span${c(w.beh)}><small>سلوك</small>${fmtG(w.beh)}</span><span${c(w.tools)}><small>أدوات</small>${fmtG(w.tools)}</span><span${c(w.app)}><small>تطبيق</small>${fmtG(w.app)}</span><span${c(w.part)}><small>مشاركة</small>${fmtG(w.part)}</span></div>`;
 }
 // يُحتسب الأسبوع للطالبة فقط إذا كُتب عنوان الدرس أو سُجّل غيابها؛ وإلا تبقى أعمدته فارغة
-function weekCounted(rec, row){ return !!row && (row.attend === 'absent' || !!(((rec && rec.lesson) || '') + '').trim()); }
-function recordCounted(rec){ return !!rec && (((rec.lesson || '') + '').trim() !== '' || toArrIdx(rec.rows).some(r => r && r.attend === 'absent')); }
+function weekCounted(rec, row){ return !!row && (row.attend === 'absent' || row.attend === 'late' || toArr(row.violations).length > 0 || !!(((rec && rec.lesson) || '') + '').trim()); }   // أي مخالفة أو تأخر تُحتسب دائماً حتى لو نُسي عنوان الدرس
+function recordCounted(rec){ return !!rec && (((rec.lesson || '') + '').trim() !== '' || toArrIdx(rec.rows).some(r => r && (r.attend === 'absent' || r.attend === 'late' || toArr(r.violations).length > 0))); }
 // أربع خانات رقمية لأسبوع: سلوك، أدوات، تطبيق، مشاركة (فارغة إن لم يُحتسب الأسبوع، وغ بالأحمر للغياب)
 function itemCellsHTML(rec, r, lastBorder, behExtra){
   const cell = (inner, last) => `<td${last ? ` style="${lastBorder}"` : ''}>${inner}</td>`;
