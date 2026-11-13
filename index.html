@@ -446,7 +446,8 @@
           <div class="field"><label>الفترة الدراسية</label><select id="termSelect"></select></div>
           <div class="field"><label>تاريخ الحصة <button type="button" onclick="goToday()" style="border:1px solid var(--line); background:#fff; border-radius:6px; font-family:inherit; font-size:11px; padding:1px 7px; cursor:pointer; margin-inline-start:6px;">📅 اليوم</button></label><input type="date" id="dateInput"></div>
           <div class="field"><label>الأسبوع</label><select id="weekSelect" onchange="onWeekSelectChange()"></select></div>
-          <div class="field" id="labField" style="display:none"><label>مختبر الاختبار</label><select id="labSelect" onchange="onLabChange()"><option value="">— بدون —</option><option value="1">مختبر 1</option><option value="2">مختبر 2</option></select></div>
+          <div class="field" id="labField" style="display:none"><label>مختبر الاختبار</label><select id="labSelect" onchange="onLabChange()"><option value="">— بدون —</option><option value="1">مختبر 1</option><option value="2">مختبر 2</option></select>
+            <label style="display:flex;align-items:center;gap:6px;margin-top:6px;font-size:13px;cursor:pointer"><input type="checkbox" id="singlePeriodChk" checked onchange="onSinglePeriodChange()"> حصة مفردة (اختبار)</label></div>
           <div class="field"><label>الحصة الدراسية</label>
             <select id="lessonPeriodSelect" onchange="onPeriodChange()">
               <option value="الحصة 1">الحصة الأولى (07:55)</option>
@@ -974,7 +975,9 @@ function playCelebrationSound(){
 // الصف العاشر: حصتان متتاليتان دائماً (الحصة المزدوجة)
 const DOUBLE_GRADES = ['g10'];
 const PERIOD_NAMES = ['الأولى','الثانية','الثالثة','الرابعة','الخامسة','السادسة','السابعة'];
-function periodSpan(gId){ return DOUBLE_GRADES.includes(gId) ? 2 : 1; }
+function isExamSingle(){ const w = document.getElementById('weekSelect'), c = document.getElementById('singlePeriodChk'); return !!(w && c && w.value === 'الأسبوع 11' && c.checked); }
+function periodSpan(gId){ if(isExamSingle()) return 1; return DOUBLE_GRADES.includes(gId) ? 2 : 1; }
+function onSinglePeriodChange(){ renderPage(); }
 const LESSON_TIMINGS = [
   { lessonIndex: 0, startMinutes: 7 * 60 + 55 },
   { lessonIndex: 1, startMinutes: 8 * 60 + 45 },
