@@ -3060,7 +3060,7 @@ function gradebookPage(g, sec, sd, part){
   const wkW = part === 'all' ? 4.1 : (part === 'p1' ? 8.4 : 6.4);
   const WN = ['الأول','الثاني','الثالث','الرابع','الخامس','السادس','السابع','الثامن','التاسع'];
   const teacher = (typeof currentUserDisplayName !== 'undefined' && currentUserDisplayName) ? currentUserDisplayName : '';
-  let h1 = '', h2 = '', h3 = '', cg = '<col style="width:4mm"><col style="width:30mm">';
+  let h1 = '', h2 = '', h3 = '', cg = '<col style="width:4mm"><col style="width:35mm">';
   const firstOff = gbOfficial(sd, 0);
   for(let w = wFrom; w <= wTo; w++){
     const d = firstOff.weeks[w-1].date;
@@ -3073,10 +3073,11 @@ function gradebookPage(g, sec, sd, part){
   }
   const sumHead = lab => ['سلوك','أدوات','تطبيق','مشاركة'].map(x => `<th class="vt s">${x}</th>`).join('') + '<th class="vt s tt">المجموع</th>';
   if(showSum) cg += '<col style="width:5.6mm">'.repeat(4) + '<col style="width:6.6mm">' + '<col style="width:5.6mm">'.repeat(4) + '<col style="width:6.6mm">' + '<col style="width:8mm">' + '<col style="width:8mm"><col style="width:9mm"><col style="width:8mm"><col style="width:8mm">';
+  const rowH = Math.max(4.8, Math.min(7.2, 148 / Math.max(1, sd.students.length)));
   let rows = '';
   sd.students.forEach((name, idx) => {
     const o = gbOfficial(sd, idx);
-    rows += `<tr><td>${idx + 1}</td><td class="nm">${escHtml(formatThreePartName(name))}</td>`;
+    rows += `<tr style="height:${rowH}mm"><td>${idx + 1}</td><td class="nm">${escHtml(formatThreePartName(name))}</td>`;
     o.weeks.slice(wFrom - 1, wTo).forEach(wk => {
       if(!wk.counted) rows += '<td></td><td></td><td></td><td></td>';
       else if(wk.absent) rows += '<td class="ab">غ</td><td class="ab">غ</td><td class="ab">غ</td><td class="ab">غ</td>';
@@ -3088,7 +3089,7 @@ function gradebookPage(g, sec, sd, part){
   });
   return `<section class="gb"><div class="gb-hd">
       <div class="gb-t1"><b>منطقة الأحمدي التعليمية — ثانوية موضي سلطان العيسى بنات</b> &nbsp;|&nbsp; كشف متابعة المتعلمين لمادة الحاسوب — المجال: تكنولوجيا المعلومات والاتصالات (تقنية المعلومات) — المرحلة الثانوية</div>
-      <div class="gb-t2">الصف / الشعبة: <b>${escHtml(g.name)} / ${escHtml(sec)}</b> &nbsp;|&nbsp; المعلمة: <b>${escHtml(teacher)}</b> &nbsp;|&nbsp; الفترة الدراسية الأولى &nbsp;|&nbsp; العام الدراسي 2026 / 2027${part === 'p1' ? ' &nbsp;|&nbsp; <b>الصفحة 1 من 2: الأسابيع 1–5</b>' : (part === 'p2' ? ' &nbsp;|&nbsp; <b>الصفحة 2 من 2: الأسابيع 6–9 + مجاميع كل الأسابيع</b>' : '')}</div>
+      <div class="gb-t2">الصف / الشعبة: <b>${escHtml(g.name)} / ${escHtml(sec)}</b> &nbsp;|&nbsp; المعلمة: <b>${escHtml(teacher)}</b> &nbsp;|&nbsp; الفترة الدراسية الأولى &nbsp;|&nbsp; العام الدراسي 2026 / 2027</div>
     </div>
     <table class="gbt"><colgroup>${cg}</colgroup><thead>
       <tr><th rowspan="3">م</th><th rowspan="3">اسم الطالبة</th>${h1}${showSum ? `
@@ -3097,6 +3098,7 @@ function gradebookPage(g, sec, sd, part){
       <tr>${h2}${showSum ? `<th colspan="5" class="sec2"></th><th colspan="5" class="sec2"></th><th rowspan="2" class="vt ex">المشروع (20)</th><th rowspan="2" class="vt ex">الاختبار العملي (40)</th><th rowspan="2" class="vt ex">المجموع (60)</th>` : ''}</tr>
       <tr>${h3}${showSum ? sumHead() + sumHead() : ''}</tr>
     </thead><tbody>${rows}</tbody></table>
+    <div class="gb-sign"><span>المعلمة: ${escHtml(teacher || 'وفاء عليان')}</span><span>الموجهة الفنية: أ. ريم الرشيدي</span></div>
     </section>`;
 }
 function generateOfficialGradebook(){
@@ -3114,12 +3116,14 @@ function generateOfficialGradebook(){
       body{ margin:0; font-family:'Tajawal','Cairo',sans-serif; direction:rtl; color:#111; }
       .bar{ padding:6px 10px; background:#1F2430; color:#fff; font-size:12px; } .bar button{ font-family:inherit; padding:5px 12px; margin-inline-end:8px; cursor:pointer; }
       .gb{ page-break-after:always; padding:1mm; } .gb-hd{ margin-bottom:1.2mm; text-align:center; } .gb-t1{ font-size:8.5pt; } .gb-t2{ font-size:7.5pt; margin-top:0.8mm; color:#333; }
-      table.gbt{ width:100%; border-collapse:collapse; table-layout:fixed; } .gbt th, .gbt td{ border:0.25mm solid #444; padding:0; text-align:center; font-size:6pt; height:4.5mm; overflow:hidden; line-height:1.1; }
+      table.gbt{ width:100%; border-collapse:collapse; table-layout:fixed; } .gbt th, .gbt td{ border:0.25mm solid #444; padding:0; text-align:center; font-size:7pt; font-weight:700; height:4.5mm; overflow:hidden; line-height:1.1; }
+      .gbt tbody td{ height:auto; }
       .gbt th{ background:#E8EEF7; font-weight:700; } .gbt th.wk{ background:#1F3A5F; color:#fff; font-size:6.4pt; } .gbt th.dt{ background:#FAF3F0; font-size:5.6pt; height:3.6mm; }
       .gbt th.sec{ background:#2E6F57; color:#fff; font-size:6.4pt; } .gbt th.sec2{ background:#fff; height:3.6mm; } .gbt th.ex{ background:#B8860B; color:#fff; } .gbt th.tot{ background:#8A1C30; color:#fff; }
       .vt{ writing-mode:vertical-rl; font-size:5.4pt !important; height:13mm !important; } .gbt th.s{ background:#DDEFE6; }
-      .nm{ text-align:right; padding:0 1mm !important; font-weight:700; font-size:6.4pt !important; white-space:nowrap; overflow:hidden; }
+      .nm{ text-align:right; padding:0 1mm !important; font-weight:800; font-size:7.8pt !important; white-space:nowrap; overflow:hidden; }
       .lo{ color:#B8001F; font-weight:700; } .ab{ color:#B8001F; font-weight:800; } .sm{ background:#F3FAF6; font-weight:700; } .tt{ background:#DDEFE6 !important; } .tot{ background:#FDF2F4; font-weight:800; font-size:7pt !important; }
+      .gb-sign{ margin-top:2mm; font-size:9pt; font-weight:800; color:#111; display:flex; justify-content:space-between; padding:0 6mm; }
       .gb-ft{ margin-top:1.2mm; font-size:5.8pt; color:#444; line-height:1.5; }
       @media print{ .bar{ display:none; } }
     </style></head><body>
