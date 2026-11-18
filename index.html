@@ -3057,10 +3057,10 @@ function gbOfficial(secData, idx){
 function gradebookPage(g, sec, sd, part){
   part = part || 'all';
   const wFrom = part === 'p2' ? 6 : 1, wTo = part === 'p1' ? 5 : GB_WEEKS, showSum = part !== 'p1';
-  const wkW = part === 'all' ? 4.1 : (part === 'p1' ? 8.4 : 6.4);
+  const wkW = part === 'all' ? 4.0 : (part === 'p1' ? 8.4 : 6.4);
   const WN = ['الأول','الثاني','الثالث','الرابع','الخامس','السادس','السابع','الثامن','التاسع'];
   const teacher = (typeof currentUserDisplayName !== 'undefined' && currentUserDisplayName) ? currentUserDisplayName : '';
-  let h1 = '', h2 = '', h3 = '', cg = '<col style="width:4mm"><col style="width:35mm">';
+  let h1 = '', h2 = '', h3 = '', cg = '<col style="width:4mm"><col style="width:38mm">';
   const firstOff = gbOfficial(sd, 0);
   for(let w = wFrom; w <= wTo; w++){
     const d = firstOff.weeks[w-1].date;
@@ -3073,7 +3073,7 @@ function gradebookPage(g, sec, sd, part){
   }
   const sumHead = lab => ['سلوك','أدوات','تطبيق','مشاركة'].map(x => `<th class="vt s">${x}</th>`).join('') + '<th class="vt s tt">المجموع</th>';
   if(showSum) cg += '<col style="width:5.6mm">'.repeat(4) + '<col style="width:6.6mm">' + '<col style="width:5.6mm">'.repeat(4) + '<col style="width:6.6mm">' + '<col style="width:8mm">' + '<col style="width:8mm"><col style="width:9mm"><col style="width:8mm"><col style="width:8mm">';
-  const rowH = Math.max(4.8, Math.min(7.2, 148 / Math.max(1, sd.students.length)));
+  const rowH = Math.max(3.3, Math.min(7.2, 142 / Math.max(1, sd.students.length)));
   let rows = '';
   sd.students.forEach((name, idx) => {
     const o = gbOfficial(sd, idx);
@@ -3089,7 +3089,7 @@ function gradebookPage(g, sec, sd, part){
   });
   return `<section class="gb"><div class="gb-hd">
       <div class="gb-t1"><b>منطقة الأحمدي التعليمية — ثانوية موضي سلطان العيسى بنات</b> &nbsp;|&nbsp; كشف متابعة المتعلمين لمادة الحاسوب — المجال: تكنولوجيا المعلومات والاتصالات (تقنية المعلومات) — المرحلة الثانوية</div>
-      <div class="gb-t2">الصف / الشعبة: <b>${escHtml(g.name)} / ${escHtml(sec)}</b> &nbsp;|&nbsp; المعلمة: <b>${escHtml(teacher)}</b> &nbsp;|&nbsp; الفترة الدراسية الأولى &nbsp;|&nbsp; العام الدراسي 2026 / 2027</div>
+      <div class="gb-t2">الصف: <b>${escHtml(String(sec).replace(/^(\d+)\s+/, '$1'))}</b> &nbsp;|&nbsp; الفترة الدراسية الأولى &nbsp;|&nbsp; العام الدراسي 2026 / 2027</div>
     </div>
     <table class="gbt"><colgroup>${cg}</colgroup><thead>
       <tr><th rowspan="3">م</th><th rowspan="3">اسم الطالبة</th>${h1}${showSum ? `
@@ -3118,10 +3118,10 @@ function generateOfficialGradebook(){
       .gb{ page-break-after:always; padding:1mm; } .gb-hd{ margin-bottom:1.2mm; text-align:center; } .gb-t1{ font-size:8.5pt; } .gb-t2{ font-size:7.5pt; margin-top:0.8mm; color:#333; }
       table.gbt{ width:100%; border-collapse:collapse; table-layout:fixed; } .gbt th, .gbt td{ border:0.25mm solid #444; padding:0; text-align:center; font-size:7pt; font-weight:700; height:4.5mm; overflow:hidden; line-height:1.1; }
       .gbt tbody td{ height:auto; }
-      .gbt th{ background:#E8EEF7; font-weight:700; } .gbt th.wk{ background:#1F3A5F; color:#fff; font-size:6.4pt; } .gbt th.dt{ background:#FAF3F0; font-size:5.6pt; height:3.6mm; }
-      .gbt th.sec{ background:#2E6F57; color:#fff; font-size:6.4pt; } .gbt th.sec2{ background:#fff; height:3.6mm; } .gbt th.ex{ background:#B8860B; color:#fff; } .gbt th.tot{ background:#8A1C30; color:#fff; }
+      .gbt th{ background:#E8EEF7; font-weight:700; } .gbt th.wk{ background:#1F3A5F; color:#fff; font-size:7.6pt; height:7.5mm; } .gbt th.dt{ background:#FAF3F0; font-size:6.4pt; height:5mm; }
+      .gbt th.sec{ background:#2E6F57; color:#fff; font-size:7pt; height:7.5mm; } .gbt th.sec2{ background:#fff; height:5mm; } .gbt th.ex{ background:#B8860B; color:#fff; } .gbt th.tot{ background:#8A1C30; color:#fff; }
       .vt{ writing-mode:vertical-rl; font-size:5.4pt !important; height:13mm !important; } .gbt th.s{ background:#DDEFE6; }
-      .nm{ text-align:right; padding:0 1mm !important; font-weight:800; font-size:7.8pt !important; white-space:nowrap; overflow:hidden; }
+      .nm{ text-align:right; padding:0 1mm !important; font-weight:900; font-size:9pt !important; white-space:nowrap; overflow:hidden; }
       .lo{ color:#B8001F; font-weight:700; } .ab{ color:#B8001F; font-weight:800; } .sm{ background:#F3FAF6; font-weight:700; } .tt{ background:#DDEFE6 !important; } .tot{ background:#FDF2F4; font-weight:800; font-size:7pt !important; }
       .gb-sign{ margin-top:2mm; font-size:9pt; font-weight:800; color:#111; display:flex; justify-content:space-between; padding:0 6mm; }
       .gb-ft{ margin-top:1.2mm; font-size:5.8pt; color:#444; line-height:1.5; }
